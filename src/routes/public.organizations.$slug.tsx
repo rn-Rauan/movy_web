@@ -125,6 +125,12 @@ function PublicOrgPage() {
                     <span className="font-semibold">R$ {trip.price.toFixed(2)}</span>
                   ) : null}
                 </div>
+
+                <Link to="/login" className="block mt-3">
+                  <Button className="w-full h-10" disabled={lotada}>
+                    {lotada ? "Lotada" : "Ver viagem"}
+                  </Button>
+                </Link>
               </Card>
             </li>
           );
