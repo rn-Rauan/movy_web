@@ -15,8 +15,10 @@ import { Route as MyBookingsRouteImport } from './routes/my-bookings'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TripsOrgIdRouteImport } from './routes/trips.$orgId'
+import { Route as PublicTripInstancesRouteImport } from './routes/public.trip-instances'
 import { Route as MyBookingsBookingIdRouteImport } from './routes/my-bookings.$bookingId'
 import { Route as TripsOrgIdTripIdRouteImport } from './routes/trips.$orgId.$tripId'
+import { Route as PublicOrganizationsSlugRouteImport } from './routes/public.organizations.$slug'
 import { Route as TripsOrgIdTripIdBookRouteImport } from './routes/trips.$orgId.$tripId.book'
 
 const SignupRoute = SignupRouteImport.update({
@@ -49,6 +51,11 @@ const TripsOrgIdRoute = TripsOrgIdRouteImport.update({
   path: '/trips/$orgId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicTripInstancesRoute = PublicTripInstancesRouteImport.update({
+  id: '/public/trip-instances',
+  path: '/public/trip-instances',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyBookingsBookingIdRoute = MyBookingsBookingIdRouteImport.update({
   id: '/$bookingId',
   path: '/$bookingId',
@@ -58,6 +65,11 @@ const TripsOrgIdTripIdRoute = TripsOrgIdTripIdRouteImport.update({
   id: '/$tripId',
   path: '/$tripId',
   getParentRoute: () => TripsOrgIdRoute,
+} as any)
+const PublicOrganizationsSlugRoute = PublicOrganizationsSlugRouteImport.update({
+  id: '/public/organizations/$slug',
+  path: '/public/organizations/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const TripsOrgIdTripIdBookRoute = TripsOrgIdTripIdBookRouteImport.update({
   id: '/book',
@@ -72,7 +84,9 @@ export interface FileRoutesByFullPath {
   '/organizations': typeof OrganizationsRoute
   '/signup': typeof SignupRoute
   '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
+  '/public/trip-instances': typeof PublicTripInstancesRoute
   '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
+  '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
   '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
 }
@@ -83,7 +97,9 @@ export interface FileRoutesByTo {
   '/organizations': typeof OrganizationsRoute
   '/signup': typeof SignupRoute
   '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
+  '/public/trip-instances': typeof PublicTripInstancesRoute
   '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
+  '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
   '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
 }
@@ -95,7 +111,9 @@ export interface FileRoutesById {
   '/organizations': typeof OrganizationsRoute
   '/signup': typeof SignupRoute
   '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
+  '/public/trip-instances': typeof PublicTripInstancesRoute
   '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
+  '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
   '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
 }
@@ -108,7 +126,9 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/signup'
     | '/my-bookings/$bookingId'
+    | '/public/trip-instances'
     | '/trips/$orgId'
+    | '/public/organizations/$slug'
     | '/trips/$orgId/$tripId'
     | '/trips/$orgId/$tripId/book'
   fileRoutesByTo: FileRoutesByTo
@@ -119,7 +139,9 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/signup'
     | '/my-bookings/$bookingId'
+    | '/public/trip-instances'
     | '/trips/$orgId'
+    | '/public/organizations/$slug'
     | '/trips/$orgId/$tripId'
     | '/trips/$orgId/$tripId/book'
   id:
@@ -130,7 +152,9 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/signup'
     | '/my-bookings/$bookingId'
+    | '/public/trip-instances'
     | '/trips/$orgId'
+    | '/public/organizations/$slug'
     | '/trips/$orgId/$tripId'
     | '/trips/$orgId/$tripId/book'
   fileRoutesById: FileRoutesById
@@ -141,7 +165,9 @@ export interface RootRouteChildren {
   MyBookingsRoute: typeof MyBookingsRouteWithChildren
   OrganizationsRoute: typeof OrganizationsRoute
   SignupRoute: typeof SignupRoute
+  PublicTripInstancesRoute: typeof PublicTripInstancesRoute
   TripsOrgIdRoute: typeof TripsOrgIdRouteWithChildren
+  PublicOrganizationsSlugRoute: typeof PublicOrganizationsSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -188,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsOrgIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/public/trip-instances': {
+      id: '/public/trip-instances'
+      path: '/public/trip-instances'
+      fullPath: '/public/trip-instances'
+      preLoaderRoute: typeof PublicTripInstancesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-bookings/$bookingId': {
       id: '/my-bookings/$bookingId'
       path: '/$bookingId'
@@ -201,6 +234,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/trips/$orgId/$tripId'
       preLoaderRoute: typeof TripsOrgIdTripIdRouteImport
       parentRoute: typeof TripsOrgIdRoute
+    }
+    '/public/organizations/$slug': {
+      id: '/public/organizations/$slug'
+      path: '/public/organizations/$slug'
+      fullPath: '/public/organizations/$slug'
+      preLoaderRoute: typeof PublicOrganizationsSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/trips/$orgId/$tripId/book': {
       id: '/trips/$orgId/$tripId/book'
@@ -253,7 +293,9 @@ const rootRouteChildren: RootRouteChildren = {
   MyBookingsRoute: MyBookingsRouteWithChildren,
   OrganizationsRoute: OrganizationsRoute,
   SignupRoute: SignupRoute,
+  PublicTripInstancesRoute: PublicTripInstancesRoute,
   TripsOrgIdRoute: TripsOrgIdRouteWithChildren,
+  PublicOrganizationsSlugRoute: PublicOrganizationsSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
