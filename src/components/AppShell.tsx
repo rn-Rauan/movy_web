@@ -1,4 +1,4 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, LogOut, Ticket, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function AppShell({ title, back, children, showTabs = true }: Props) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { logout, isAuthenticated } = useAuth();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
@@ -21,7 +21,7 @@ export function AppShell({ title, back, children, showTabs = true }: Props) {
         <div className="mx-auto max-w-md flex items-center gap-2 px-4 h-14">
           {back ? (
             <button
-              onClick={() => navigate({ to: ".." as any })}
+              onClick={() => router.history.back()}
               aria-label="Voltar"
               className="p-2 -ml-2 rounded-lg hover:bg-accent"
             >
