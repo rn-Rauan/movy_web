@@ -126,16 +126,22 @@ function PublicTripsPage() {
                   ) : null}
                 </div>
 
-                <Link
-                  to="/public/organizations/$slug"
-                  params={{ slug: trip.organizationSlug }}
-                  className="block mt-3"
-                >
-                  <Button variant="outline" className="w-full h-10">
-                    Ver empresa
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </Link>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <Link
+                    to="/public/organizations/$slug"
+                    params={{ slug: trip.organizationSlug }}
+                  >
+                    <Button variant="outline" className="w-full h-10">
+                      Ver empresa
+                    </Button>
+                  </Link>
+                  <Link to="/login">
+                    <Button className="w-full h-10">
+                      Ver viagem
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
               </Card>
             </li>
           );
