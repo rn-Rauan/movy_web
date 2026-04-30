@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: string;
       telephone: string;
     }) => {
-      const res = await api<AuthResponse>("/users", {
+      const res = await api<AuthResponse>("/auth/register", {
         method: "POST",
         auth: false,
         body: JSON.stringify(input),
