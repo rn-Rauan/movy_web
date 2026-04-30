@@ -7,6 +7,7 @@ export function formatDateTime(iso: string, timeOnly = false) {
     return d.toLocaleTimeString("pt-BR", {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "UTC",
     });
   }
   return d.toLocaleString("pt-BR", {
@@ -14,6 +15,7 @@ export function formatDateTime(iso: string, timeOnly = false) {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "UTC",
   });
 }
 
@@ -25,6 +27,7 @@ export function formatFullDate(iso: string) {
     day: "2-digit",
     month: "long",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 
