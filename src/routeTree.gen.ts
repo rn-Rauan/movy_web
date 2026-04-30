@@ -9,38 +9,171 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as OrganizationsRouteImport } from './routes/organizations'
+import { Route as MyBookingsRouteImport } from './routes/my-bookings'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TripsOrgIdRouteImport } from './routes/trips.$orgId'
+import { Route as MyBookingsBookingIdRouteImport } from './routes/my-bookings.$bookingId'
+import { Route as TripsOrgIdTripIdRouteImport } from './routes/trips.$orgId.$tripId'
+import { Route as TripsOrgIdTripIdBookRouteImport } from './routes/trips.$orgId.$tripId.book'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationsRoute = OrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyBookingsRoute = MyBookingsRouteImport.update({
+  id: '/my-bookings',
+  path: '/my-bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TripsOrgIdRoute = TripsOrgIdRouteImport.update({
+  id: '/trips/$orgId',
+  path: '/trips/$orgId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyBookingsBookingIdRoute = MyBookingsBookingIdRouteImport.update({
+  id: '/$bookingId',
+  path: '/$bookingId',
+  getParentRoute: () => MyBookingsRoute,
+} as any)
+const TripsOrgIdTripIdRoute = TripsOrgIdTripIdRouteImport.update({
+  id: '/$tripId',
+  path: '/$tripId',
+  getParentRoute: () => TripsOrgIdRoute,
+} as any)
+const TripsOrgIdTripIdBookRoute = TripsOrgIdTripIdBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => TripsOrgIdTripIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/my-bookings': typeof MyBookingsRouteWithChildren
+  '/organizations': typeof OrganizationsRoute
+  '/signup': typeof SignupRoute
+  '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
+  '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
+  '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
+  '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/my-bookings': typeof MyBookingsRouteWithChildren
+  '/organizations': typeof OrganizationsRoute
+  '/signup': typeof SignupRoute
+  '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
+  '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
+  '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
+  '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/my-bookings': typeof MyBookingsRouteWithChildren
+  '/organizations': typeof OrganizationsRoute
+  '/signup': typeof SignupRoute
+  '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
+  '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
+  '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
+  '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/my-bookings'
+    | '/organizations'
+    | '/signup'
+    | '/my-bookings/$bookingId'
+    | '/trips/$orgId'
+    | '/trips/$orgId/$tripId'
+    | '/trips/$orgId/$tripId/book'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/my-bookings'
+    | '/organizations'
+    | '/signup'
+    | '/my-bookings/$bookingId'
+    | '/trips/$orgId'
+    | '/trips/$orgId/$tripId'
+    | '/trips/$orgId/$tripId/book'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/my-bookings'
+    | '/organizations'
+    | '/signup'
+    | '/my-bookings/$bookingId'
+    | '/trips/$orgId'
+    | '/trips/$orgId/$tripId'
+    | '/trips/$orgId/$tripId/book'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LoginRoute: typeof LoginRoute
+  MyBookingsRoute: typeof MyBookingsRouteWithChildren
+  OrganizationsRoute: typeof OrganizationsRoute
+  SignupRoute: typeof SignupRoute
+  TripsOrgIdRoute: typeof TripsOrgIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizations': {
+      id: '/organizations'
+      path: '/organizations'
+      fullPath: '/organizations'
+      preLoaderRoute: typeof OrganizationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-bookings': {
+      id: '/my-bookings'
+      path: '/my-bookings'
+      fullPath: '/my-bookings'
+      preLoaderRoute: typeof MyBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +181,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trips/$orgId': {
+      id: '/trips/$orgId'
+      path: '/trips/$orgId'
+      fullPath: '/trips/$orgId'
+      preLoaderRoute: typeof TripsOrgIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-bookings/$bookingId': {
+      id: '/my-bookings/$bookingId'
+      path: '/$bookingId'
+      fullPath: '/my-bookings/$bookingId'
+      preLoaderRoute: typeof MyBookingsBookingIdRouteImport
+      parentRoute: typeof MyBookingsRoute
+    }
+    '/trips/$orgId/$tripId': {
+      id: '/trips/$orgId/$tripId'
+      path: '/$tripId'
+      fullPath: '/trips/$orgId/$tripId'
+      preLoaderRoute: typeof TripsOrgIdTripIdRouteImport
+      parentRoute: typeof TripsOrgIdRoute
+    }
+    '/trips/$orgId/$tripId/book': {
+      id: '/trips/$orgId/$tripId/book'
+      path: '/book'
+      fullPath: '/trips/$orgId/$tripId/book'
+      preLoaderRoute: typeof TripsOrgIdTripIdBookRouteImport
+      parentRoute: typeof TripsOrgIdTripIdRoute
+    }
   }
 }
 
+interface MyBookingsRouteChildren {
+  MyBookingsBookingIdRoute: typeof MyBookingsBookingIdRoute
+}
+
+const MyBookingsRouteChildren: MyBookingsRouteChildren = {
+  MyBookingsBookingIdRoute: MyBookingsBookingIdRoute,
+}
+
+const MyBookingsRouteWithChildren = MyBookingsRoute._addFileChildren(
+  MyBookingsRouteChildren,
+)
+
+interface TripsOrgIdTripIdRouteChildren {
+  TripsOrgIdTripIdBookRoute: typeof TripsOrgIdTripIdBookRoute
+}
+
+const TripsOrgIdTripIdRouteChildren: TripsOrgIdTripIdRouteChildren = {
+  TripsOrgIdTripIdBookRoute: TripsOrgIdTripIdBookRoute,
+}
+
+const TripsOrgIdTripIdRouteWithChildren =
+  TripsOrgIdTripIdRoute._addFileChildren(TripsOrgIdTripIdRouteChildren)
+
+interface TripsOrgIdRouteChildren {
+  TripsOrgIdTripIdRoute: typeof TripsOrgIdTripIdRouteWithChildren
+}
+
+const TripsOrgIdRouteChildren: TripsOrgIdRouteChildren = {
+  TripsOrgIdTripIdRoute: TripsOrgIdTripIdRouteWithChildren,
+}
+
+const TripsOrgIdRouteWithChildren = TripsOrgIdRoute._addFileChildren(
+  TripsOrgIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LoginRoute: LoginRoute,
+  MyBookingsRoute: MyBookingsRouteWithChildren,
+  OrganizationsRoute: OrganizationsRoute,
+  SignupRoute: SignupRoute,
+  TripsOrgIdRoute: TripsOrgIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
