@@ -16,18 +16,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { TripInstance } from "@/lib/types";
-import { canEnroll, formatDateTime } from "@/lib/format";
+import type { TripInstance, EnrollmentType, PaymentMethod } from "@/lib/types";
+import { canEnroll, formatDateTime, tripPriceFor } from "@/lib/format";
 
 export const Route = createFileRoute("/trips/$orgId/$tripId/book")({
   component: BookPage,
 });
 
 const schema = z.object({
-  enrollmentType: z.enum(["ONE_WAY", "ROUND_TRIP"]),
+  enrollmentType: z.enum(["ONE_WAY", "RETURN", "ROUND_TRIP"]),
   boardingStop: z.string().trim().min(1, "Informe a parada de embarque"),
   alightingStop: z.string().trim().min(1, "Informe a parada de desembarque"),
-  method: z.string().trim().min(1, "Informe o método"),
+  method: z.enum(["MONEY", "PIX", "CREDIT_CARD", "DEBIT_CARD"]),
 });
 
 function BookPage() {
@@ -37,10 +37,10 @@ function BookPage() {
   const [trip, setTrip] = useState<TripInstance | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    enrollmentType: "ONE_WAY" as "ONE_WAY" | "ROUND_TRIP",
+    enrollmentType: "ONE_WAY" as EnrollmentType,
     boardingStop: "",
     alightingStop: "",
-    method: "PIX",
+    method: "PIX" as PaymentMethod,
   });
 
   useEffect(() => {
@@ -50,7 +50,14 @@ function BookPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
     api<TripInstance>(`/public/trip-instances/${tripId}`, { auth: false })
-      .then(setTrip)
+      .then((t) => {
+        setTrip(t);
+        setForm((f) => ({
+          ...f,
+          boardingStop: f.boardingStop || t.departurePoint || "",
+          alightingStop: f.alightingStop || t.destination || "",
+        }));
+      })
       .catch(() => {});
   }, [tripId, isAuthenticated]);
 
@@ -80,12 +87,19 @@ function BookPage() {
     }
   }
 
+  const price = trip ? tripPriceFor(trip, form.enrollmentType) : undefined;
+
   return (
     <AppShell title="Inscrição" back>
       {trip ? (
         <Card className="p-4 mb-4 bg-accent/40">
           <p className="text-xs text-muted-foreground">Viagem</p>
-          <p className="font-medium">{formatDateTime(trip.departureTime)}</p>
+          <p className="font-medium">
+            {trip.departurePoint} → {trip.destination}
+          </p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {formatDateTime(trip.departureTime)}
+          </p>
         </Card>
       ) : null}
 
@@ -95,15 +109,22 @@ function BookPage() {
           <Select
             value={form.enrollmentType}
             onValueChange={(v) =>
-              setForm((f) => ({ ...f, enrollmentType: v as "ONE_WAY" | "ROUND_TRIP" }))
+              setForm((f) => ({ ...f, enrollmentType: v as EnrollmentType }))
             }
           >
             <SelectTrigger className="h-12 text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ONE_WAY">Somente ida</SelectItem>
-              <SelectItem value="ROUND_TRIP">Ida e volta</SelectItem>
+              {trip?.priceOneWay != null || !trip ? (
+                <SelectItem value="ONE_WAY">Somente ida</SelectItem>
+              ) : null}
+              {trip?.priceReturn != null ? (
+                <SelectItem value="RETURN">Somente volta</SelectItem>
+              ) : null}
+              {trip?.priceRoundTrip != null || !trip ? (
+                <SelectItem value="ROUND_TRIP">Ida e volta</SelectItem>
+              ) : null}
             </SelectContent>
           </Select>
         </div>
@@ -114,7 +135,7 @@ function BookPage() {
             id="boardingStop"
             value={form.boardingStop}
             onChange={(e) => setForm((f) => ({ ...f, boardingStop: e.target.value }))}
-            placeholder="Ex: A2"
+            placeholder={trip?.departurePoint || "Ex: Terminal Rodoviário"}
             className="h-12 text-base"
             required
           />
@@ -126,7 +147,7 @@ function BookPage() {
             id="alightingStop"
             value={form.alightingStop}
             onChange={(e) => setForm((f) => ({ ...f, alightingStop: e.target.value }))}
-            placeholder="Ex: B5"
+            placeholder={trip?.destination || "Ex: Universidade"}
             className="h-12 text-base"
             required
           />
@@ -134,18 +155,28 @@ function BookPage() {
 
         <div className="space-y-2">
           <Label>Método de pagamento</Label>
-          <Select value={form.method} onValueChange={(v) => setForm((f) => ({ ...f, method: v }))}>
+          <Select
+            value={form.method}
+            onValueChange={(v) => setForm((f) => ({ ...f, method: v as PaymentMethod }))}
+          >
             <SelectTrigger className="h-12 text-base">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="PIX">PIX</SelectItem>
               <SelectItem value="CREDIT_CARD">Cartão de crédito</SelectItem>
-              <SelectItem value="CASH">Dinheiro</SelectItem>
-              <SelectItem value="SUBSCRIPTION">Assinatura</SelectItem>
+              <SelectItem value="DEBIT_CARD">Cartão de débito</SelectItem>
+              <SelectItem value="MONEY">Dinheiro</SelectItem>
             </SelectContent>
           </Select>
         </div>
+
+        {price != null ? (
+          <Card className="p-4 flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Valor</span>
+            <span className="text-lg font-semibold">R$ {price.toFixed(2)}</span>
+          </Card>
+        ) : null}
 
         <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
           {submitting ? "Confirmando..." : "Confirmar inscrição"}
