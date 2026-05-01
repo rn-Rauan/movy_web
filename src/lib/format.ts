@@ -37,8 +37,8 @@ export function statusLabel(s: TripStatus | string): string {
     SCHEDULED: "Agendada",
     CONFIRMED: "Confirmada",
     IN_PROGRESS: "Em curso",
-    COMPLETED: "Concluída",
-    CANCELLED: "Cancelada",
+    FINISHED: "Concluída",
+    CANCELED: "Cancelada",
   };
   return map[s] ?? s;
 }
@@ -48,7 +48,7 @@ export function statusVariant(
 ): "default" | "secondary" | "destructive" | "outline" {
   if (s === "CONFIRMED" || s === "IN_PROGRESS") return "default";
   if (s === "SCHEDULED") return "secondary";
-  if (s === "CANCELLED") return "destructive";
+  if (s === "CANCELED") return "destructive";
   return "outline";
 }
 
@@ -59,9 +59,36 @@ export function canEnroll(s: TripStatus | string) {
 export function bookingStatusLabel(s: string) {
   const map: Record<string, string> = {
     ACTIVE: "Ativa",
-    CANCELLED: "Cancelada",
-    COMPLETED: "Concluída",
-    NO_SHOW: "Faltou",
+    INACTIVE: "Cancelada",
   };
   return map[s] ?? s;
+}
+
+export function enrollmentTypeLabel(t: string) {
+  const map: Record<string, string> = {
+    ONE_WAY: "Somente ida",
+    RETURN: "Somente volta",
+    ROUND_TRIP: "Ida e volta",
+  };
+  return map[t] ?? t;
+}
+
+export function paymentMethodLabel(m: string) {
+  const map: Record<string, string> = {
+    MONEY: "Dinheiro",
+    PIX: "PIX",
+    CREDIT_CARD: "Cartão de crédito",
+    DEBIT_CARD: "Cartão de débito",
+  };
+  return map[m] ?? m;
+}
+
+/** Compute price from a public trip + chosen enrollment type. */
+export function tripPriceFor(
+  trip: { priceOneWay?: number; priceReturn?: number; priceRoundTrip?: number },
+  type: "ONE_WAY" | "RETURN" | "ROUND_TRIP",
+): number | undefined {
+  if (type === "ONE_WAY") return trip.priceOneWay;
+  if (type === "RETURN") return trip.priceReturn;
+  return trip.priceRoundTrip;
 }

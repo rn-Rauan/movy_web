@@ -19,9 +19,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { Booking } from "@/lib/types";
-import { bookingStatusLabel, formatDateTime, formatFullDate } from "@/lib/format";
-import { Calendar, MapPin, CreditCard, Hash } from "lucide-react";
+import type { BookingDetails } from "@/lib/types";
+import {
+  bookingStatusLabel,
+  enrollmentTypeLabel,
+  formatDateTime,
+  formatFullDate,
+  statusLabel,
+  statusVariant,
+} from "@/lib/format";
+import { Calendar, MapPin, CreditCard, Hash, Users, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/my-bookings/$bookingId")({
   component: BookingDetailPage,
@@ -31,7 +38,7 @@ function BookingDetailPage() {
   const { bookingId } = Route.useParams();
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
-  const [booking, setBooking] = useState<Booking | null>(null);
+  const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
@@ -40,7 +47,7 @@ function BookingDetailPage() {
   }, [loading, isAuthenticated, navigate]);
 
   function load() {
-    api<Booking>(`/bookings/${bookingId}`)
+    api<BookingDetails>(`/bookings/${bookingId}/details`)
       .then(setBooking)
       .catch((err) => {
         setError(err.message);
@@ -86,6 +93,7 @@ function BookingDetailPage() {
   }
 
   const isActive = booking.status === "ACTIVE";
+  const departure = booking.tripDepartureTime || booking.enrollmentDate;
 
   return (
     <AppShell title="Inscrição" back>
@@ -93,21 +101,29 @@ function BookingDetailPage() {
         <div className="flex items-start justify-between gap-2 mb-4">
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Data da viagem</p>
-            <p className="font-semibold capitalize">{formatFullDate(booking.enrollmentDate)}</p>
+            <p className="font-semibold capitalize">{formatFullDate(departure)}</p>
           </div>
-          <Badge
-            variant={
-              isActive ? "default" : booking.status === "CANCELLED" ? "destructive" : "secondary"
-            }
-          >
-            {bookingStatusLabel(booking.status)}
-          </Badge>
+          <div className="flex flex-col items-end gap-1">
+            <Badge variant={isActive ? "default" : "destructive"}>
+              {bookingStatusLabel(booking.status)}
+            </Badge>
+            {booking.tripStatus ? (
+              <Badge variant={statusVariant(booking.tripStatus)}>
+                {statusLabel(booking.tripStatus)}
+              </Badge>
+            ) : null}
+          </div>
         </div>
 
         <div className="space-y-3">
-          <Row icon={<Calendar className="h-4 w-4" />} label="Horário">
-            {formatDateTime(booking.enrollmentDate, true)}
+          <Row icon={<Calendar className="h-4 w-4" />} label="Saída">
+            {formatDateTime(departure, true)}
           </Row>
+          {booking.tripArrivalEstimate ? (
+            <Row icon={<Clock className="h-4 w-4" />} label="Chegada">
+              {formatDateTime(booking.tripArrivalEstimate, true)}
+            </Row>
+          ) : null}
           <Row icon={<MapPin className="h-4 w-4" />} label="Embarque">
             {booking.boardingStop}
           </Row>
@@ -115,8 +131,13 @@ function BookingDetailPage() {
             {booking.alightingStop}
           </Row>
           <Row icon={<Hash className="h-4 w-4" />} label="Tipo">
-            {booking.enrollmentType === "ONE_WAY" ? "Somente ida" : "Ida e volta"}
+            {enrollmentTypeLabel(booking.enrollmentType)}
           </Row>
+          {booking.availableSlots != null && booking.totalCapacity != null ? (
+            <Row icon={<Users className="h-4 w-4" />} label="Vagas">
+              {booking.availableSlots} de {booking.totalCapacity}
+            </Row>
+          ) : null}
           {booking.recordedPrice != null ? (
             <Row icon={<CreditCard className="h-4 w-4" />} label="Valor">
               R$ {booking.recordedPrice.toFixed(2)}

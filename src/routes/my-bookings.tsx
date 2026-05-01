@@ -68,9 +68,7 @@ function MyBookingsPage() {
                       variant={
                         b.status === "ACTIVE"
                           ? "default"
-                          : b.status === "CANCELLED"
-                            ? "destructive"
-                            : "secondary"
+                          : "destructive"
                       }
                     >
                       {bookingStatusLabel(b.status)}

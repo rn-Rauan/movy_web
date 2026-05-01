@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Clock, Users, DollarSign, AlertCircle } from "lucide-react";
-import type { TripInstance } from "@/lib/types";
+import type { TripInstance, BookingAvailability } from "@/lib/types";
 import {
   canEnroll,
   formatDateTime,
@@ -22,18 +22,12 @@ export const Route = createFileRoute("/trips/$orgId/$tripId")({
   component: TripDetailPage,
 });
 
-type Availability = {
-  totalCapacity?: number;
-  bookedCount?: number;
-  availableSeats?: number;
-};
-
 function TripDetailPage() {
   const { orgId, tripId } = Route.useParams();
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [trip, setTrip] = useState<TripInstance | null>(null);
-  const [availability, setAvailability] = useState<Availability | null>(null);
+  const [availability, setAvailability] = useState<BookingAvailability | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,7 +47,7 @@ function TripDetailPage() {
           toast.error(err.message);
         }
       });
-    api<Availability>(`/bookings/availability/${tripId}`)
+    api<BookingAvailability>(`/bookings/availability/${tripId}`)
       .then((res) => {
         if (!cancelled) setAvailability(res);
       })
@@ -85,12 +79,9 @@ function TripDetailPage() {
     );
   }
 
-  const seats =
-    availability?.availableSeats ??
-    (availability && availability.totalCapacity != null && availability.bookedCount != null
-      ? availability.totalCapacity - availability.bookedCount
-      : trip.totalCapacity);
-  const enrollable = canEnroll(trip.tripStatus) && (seats == null || seats > 0);
+  const seats = availability?.availableSlots ?? trip.totalCapacity;
+  const enrollable =
+    availability?.isBookable ?? (canEnroll(trip.tripStatus) && (seats == null || seats > 0));
 
   return (
     <AppShell title="Detalhes" back>
