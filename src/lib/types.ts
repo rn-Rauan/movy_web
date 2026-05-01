@@ -17,13 +17,13 @@ export type TripStatus =
   | "SCHEDULED"
   | "CONFIRMED"
   | "IN_PROGRESS"
-  | "COMPLETED"
-  | "CANCELLED";
+  | "FINISHED"
+  | "CANCELED";
 
 export type TripInstance = {
   id: string;
   organizationId: string;
-  tripTemplateId: string;
+  tripTemplateId?: string;
   driverId?: string | null;
   vehicleId?: string | null;
   tripStatus: TripStatus;
@@ -35,14 +35,26 @@ export type TripInstance = {
   availableSeats?: number;
   departureTime: string;
   arrivalEstimate?: string;
-  origin?: string;
+  /** Public trip fields (PublicTripInstanceResponse) */
+  departurePoint?: string;
   destination?: string;
-  price?: number;
+  priceOneWay?: number;
+  priceReturn?: number;
+  priceRoundTrip?: number;
+  isRecurring?: boolean;
+  /** Optional helpers possibly returned by some endpoints */
+  organizationName?: string;
+  organizationSlug?: string;
+  stops?: string[];
   createdAt?: string;
   updatedAt?: string;
 };
 
-export type BookingStatus = "ACTIVE" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+export type BookingStatus = "ACTIVE" | "INACTIVE";
+
+export type EnrollmentType = "ONE_WAY" | "RETURN" | "ROUND_TRIP";
+
+export type PaymentMethod = "MONEY" | "PIX" | "CREDIT_CARD" | "DEBIT_CARD";
 
 export type Booking = {
   id: string;
@@ -52,13 +64,32 @@ export type Booking = {
   enrollmentDate: string;
   status: BookingStatus;
   presenceConfirmed: boolean;
-  enrollmentType: "ONE_WAY" | "ROUND_TRIP";
+  enrollmentType: EnrollmentType;
   recordedPrice?: number;
   boardingStop: string;
   alightingStop: string;
   createdAt?: string;
   updatedAt?: string;
   tripInstance?: TripInstance;
+};
+
+/** Returned by GET /bookings/{id}/details */
+export type BookingDetails = Booking & {
+  tripDepartureTime?: string;
+  tripArrivalEstimate?: string;
+  tripStatus?: TripStatus;
+  totalCapacity?: number;
+  availableSlots?: number;
+};
+
+/** Returned by GET /bookings/availability/{tripInstanceId} */
+export type BookingAvailability = {
+  tripInstanceId: string;
+  tripStatus: TripStatus;
+  totalCapacity: number;
+  activeCount: number;
+  availableSlots: number;
+  isBookable: boolean;
 };
 
 export type Paginated<T> = {
