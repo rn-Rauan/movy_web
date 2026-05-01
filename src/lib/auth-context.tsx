@@ -44,12 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signup = useCallback(
-    async (input: {
-      name: string;
-      email: string;
-      password: string;
-      telephone: string;
-    }) => {
+    async (input: { name: string; email: string; password: string; telephone: string }) => {
       const res = await api<AuthResponse>("/auth/register", {
         method: "POST",
         auth: false,
@@ -58,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       tokenStorage.set(res);
       setUser(res.user);
     },
-    []
+    [],
   );
 
   const logout = useCallback(() => {

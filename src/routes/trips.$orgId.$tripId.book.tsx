@@ -49,7 +49,9 @@ function BookPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    api<TripInstance>(`/public/trip-instances/${tripId}`, { auth: false }).then(setTrip).catch(() => {});
+    api<TripInstance>(`/public/trip-instances/${tripId}`, { auth: false })
+      .then(setTrip)
+      .catch(() => {});
   }, [tripId, isAuthenticated]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -71,8 +73,8 @@ function BookPage() {
       });
       toast.success("Inscrição realizada!");
       navigate({ to: "/my-bookings" });
-    } catch (err: any) {
-      toast.error(err.message ?? "Falha na inscrição");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha na inscrição");
     } finally {
       setSubmitting(false);
     }
@@ -93,7 +95,7 @@ function BookPage() {
           <Select
             value={form.enrollmentType}
             onValueChange={(v) =>
-              setForm((f) => ({ ...f, enrollmentType: v as any }))
+              setForm((f) => ({ ...f, enrollmentType: v as "ONE_WAY" | "ROUND_TRIP" }))
             }
           >
             <SelectTrigger className="h-12 text-base">
@@ -111,9 +113,7 @@ function BookPage() {
           <Input
             id="boardingStop"
             value={form.boardingStop}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, boardingStop: e.target.value }))
-            }
+            onChange={(e) => setForm((f) => ({ ...f, boardingStop: e.target.value }))}
             placeholder="Ex: A2"
             className="h-12 text-base"
             required
@@ -125,9 +125,7 @@ function BookPage() {
           <Input
             id="alightingStop"
             value={form.alightingStop}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, alightingStop: e.target.value }))
-            }
+            onChange={(e) => setForm((f) => ({ ...f, alightingStop: e.target.value }))}
             placeholder="Ex: B5"
             className="h-12 text-base"
             required
@@ -136,10 +134,7 @@ function BookPage() {
 
         <div className="space-y-2">
           <Label>Método de pagamento</Label>
-          <Select
-            value={form.method}
-            onValueChange={(v) => setForm((f) => ({ ...f, method: v }))}
-          >
+          <Select value={form.method} onValueChange={(v) => setForm((f) => ({ ...f, method: v }))}>
             <SelectTrigger className="h-12 text-base">
               <SelectValue />
             </SelectTrigger>
@@ -152,11 +147,7 @@ function BookPage() {
           </Select>
         </div>
 
-        <Button
-          type="submit"
-          disabled={submitting}
-          className="w-full h-12 text-base"
-        >
+        <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
           {submitting ? "Confirmando..." : "Confirmar inscrição"}
         </Button>
       </form>

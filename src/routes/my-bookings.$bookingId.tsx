@@ -59,8 +59,8 @@ function BookingDetailPage() {
       await api(`/bookings/${bookingId}/cancel`, { method: "PATCH" });
       toast.success("Inscrição cancelada.");
       load();
-    } catch (err: any) {
-      toast.error(err.message ?? "Falha ao cancelar");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao cancelar");
     } finally {
       setCancelling(false);
     }
@@ -92,20 +92,12 @@ function BookingDetailPage() {
       <Card className="p-5 mb-4">
         <div className="flex items-start justify-between gap-2 mb-4">
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              Data da viagem
-            </p>
-            <p className="font-semibold capitalize">
-              {formatFullDate(booking.enrollmentDate)}
-            </p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Data da viagem</p>
+            <p className="font-semibold capitalize">{formatFullDate(booking.enrollmentDate)}</p>
           </div>
           <Badge
             variant={
-              isActive
-                ? "default"
-                : booking.status === "CANCELLED"
-                  ? "destructive"
-                  : "secondary"
+              isActive ? "default" : booking.status === "CANCELLED" ? "destructive" : "secondary"
             }
           >
             {bookingStatusLabel(booking.status)}
@@ -136,11 +128,7 @@ function BookingDetailPage() {
       {isActive ? (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button
-              variant="destructive"
-              className="w-full h-12 text-base"
-              disabled={cancelling}
-            >
+            <Button variant="destructive" className="w-full h-12 text-base" disabled={cancelling}>
               {cancelling ? "Cancelando..." : "Cancelar inscrição"}
             </Button>
           </AlertDialogTrigger>
@@ -153,9 +141,7 @@ function BookingDetailPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Voltar</AlertDialogCancel>
-              <AlertDialogAction onClick={onCancel}>
-                Cancelar inscrição
-              </AlertDialogAction>
+              <AlertDialogAction onClick={onCancel}>Cancelar inscrição</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

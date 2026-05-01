@@ -29,7 +29,7 @@ function MyBookingsPage() {
     if (!isAuthenticated) return;
     api<Booking[] | { data: Booking[] }>("/bookings/user")
       .then((res) => {
-        const list = Array.isArray(res) ? res : res.data ?? [];
+        const list = Array.isArray(res) ? res : (res.data ?? []);
         setItems(list);
       })
       .catch((err) => {
@@ -51,19 +51,13 @@ function MyBookingsPage() {
       ) : items && items.length === 0 ? (
         <Card className="p-8 text-center">
           <Ticket className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">
-            Você ainda não tem inscrições.
-          </p>
+          <p className="text-muted-foreground">Você ainda não tem inscrições.</p>
         </Card>
       ) : (
         <ul className="space-y-3">
           {items!.map((b) => (
             <li key={b.id}>
-              <Link
-                to="/my-bookings/$bookingId"
-                params={{ bookingId: b.id }}
-                className="block"
-              >
+              <Link to="/my-bookings/$bookingId" params={{ bookingId: b.id }} className="block">
                 <Card className="p-4 active:bg-accent transition-colors">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2 text-sm font-semibold">

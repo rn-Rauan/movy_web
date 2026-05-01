@@ -30,25 +30,28 @@ export function AppShell({ title, back, children, showTabs = true }: Props) {
           ) : null}
           <h1 className="text-lg font-semibold flex-1 truncate">{title}</h1>
           {isAuthenticated ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={logout}
-              aria-label="Sair"
-            >
+            <Button variant="ghost" size="icon" onClick={logout} aria-label="Sair">
               <LogOut className="h-5 w-5" />
             </Button>
           ) : null}
         </div>
       </header>
-      <main className="flex-1 mx-auto w-full max-w-md px-4 py-4 pb-24">
-        {children}
-      </main>
+      <main className="flex-1 mx-auto w-full max-w-md px-4 py-4 pb-24">{children}</main>
       {isAuthenticated && showTabs ? (
         <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border">
           <div className="mx-auto max-w-md grid grid-cols-2">
-            <TabLink to="/organizations" icon={<MapPin className="h-5 w-5" />} label="Viagens" active={path.startsWith("/organizations") || path.startsWith("/trips")} />
-            <TabLink to="/my-bookings" icon={<Ticket className="h-5 w-5" />} label="Inscrições" active={path.startsWith("/my-bookings")} />
+            <TabLink
+              to="/organizations"
+              icon={<MapPin className="h-5 w-5" />}
+              label="Viagens"
+              active={path.startsWith("/organizations") || path.startsWith("/trips")}
+            />
+            <TabLink
+              to="/my-bookings"
+              icon={<Ticket className="h-5 w-5" />}
+              label="Inscrições"
+              active={path.startsWith("/my-bookings")}
+            />
           </div>
         </nav>
       ) : null}

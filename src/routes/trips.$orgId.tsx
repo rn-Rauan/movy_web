@@ -38,11 +38,9 @@ function TripsPage() {
     api<TripInstance[] | { data: TripInstance[] }>(url, { auth: !slug })
       .then((res) => {
         if (cancelled) return;
-        const list = Array.isArray(res) ? res : res.data ?? [];
+        const list = Array.isArray(res) ? res : (res.data ?? []);
         const sorted = [...list].sort(
-          (a, b) =>
-            new Date(a.departureTime).getTime() -
-            new Date(b.departureTime).getTime()
+          (a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime(),
         );
         setTrips(sorted);
       })
@@ -54,7 +52,7 @@ function TripsPage() {
     return () => {
       cancelled = true;
     };
-  }, [orgId, isAuthenticated]);
+  }, [orgId, isAuthenticated, slug]);
 
   return (
     <AppShell title="Viagens" back>
@@ -67,9 +65,7 @@ function TripsPage() {
       ) : error ? (
         <Card className="p-4 text-sm text-destructive">{error}</Card>
       ) : trips && trips.length === 0 ? (
-        <Card className="p-6 text-center text-muted-foreground">
-          Nenhuma viagem disponível.
-        </Card>
+        <Card className="p-6 text-center text-muted-foreground">Nenhuma viagem disponível.</Card>
       ) : (
         <ul className="space-y-3">
           {trips!.map((trip) => {

@@ -1,3 +1,5 @@
+import type { AuthUser } from "./types";
+
 export const API_BASE_URL = import.meta.env.VITE_API_URL as string;
 
 const ACCESS_KEY = "tt_access";
@@ -18,7 +20,7 @@ export const tokenStorage = {
     const raw = localStorage.getItem(USER_KEY);
     return raw ? JSON.parse(raw) : null;
   },
-  set(tokens: { accessToken: string; refreshToken: string; user: any }) {
+  set(tokens: { accessToken: string; refreshToken: string; user: AuthUser }) {
     localStorage.setItem(ACCESS_KEY, tokens.accessToken);
     localStorage.setItem(REFRESH_KEY, tokens.refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(tokens.user));
@@ -32,17 +34,17 @@ export const tokenStorage = {
 
 export class ApiError extends Error {
   status: number;
-  data: any;
-  constructor(message: string, status: number, data: any) {
+  data: unknown;
+  constructor(message: string, status: number, data: unknown) {
     super(message);
     this.status = status;
     this.data = data;
   }
 }
 
-export async function api<T = any>(
+export async function api<T = unknown>(
   path: string,
-  init: RequestInit & { auth?: boolean } = {}
+  init: RequestInit & { auth?: boolean } = {},
 ): Promise<T> {
   const { auth = true, headers, ...rest } = init;
   const finalHeaders: Record<string, string> = {
@@ -60,12 +62,11 @@ export async function api<T = any>(
   const text = await res.text();
   const data = text ? safeJson(text) : null;
   if (!res.ok) {
-    const message =
-      (data && (data.message || data.error)) || `Erro ${res.status}`;
+    const message = (data && (data.message || data.error)) || `Erro ${res.status}`;
     throw new ApiError(
       Array.isArray(message) ? message.join(", ") : String(message),
       res.status,
-      data
+      data,
     );
   }
   return data as T;

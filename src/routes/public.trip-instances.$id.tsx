@@ -65,16 +65,10 @@ function PublicTripDetailPage() {
       <Card className="p-5 mb-4">
         <div className="flex items-start justify-between gap-2 mb-4">
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              Saída
-            </p>
-            <p className="font-semibold capitalize">
-              {formatFullDate(trip.departureTime)}
-            </p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Saída</p>
+            <p className="font-semibold capitalize">{formatFullDate(trip.departureTime)}</p>
           </div>
-          <Badge variant={statusVariant(trip.tripStatus)}>
-            {statusLabel(trip.tripStatus)}
-          </Badge>
+          <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
         </div>
 
         <div className="space-y-3 mb-4">
@@ -129,11 +123,7 @@ function PublicTripDetailPage() {
           </Button>
         </Link>
       ) : (
-        <Link
-          to="/login"
-          search={{ redirect: `/public/trip-instances/${id}` }}
-          className="block"
-        >
+        <Link to="/login" search={{ redirect: `/public/trip-instances/${id}` }} className="block">
           <Button className="w-full h-12 text-base" disabled={lotada}>
             {lotada ? "Viagem lotada" : "Entrar para reservar"}
           </Button>

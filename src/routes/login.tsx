@@ -41,12 +41,13 @@ function LoginPage() {
     try {
       await login(email, password);
       if (redirect) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         navigate({ to: redirect as any });
       } else {
         navigate({ to: "/organizations" });
       }
-    } catch (err: any) {
-      toast.error(err.message ?? "Falha ao entrar");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao entrar");
     } finally {
       setSubmitting(false);
     }
@@ -90,11 +91,7 @@ function LoginPage() {
               required
             />
           </div>
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="w-full h-12 text-base"
-          >
+          <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
             {submitting ? "Entrando..." : "Entrar"}
           </Button>
         </form>

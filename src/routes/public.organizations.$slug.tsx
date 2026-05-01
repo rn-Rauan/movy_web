@@ -11,6 +11,8 @@ import { Building2, Calendar, Users, MapPin } from "lucide-react";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
 import type { TripInstance, Paginated } from "@/lib/types";
 
+type PublicOrgTrip = TripInstance & { organizationName?: string };
+
 export const Route = createFileRoute("/public/organizations/$slug")({
   head: () => ({
     meta: [
@@ -23,19 +25,19 @@ export const Route = createFileRoute("/public/organizations/$slug")({
 
 function PublicOrgPage() {
   const { slug } = Route.useParams();
-  const [trips, setTrips] = useState<TripInstance[] | null>(null);
+  const [trips, setTrips] = useState<PublicOrgTrip[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api<Paginated<TripInstance>>(`/public/trip-instances/org/${slug}`, { auth: false })
-      .then((res) => setTrips(Array.isArray(res) ? res : res.data ?? []))
+    api<Paginated<PublicOrgTrip>>(`/public/trip-instances/org/${slug}`, { auth: false })
+      .then((res) => setTrips(Array.isArray(res) ? res : (res.data ?? [])))
       .catch((err) => {
         setError(err.message);
         toast.error(err.message);
       });
   }, [slug]);
 
-  const orgName = (trips && trips.length > 0 && (trips[0] as any).organizationName) || slug;
+  const orgName = (trips && trips.length > 0 && trips[0].organizationName) || slug;
 
   return (
     <AppShell title="Empresa" back showTabs={false}>
@@ -54,7 +56,9 @@ function PublicOrgPage() {
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold">Próximas viagens</h3>
         <Link to="/login">
-          <Button variant="ghost" size="sm">Entrar para reservar</Button>
+          <Button variant="ghost" size="sm">
+            Entrar para reservar
+          </Button>
         </Link>
       </div>
 

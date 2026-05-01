@@ -34,7 +34,7 @@ function PublicTripsPage() {
 
   useEffect(() => {
     api<Paginated<PublicTrip>>("/public/trip-instances", { auth: false })
-      .then((res) => setTrips(Array.isArray(res) ? res : res.data ?? []))
+      .then((res) => setTrips(Array.isArray(res) ? res : (res.data ?? [])))
       .catch((err) => {
         setError(err.message);
         toast.error(err.message);
@@ -43,18 +43,16 @@ function PublicTripsPage() {
 
   const filtered = (trips ?? []).filter((t) => {
     const q = search.toLowerCase();
-    return (
-      !q ||
-      t.origin?.toLowerCase().includes(q) ||
-      t.destination?.toLowerCase().includes(q)
-    );
+    return !q || t.origin?.toLowerCase().includes(q) || t.destination?.toLowerCase().includes(q);
   });
 
   return (
     <AppShell title="Viagens" showTabs={false}>
       <div className="mb-4 flex justify-end">
         <Link to="/login">
-          <Button variant="outline" size="sm">Entrar</Button>
+          <Button variant="outline" size="sm">
+            Entrar
+          </Button>
         </Link>
       </div>
 
@@ -88,9 +86,7 @@ function PublicTripsPage() {
                 <li key={trip.id}>
                   <Card className="p-4">
                     <div className="flex items-start justify-between gap-2 mb-3">
-                      <p className="text-xs font-medium text-primary">
-                        {trip.organizationName}
-                      </p>
+                      <p className="text-xs font-medium text-primary">{trip.organizationName}</p>
                       <Badge variant={statusVariant(trip.tripStatus)}>
                         {statusLabel(trip.tripStatus)}
                       </Badge>
@@ -138,10 +134,7 @@ function PublicTripsPage() {
                           Ver empresa
                         </Button>
                       )}
-                      <Link
-                        to="/public/trip-instances/$id"
-                        params={{ id: trip.id }}
-                      >
+                      <Link to="/public/trip-instances/$id" params={{ id: trip.id }}>
                         <Button className="w-full h-10">
                           Ver viagem
                           <ChevronRight className="h-4 w-4 ml-1" />

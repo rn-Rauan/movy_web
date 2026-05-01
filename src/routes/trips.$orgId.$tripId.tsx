@@ -97,16 +97,10 @@ function TripDetailPage() {
       <Card className="p-5 mb-4">
         <div className="flex items-start justify-between gap-2 mb-4">
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              Saída
-            </p>
-            <p className="font-semibold capitalize">
-              {formatFullDate(trip.departureTime)}
-            </p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Saída</p>
+            <p className="font-semibold capitalize">{formatFullDate(trip.departureTime)}</p>
           </div>
-          <Badge variant={statusVariant(trip.tripStatus)}>
-            {statusLabel(trip.tripStatus)}
-          </Badge>
+          <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -141,11 +135,7 @@ function TripDetailPage() {
       ) : null}
 
       {enrollable ? (
-        <Link
-          to="/trips/$orgId/$tripId/book"
-          params={{ orgId, tripId }}
-          className="block"
-        >
+        <Link to="/trips/$orgId/$tripId/book" params={{ orgId, tripId }} className="block">
           <Button className="w-full h-12 text-base">Inscrever-se</Button>
         </Link>
       ) : (

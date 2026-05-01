@@ -44,7 +44,7 @@ export function statusLabel(s: TripStatus | string): string {
 }
 
 export function statusVariant(
-  s: TripStatus | string
+  s: TripStatus | string,
 ): "default" | "secondary" | "destructive" | "outline" {
   if (s === "CONFIRMED" || s === "IN_PROGRESS") return "default";
   if (s === "SCHEDULED") return "secondary";

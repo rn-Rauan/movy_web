@@ -31,7 +31,7 @@ function OrganizationsPage() {
     api<Organization[] | { data: Organization[] }>("/organizations/active")
       .then((res) => {
         if (cancelled) return;
-        const list = Array.isArray(res) ? res : res.data ?? [];
+        const list = Array.isArray(res) ? res : (res.data ?? []);
         setOrgs(list);
       })
       .catch((err) => {
@@ -78,9 +78,7 @@ function OrganizationsPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{org.name}</p>
                     {org.description ? (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {org.description}
-                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{org.description}</p>
                     ) : null}
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />

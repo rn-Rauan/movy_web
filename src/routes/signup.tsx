@@ -44,8 +44,8 @@ function SignupPage() {
     try {
       await signup(parsed.data);
       navigate({ to: "/organizations" });
-    } catch (err: any) {
-      toast.error(err.message ?? "Falha ao cadastrar");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao cadastrar");
     } finally {
       setSubmitting(false);
     }
@@ -56,9 +56,7 @@ function SignupPage() {
       <main className="flex-1 mx-auto w-full max-w-md px-6 py-8">
         <div className="mb-6 mt-4">
           <h1 className="text-2xl font-bold">Criar conta</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Leva menos de um minuto
-          </p>
+          <p className="text-muted-foreground text-sm mt-1">Leva menos de um minuto</p>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <Field id="name" label="Nome completo">
@@ -106,11 +104,7 @@ function SignupPage() {
               required
             />
           </Field>
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="w-full h-12 text-base"
-          >
+          <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
             {submitting ? "Criando..." : "Criar conta"}
           </Button>
         </form>
@@ -125,15 +119,7 @@ function SignupPage() {
   );
 }
 
-function Field({
-  id,
-  label,
-  children,
-}: {
-  id: string;
-  label: string;
-  children: React.ReactNode;
-}) {
+function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
