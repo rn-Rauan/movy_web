@@ -49,7 +49,7 @@ function BookPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    api<TripInstance>(`/trip-instances/${tripId}`).then(setTrip).catch(() => {});
+    api<TripInstance>(`/public/trip-instances/${tripId}`, { auth: false }).then(setTrip).catch(() => {});
   }, [tripId, isAuthenticated]);
 
   async function onSubmit(e: React.FormEvent) {

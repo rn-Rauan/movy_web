@@ -17,7 +17,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TripsOrgIdRouteImport } from './routes/trips.$orgId'
 import { Route as PublicTripInstancesRouteImport } from './routes/public.trip-instances'
 import { Route as MyBookingsBookingIdRouteImport } from './routes/my-bookings.$bookingId'
+import { Route as PublicTripInstancesIndexRouteImport } from './routes/public.trip-instances.index'
 import { Route as TripsOrgIdTripIdRouteImport } from './routes/trips.$orgId.$tripId'
+import { Route as PublicTripInstancesIdRouteImport } from './routes/public.trip-instances.$id'
 import { Route as PublicOrganizationsSlugRouteImport } from './routes/public.organizations.$slug'
 import { Route as TripsOrgIdTripIdBookRouteImport } from './routes/trips.$orgId.$tripId.book'
 
@@ -61,10 +63,21 @@ const MyBookingsBookingIdRoute = MyBookingsBookingIdRouteImport.update({
   path: '/$bookingId',
   getParentRoute: () => MyBookingsRoute,
 } as any)
+const PublicTripInstancesIndexRoute =
+  PublicTripInstancesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PublicTripInstancesRoute,
+  } as any)
 const TripsOrgIdTripIdRoute = TripsOrgIdTripIdRouteImport.update({
   id: '/$tripId',
   path: '/$tripId',
   getParentRoute: () => TripsOrgIdRoute,
+} as any)
+const PublicTripInstancesIdRoute = PublicTripInstancesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => PublicTripInstancesRoute,
 } as any)
 const PublicOrganizationsSlugRoute = PublicOrganizationsSlugRouteImport.update({
   id: '/public/organizations/$slug',
@@ -84,10 +97,12 @@ export interface FileRoutesByFullPath {
   '/organizations': typeof OrganizationsRoute
   '/signup': typeof SignupRoute
   '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
-  '/public/trip-instances': typeof PublicTripInstancesRoute
+  '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
   '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
+  '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
   '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
+  '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
   '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesByTo {
@@ -97,10 +112,11 @@ export interface FileRoutesByTo {
   '/organizations': typeof OrganizationsRoute
   '/signup': typeof SignupRoute
   '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
-  '/public/trip-instances': typeof PublicTripInstancesRoute
   '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
+  '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
   '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
+  '/public/trip-instances': typeof PublicTripInstancesIndexRoute
   '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesById {
@@ -111,10 +127,12 @@ export interface FileRoutesById {
   '/organizations': typeof OrganizationsRoute
   '/signup': typeof SignupRoute
   '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
-  '/public/trip-instances': typeof PublicTripInstancesRoute
+  '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
   '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
+  '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
   '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
+  '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
   '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
 }
 export interface FileRouteTypes {
@@ -129,7 +147,9 @@ export interface FileRouteTypes {
     | '/public/trip-instances'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
+    | '/public/trip-instances/$id'
     | '/trips/$orgId/$tripId'
+    | '/public/trip-instances/'
     | '/trips/$orgId/$tripId/book'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -139,10 +159,11 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/signup'
     | '/my-bookings/$bookingId'
-    | '/public/trip-instances'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
+    | '/public/trip-instances/$id'
     | '/trips/$orgId/$tripId'
+    | '/public/trip-instances'
     | '/trips/$orgId/$tripId/book'
   id:
     | '__root__'
@@ -155,7 +176,9 @@ export interface FileRouteTypes {
     | '/public/trip-instances'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
+    | '/public/trip-instances/$id'
     | '/trips/$orgId/$tripId'
+    | '/public/trip-instances/'
     | '/trips/$orgId/$tripId/book'
   fileRoutesById: FileRoutesById
 }
@@ -165,7 +188,7 @@ export interface RootRouteChildren {
   MyBookingsRoute: typeof MyBookingsRouteWithChildren
   OrganizationsRoute: typeof OrganizationsRoute
   SignupRoute: typeof SignupRoute
-  PublicTripInstancesRoute: typeof PublicTripInstancesRoute
+  PublicTripInstancesRoute: typeof PublicTripInstancesRouteWithChildren
   TripsOrgIdRoute: typeof TripsOrgIdRouteWithChildren
   PublicOrganizationsSlugRoute: typeof PublicOrganizationsSlugRoute
 }
@@ -228,12 +251,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyBookingsBookingIdRouteImport
       parentRoute: typeof MyBookingsRoute
     }
+    '/public/trip-instances/': {
+      id: '/public/trip-instances/'
+      path: '/'
+      fullPath: '/public/trip-instances/'
+      preLoaderRoute: typeof PublicTripInstancesIndexRouteImport
+      parentRoute: typeof PublicTripInstancesRoute
+    }
     '/trips/$orgId/$tripId': {
       id: '/trips/$orgId/$tripId'
       path: '/$tripId'
       fullPath: '/trips/$orgId/$tripId'
       preLoaderRoute: typeof TripsOrgIdTripIdRouteImport
       parentRoute: typeof TripsOrgIdRoute
+    }
+    '/public/trip-instances/$id': {
+      id: '/public/trip-instances/$id'
+      path: '/$id'
+      fullPath: '/public/trip-instances/$id'
+      preLoaderRoute: typeof PublicTripInstancesIdRouteImport
+      parentRoute: typeof PublicTripInstancesRoute
     }
     '/public/organizations/$slug': {
       id: '/public/organizations/$slug'
@@ -264,6 +301,19 @@ const MyBookingsRouteWithChildren = MyBookingsRoute._addFileChildren(
   MyBookingsRouteChildren,
 )
 
+interface PublicTripInstancesRouteChildren {
+  PublicTripInstancesIdRoute: typeof PublicTripInstancesIdRoute
+  PublicTripInstancesIndexRoute: typeof PublicTripInstancesIndexRoute
+}
+
+const PublicTripInstancesRouteChildren: PublicTripInstancesRouteChildren = {
+  PublicTripInstancesIdRoute: PublicTripInstancesIdRoute,
+  PublicTripInstancesIndexRoute: PublicTripInstancesIndexRoute,
+}
+
+const PublicTripInstancesRouteWithChildren =
+  PublicTripInstancesRoute._addFileChildren(PublicTripInstancesRouteChildren)
+
 interface TripsOrgIdTripIdRouteChildren {
   TripsOrgIdTripIdBookRoute: typeof TripsOrgIdTripIdBookRoute
 }
@@ -293,7 +343,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyBookingsRoute: MyBookingsRouteWithChildren,
   OrganizationsRoute: OrganizationsRoute,
   SignupRoute: SignupRoute,
-  PublicTripInstancesRoute: PublicTripInstancesRoute,
+  PublicTripInstancesRoute: PublicTripInstancesRouteWithChildren,
   TripsOrgIdRoute: TripsOrgIdRouteWithChildren,
   PublicOrganizationsSlugRoute: PublicOrganizationsSlugRoute,
 }

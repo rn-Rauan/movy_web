@@ -8,7 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Bus } from "lucide-react";
 
+const searchSchema = z.object({
+  redirect: z.string().optional(),
+});
+
 export const Route = createFileRoute("/login")({
+  validateSearch: searchSchema,
   component: LoginPage,
 });
 
@@ -20,6 +25,7 @@ const schema = z.object({
 function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -34,7 +40,11 @@ function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate({ to: "/organizations" });
+      if (redirect) {
+        navigate({ to: redirect as any });
+      } else {
+        navigate({ to: "/organizations" });
+      }
     } catch (err: any) {
       toast.error(err.message ?? "Falha ao entrar");
     } finally {

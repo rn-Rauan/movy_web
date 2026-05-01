@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -12,11 +13,13 @@ import type { TripInstance } from "@/lib/types";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
 
 export const Route = createFileRoute("/trips/$orgId")({
+  validateSearch: z.object({ slug: z.string().optional() }),
   component: TripsPage,
 });
 
 function TripsPage() {
   const { orgId } = Route.useParams();
+  const { slug } = Route.useSearch();
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [trips, setTrips] = useState<TripInstance[] | null>(null);
@@ -29,9 +32,10 @@ function TripsPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
     let cancelled = false;
-    api<TripInstance[] | { data: TripInstance[] }>(
-      `/trip-instances/organization/${orgId}`
-    )
+    const url = slug
+      ? `/public/trip-instances/org/${slug}`
+      : `/trip-instances/organization/${orgId}`;
+    api<TripInstance[] | { data: TripInstance[] }>(url, { auth: !slug })
       .then((res) => {
         if (cancelled) return;
         const list = Array.isArray(res) ? res : res.data ?? [];

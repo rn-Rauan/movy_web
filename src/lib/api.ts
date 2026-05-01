@@ -1,8 +1,4 @@
-const DEFAULT_BASE_URL = "http://localhost:5701";
-
-export const API_BASE_URL =
-  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
-  DEFAULT_BASE_URL;
+export const API_BASE_URL = import.meta.env.VITE_API_URL as string;
 
 const ACCESS_KEY = "tt_access";
 const REFRESH_KEY = "tt_refresh";

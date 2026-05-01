@@ -43,7 +43,7 @@ function TripDetailPage() {
   useEffect(() => {
     if (!isAuthenticated) return;
     let cancelled = false;
-    api<TripInstance>(`/trip-instances/${tripId}`)
+    api<TripInstance>(`/public/trip-instances/${tripId}`, { auth: false })
       .then((res) => {
         if (!cancelled) setTrip(res);
       })

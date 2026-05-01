@@ -68,6 +68,7 @@ function OrganizationsPage() {
               <Link
                 to="/trips/$orgId"
                 params={{ orgId: org.id }}
+                search={{ slug: org.slug }}
                 className="block"
               >
                 <Card className="p-4 flex items-center gap-3 active:bg-accent transition-colors">
