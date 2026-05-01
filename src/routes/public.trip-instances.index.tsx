@@ -43,7 +43,11 @@ function PublicTripsPage() {
 
   const filtered = (trips ?? []).filter((t) => {
     const q = search.toLowerCase();
-    return !q || t.origin?.toLowerCase().includes(q) || t.destination?.toLowerCase().includes(q);
+    return (
+      !q ||
+      t.departurePoint?.toLowerCase().includes(q) ||
+      t.destination?.toLowerCase().includes(q)
+    );
   });
 
   return (
@@ -95,7 +99,7 @@ function PublicTripsPage() {
                     <div className="space-y-1.5 mb-3">
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span className="font-medium truncate">{trip.origin}</span>
+                        <span className="font-medium truncate">{trip.departurePoint}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-primary shrink-0" />
@@ -112,9 +116,9 @@ function PublicTripsPage() {
                         <Users className="h-3.5 w-3.5" />
                         {seats} vagas
                       </span>
-                      {trip.price != null ? (
+                      {trip.priceOneWay != null ? (
                         <span className="font-semibold text-foreground">
-                          R$ {trip.price.toFixed(2)}
+                          a partir de R$ {trip.priceOneWay.toFixed(2)}
                         </span>
                       ) : null}
                     </div>

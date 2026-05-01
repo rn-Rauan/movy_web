@@ -72,12 +72,12 @@ function PublicTripDetailPage() {
         </div>
 
         <div className="space-y-3 mb-4">
-          {trip.origin ? (
+          {trip.departurePoint ? (
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
               <div>
                 <p className="text-xs text-muted-foreground">Origem</p>
-                <p className="font-medium">{trip.origin}</p>
+                <p className="font-medium">{trip.departurePoint}</p>
               </div>
             </div>
           ) : null}
@@ -104,9 +104,9 @@ function PublicTripDetailPage() {
           <Info icon={<Users className="h-4 w-4" />} label="Vagas">
             {lotada ? "Lotada" : `${seats} disponíveis`}
           </Info>
-          {trip.price != null ? (
+          {trip.priceOneWay != null ? (
             <Info icon={<DollarSign className="h-4 w-4" />} label="Preço">
-              R$ {trip.price.toFixed(2)}
+              R$ {trip.priceOneWay.toFixed(2)}
             </Info>
           ) : null}
         </div>

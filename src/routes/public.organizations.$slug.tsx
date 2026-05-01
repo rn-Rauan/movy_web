@@ -95,7 +95,7 @@ function PublicOrgPage() {
                   <div className="space-y-1 mb-3">
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="truncate">{trip.origin}</span>
+                      <span className="truncate">{trip.departurePoint}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -108,8 +108,8 @@ function PublicOrgPage() {
                       <Users className="h-4 w-4" />
                       {lotada ? "Lotada" : `${seats} vagas`}
                     </span>
-                    {trip.price != null ? (
-                      <span className="font-semibold">R$ {trip.price.toFixed(2)}</span>
+                    {trip.priceOneWay != null ? (
+                      <span className="font-semibold">R$ {trip.priceOneWay.toFixed(2)}</span>
                     ) : null}
                   </div>
 

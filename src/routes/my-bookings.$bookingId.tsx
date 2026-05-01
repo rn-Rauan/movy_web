@@ -95,11 +95,7 @@ function BookingDetailPage() {
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Data da viagem</p>
             <p className="font-semibold capitalize">{formatFullDate(booking.enrollmentDate)}</p>
           </div>
-          <Badge
-            variant={
-              isActive ? "default" : booking.status === "CANCELLED" ? "destructive" : "secondary"
-            }
-          >
+          <Badge variant={isActive ? "default" : "destructive"}>
             {bookingStatusLabel(booking.status)}
           </Badge>
         </div>
