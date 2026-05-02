@@ -11,6 +11,7 @@ interface UseTripsOptions {
 export function useTrips({ orgId, slug }: UseTripsOptions) {
   const [trips, setTrips] = useState<TripInstance[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,7 +35,9 @@ export function useTrips({ orgId, slug }: UseTripsOptions) {
     return () => {
       cancelled = true;
     };
-  }, [orgId, slug]);
+  }, [orgId, slug, tick]);
 
-  return { trips, loading: trips === null && !error, error };
+  const refetch = () => setTick((t) => t + 1);
+
+  return { trips, loading: trips === null && !error, error, refetch };
 }

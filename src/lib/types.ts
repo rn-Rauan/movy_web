@@ -122,3 +122,33 @@ export type Paginated<T> = {
   limit?: number;
   totalPages?: number;
 };
+
+export type Driver = {
+  id: string;
+  userId: string;
+  cnh: string;
+  cnhCategory: "A" | "B" | "C" | "D" | "E";
+  cnhExpiresAt: string;
+  driverStatus: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+  userName?: string;
+  userEmail?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type Vehicle = {
+  id: string;
+  plate: string;
+  model: string;
+  type: "VAN" | "BUS" | "MINIBUS" | "CAR";
+  maxCapacity: number;
+  status: "ACTIVE" | "INACTIVE";
+  organizationId: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type TripPassenger = {
+  name: string;
+  boardingStop: string;
+};
