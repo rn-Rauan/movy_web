@@ -41,7 +41,7 @@ const passengerTabs: NavItem[] = [
   },
 ];
 
-function adminTabs(orgId: string): NavItem[] {
+function adminTabs(): NavItem[] {
   return [
     {
       to: "/dashboard",
@@ -106,7 +106,7 @@ export function BottomNav() {
 
   const tabs =
     isAdmin && adminOrgId
-      ? adminTabs(adminOrgId)
+      ? adminTabs()
       : isDriver
         ? driverTabs
         : passengerTabs;
