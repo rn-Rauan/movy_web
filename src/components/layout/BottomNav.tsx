@@ -19,13 +19,13 @@ const passengerTabs: NavItem[] = [
     match: "/public",
   },
   {
-    to: "/_protected/organizations",
+    to: "/organizations",
     icon: <Building2 className="h-5 w-5" />,
     label: "Empresas",
     match: ["/organizations", "/trips"],
   },
   {
-    to: "/_protected/my-bookings",
+    to: "/my-bookings",
     icon: <Ticket className="h-5 w-5" />,
     label: "Inscrições",
     match: "/my-bookings",
@@ -41,14 +41,14 @@ function adminTabs(orgId: string): NavItem[] {
       match: "/public",
     },
     {
-      to: "/_protected/trips/$orgId" as string,
+      to: "/trips/$orgId" as string,
       params: { orgId },
       icon: <Building2 className="h-5 w-5" />,
       label: "Viagens",
       match: "/trips",
     },
     {
-      to: "/_protected/setup",
+      to: "/setup",
       icon: <Settings2 className="h-5 w-5" />,
       label: "Configurar",
       match: "/setup",
@@ -67,7 +67,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-20">
-      <div className={`mx-auto max-w-md grid grid-cols-${tabs.length}`}>
+      <div className="mx-auto max-w-md grid grid-cols-3">
         {tabs.map((tab) => {
           const active = Array.isArray(tab.match)
             ? tab.match.some((m) => path.startsWith(m))

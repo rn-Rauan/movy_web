@@ -20,7 +20,7 @@ export function TripsList({ trips, orgId }: TripsListProps) {
       {trips.map((trip) => (
         <li key={trip.id}>
           <Link
-            to="/_protected/trips/$orgId/$tripId"
+            to="/trips/$orgId/$tripId"
             params={{ orgId, tripId: trip.id }}
             className="block"
           >

@@ -21,7 +21,7 @@ export function OrgsList({ orgs }: OrgsListProps) {
       {orgs.map((org) => (
         <li key={org.id}>
           <Link
-            to="/_protected/trips/$orgId"
+            to="/trips/$orgId"
             params={{ orgId: org.id }}
             search={{ slug: org.slug }}
             className="block"

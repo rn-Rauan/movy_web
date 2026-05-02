@@ -87,7 +87,7 @@ function PublicTripDetailPage() {
 
         {isAuthenticated && trip.organizationId ? (
           <Link
-            to="/_protected/trips/$orgId/$tripId"
+            to="/trips/$orgId/$tripId"
             params={{ orgId: trip.organizationId, tripId: id }}
             className="block"
           >

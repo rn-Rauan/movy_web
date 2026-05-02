@@ -208,7 +208,7 @@ function SetupPage() {
         body: JSON.stringify(parsed.data),
       });
       toast.success("Motorista associado!");
-      navigate({ to: "/_protected/organizations" });
+      navigate({ to: "/organizations" });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Erro ao associar motorista");
     } finally {
@@ -535,7 +535,7 @@ function SetupPage() {
               type="button"
               variant="ghost"
               className="w-full"
-              onClick={() => navigate({ to: "/_protected/organizations" })}
+              onClick={() => navigate({ to: "/organizations" })}
             >
               Pular
             </Button>

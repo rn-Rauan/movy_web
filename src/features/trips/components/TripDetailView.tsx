@@ -67,7 +67,7 @@ export function TripDetailView({ trip, availability, orgId }: TripDetailViewProp
 
       {enrollable ? (
         <Link
-          to="/_protected/trips/$orgId/$tripId/book"
+          to="/trips/$orgId/$tripId/book"
           params={{ orgId, tripId: trip.id }}
           className="block"
         >

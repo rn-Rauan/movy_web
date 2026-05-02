@@ -23,7 +23,7 @@ export function BookingsList({ bookings }: BookingsListProps) {
       {bookings.map((b) => (
         <li key={b.id}>
           <Link
-            to="/_protected/my-bookings/$bookingId"
+            to="/my-bookings/$bookingId"
             params={{ bookingId: b.id }}
             className="block"
           >

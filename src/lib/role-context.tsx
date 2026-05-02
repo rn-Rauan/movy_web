@@ -18,13 +18,14 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDriver, setIsDriver] = useState(false);
   const [adminOrgId, setAdminOrgId] = useState<string | null>(null);
-  const [roleLoading, setRoleLoading] = useState(false);
+  const [roleLoading, setRoleLoading] = useState(true);
 
   const detectRoles = useCallback(async () => {
     if (!isAuthenticated) {
       setIsAdmin(false);
       setIsDriver(false);
       setAdminOrgId(null);
+      setRoleLoading(false);
       return;
     }
 

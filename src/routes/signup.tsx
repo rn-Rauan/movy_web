@@ -43,7 +43,7 @@ function SignupPage() {
     setSubmitting(true);
     try {
       await signup(parsed.data);
-      navigate({ to: "/organizations" });
+      navigate({ to: "/" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao cadastrar");
     } finally {
