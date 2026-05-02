@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { X, Plus } from "lucide-react";
 import { api, tokenStorage } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { useRole } from "@/lib/role-context";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ function toISO(localStr: string): string {
 
 function SetupPage() {
   const { refreshUser } = useAuth();
+  const { isAdmin, adminOrgId, roleLoading, refetchRole } = useRole();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -78,6 +80,12 @@ function SetupPage() {
 
   const [orgId, setOrgId] = useState<string | null>(null);
   const [templateId, setTemplateId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!roleLoading && isAdmin && adminOrgId && step === 1 && !submitting) {
+      navigate({ to: "/organizations", replace: true });
+    }
+  }, [roleLoading, isAdmin, adminOrgId, step, submitting, navigate]);
 
   const [form1, setForm1] = useState({
     organizationName: "",
@@ -129,6 +137,7 @@ function SetupPage() {
         return;
       }
       setOrgId(id);
+      refetchRole();
       toast.success("Organização criada!");
       setStep(2);
     } catch (err: unknown) {

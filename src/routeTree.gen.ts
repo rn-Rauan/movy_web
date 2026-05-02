@@ -17,11 +17,13 @@ import { Route as PublicTripInstancesRouteImport } from './routes/public.trip-in
 import { Route as ProtectedSetupRouteImport } from './routes/_protected.setup'
 import { Route as ProtectedOrganizationsRouteImport } from './routes/_protected.organizations'
 import { Route as ProtectedMyBookingsRouteImport } from './routes/_protected.my-bookings'
+import { Route as ProtectedAdminRouteImport } from './routes/_protected._admin'
 import { Route as PublicTripInstancesIndexRouteImport } from './routes/public.trip-instances.index'
 import { Route as PublicTripInstancesIdRouteImport } from './routes/public.trip-instances.$id'
 import { Route as PublicOrganizationsSlugRouteImport } from './routes/public.organizations.$slug'
 import { Route as ProtectedTripsOrgIdRouteImport } from './routes/_protected.trips.$orgId'
 import { Route as ProtectedMyBookingsBookingIdRouteImport } from './routes/_protected.my-bookings.$bookingId'
+import { Route as ProtectedAdminDriversRouteImport } from './routes/_protected._admin.drivers'
 import { Route as ProtectedTripsOrgIdTripIdRouteImport } from './routes/_protected.trips.$orgId.$tripId'
 import { Route as ProtectedTripsOrgIdTripIdBookRouteImport } from './routes/_protected.trips.$orgId.$tripId.book'
 
@@ -64,6 +66,10 @@ const ProtectedMyBookingsRoute = ProtectedMyBookingsRouteImport.update({
   path: '/my-bookings',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedAdminRoute = ProtectedAdminRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const PublicTripInstancesIndexRoute =
   PublicTripInstancesIndexRouteImport.update({
     id: '/',
@@ -91,6 +97,11 @@ const ProtectedMyBookingsBookingIdRoute =
     path: '/$bookingId',
     getParentRoute: () => ProtectedMyBookingsRoute,
   } as any)
+const ProtectedAdminDriversRoute = ProtectedAdminDriversRouteImport.update({
+  id: '/drivers',
+  path: '/drivers',
+  getParentRoute: () => ProtectedAdminRoute,
+} as any)
 const ProtectedTripsOrgIdTripIdRoute =
   ProtectedTripsOrgIdTripIdRouteImport.update({
     id: '/$tripId',
@@ -112,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/organizations': typeof ProtectedOrganizationsRoute
   '/setup': typeof ProtectedSetupRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
+  '/drivers': typeof ProtectedAdminDriversRoute
   '/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
   '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
@@ -127,6 +139,7 @@ export interface FileRoutesByTo {
   '/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
   '/organizations': typeof ProtectedOrganizationsRoute
   '/setup': typeof ProtectedSetupRoute
+  '/drivers': typeof ProtectedAdminDriversRoute
   '/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
   '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
@@ -141,10 +154,12 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
+  '/_protected/_admin': typeof ProtectedAdminRouteWithChildren
   '/_protected/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
   '/_protected/organizations': typeof ProtectedOrganizationsRoute
   '/_protected/setup': typeof ProtectedSetupRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
+  '/_protected/_admin/drivers': typeof ProtectedAdminDriversRoute
   '/_protected/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
   '/_protected/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
@@ -163,6 +178,7 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/setup'
     | '/public/trip-instances'
+    | '/drivers'
     | '/my-bookings/$bookingId'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
@@ -178,6 +194,7 @@ export interface FileRouteTypes {
     | '/my-bookings'
     | '/organizations'
     | '/setup'
+    | '/drivers'
     | '/my-bookings/$bookingId'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
@@ -191,10 +208,12 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/login'
     | '/signup'
+    | '/_protected/_admin'
     | '/_protected/my-bookings'
     | '/_protected/organizations'
     | '/_protected/setup'
     | '/public/trip-instances'
+    | '/_protected/_admin/drivers'
     | '/_protected/my-bookings/$bookingId'
     | '/_protected/trips/$orgId'
     | '/public/organizations/$slug'
@@ -271,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedMyBookingsRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/_admin': {
+      id: '/_protected/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedAdminRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/public/trip-instances/': {
       id: '/public/trip-instances/'
       path: '/'
@@ -306,6 +332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedMyBookingsBookingIdRouteImport
       parentRoute: typeof ProtectedMyBookingsRoute
     }
+    '/_protected/_admin/drivers': {
+      id: '/_protected/_admin/drivers'
+      path: '/drivers'
+      fullPath: '/drivers'
+      preLoaderRoute: typeof ProtectedAdminDriversRouteImport
+      parentRoute: typeof ProtectedAdminRoute
+    }
     '/_protected/trips/$orgId/$tripId': {
       id: '/_protected/trips/$orgId/$tripId'
       path: '/$tripId'
@@ -322,6 +355,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ProtectedAdminRouteChildren {
+  ProtectedAdminDriversRoute: typeof ProtectedAdminDriversRoute
+}
+
+const ProtectedAdminRouteChildren: ProtectedAdminRouteChildren = {
+  ProtectedAdminDriversRoute: ProtectedAdminDriversRoute,
+}
+
+const ProtectedAdminRouteWithChildren = ProtectedAdminRoute._addFileChildren(
+  ProtectedAdminRouteChildren,
+)
 
 interface ProtectedMyBookingsRouteChildren {
   ProtectedMyBookingsBookingIdRoute: typeof ProtectedMyBookingsBookingIdRoute
@@ -360,6 +405,7 @@ const ProtectedTripsOrgIdRouteWithChildren =
   ProtectedTripsOrgIdRoute._addFileChildren(ProtectedTripsOrgIdRouteChildren)
 
 interface ProtectedRouteChildren {
+  ProtectedAdminRoute: typeof ProtectedAdminRouteWithChildren
   ProtectedMyBookingsRoute: typeof ProtectedMyBookingsRouteWithChildren
   ProtectedOrganizationsRoute: typeof ProtectedOrganizationsRoute
   ProtectedSetupRoute: typeof ProtectedSetupRoute
@@ -367,6 +413,7 @@ interface ProtectedRouteChildren {
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedAdminRoute: ProtectedAdminRouteWithChildren,
   ProtectedMyBookingsRoute: ProtectedMyBookingsRouteWithChildren,
   ProtectedOrganizationsRoute: ProtectedOrganizationsRoute,
   ProtectedSetupRoute: ProtectedSetupRoute,

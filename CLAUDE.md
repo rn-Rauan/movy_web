@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Movy Web — Documentação do Projeto
 
 ## Visão Geral
@@ -7,6 +11,30 @@ SaaS de transporte — sistema de gerenciamento e reserva de viagens.
 **Stack:** React 19 · TanStack Router (file-based routing) · TanStack React Start · Tailwind CSS · shadcn/ui · Zod
 
 **API Backend:** `VITE_API_URL` (DDD + Clean Architecture)
+
+---
+
+## Comandos de Desenvolvimento
+
+```bash
+npm run dev          # servidor Vite em modo dev
+npm run build        # build de produção
+npm run build:dev    # build em modo development
+npm run lint         # ESLint
+npm run format       # Prettier (auto-fix)
+```
+
+**Setup de ambiente:** copie `.env.example` para `.env` e ajuste `VITE_API_URL` (padrão: `http://localhost:5701`).
+
+**Sem framework de testes** configurado no projeto.
+
+---
+
+## Configurações Importantes
+
+- **Path alias:** `@/*` → `src/*` (configurado em tsconfig.json e Vite)
+- **Vite:** usa `@lovable.dev/vite-tanstack-config` — **não adicionar plugins manualmente** ao `vite.config.ts` (causará duplicação e quebra)
+- **shadcn/ui:** adicionar componentes via `npx shadcn@latest add <componente>` — nunca editar `src/components/ui/` diretamente
 
 ---
 
@@ -25,8 +53,20 @@ Roles detectados em runtime via `RoleContext` após autenticação.
 ## Contextos de Acesso
 
 1. **Público** (`/public/*`) — sem autenticação
-2. **Usuário autenticado** (`/_protected/*`) — guard centralizado em `_protected.tsx`
-3. **Admin** — mesmo guard que usuário; diferenciado pelo `BottomNav` e `index.tsx`
+2. **Usuário autenticado** (`/_protected/*`) — guard em `_protected.tsx`
+3. **Admin** (`/_protected/_admin/*`) — guard adicional em `_protected/_admin.tsx` (redireciona não-admins para `/`)
+4. **Onboarding** (`/setup`) — exceção: aberto a usuários autenticados sem org (transforma user em admin); redireciona admins existentes para `/organizations`
+
+### Como adicionar uma rota admin-only
+
+Crie o arquivo sob `_protected._admin.<nome>.tsx` (em flat naming). A URL fica sem o prefixo `_admin` — `/_protected/_admin/drivers.tsx` vira URL `/drivers`. O guard do `_admin.tsx` verifica `isAdmin` antes de renderizar.
+
+```tsx
+// src/routes/_protected._admin.drivers.tsx
+export const Route = createFileRoute("/_protected/_admin/drivers")({
+  component: DriversPage,
+});
+```
 
 ---
 
@@ -235,3 +275,4 @@ organizationsService.listMine()
 - Não duplicar guard de auth — adicionar apenas em `_protected.tsx`
 - Não adicionar React Query ainda — Context API + hooks é suficiente para o MVP
 - Não criar OrganizationContext global — `adminOrgId` do `useRole()` é suficiente
+- Não adicionar plugins ao `vite.config.ts` — o preset `@lovable.dev/vite-tanstack-config` já os inclui

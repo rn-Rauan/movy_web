@@ -1,6 +1,6 @@
 import type { AuthUser } from "./types";
 
-export const API_BASE_URL = ((import.meta.env.VITE_API_URL as string) ?? "").replace(/\/$/, "");
+export const API_BASE_URL = import.meta.env.VITE_API_URL as string;
 
 const ACCESS_KEY = "tt_access";
 const REFRESH_KEY = "tt_refresh";
