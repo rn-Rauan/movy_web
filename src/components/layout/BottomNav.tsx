@@ -50,22 +50,22 @@ function adminTabs(): NavItem[] {
       match: "/dashboard",
     },
     {
-      to: "/admin/trips",
+      to: "/trips",
       icon: <Bus className="h-5 w-5" />,
       label: "Viagens",
-      match: "/admin/trips",
+      match: "/trips",
     },
     {
-      to: "/admin/templates",
+      to: "/templates",
       icon: <FileText className="h-5 w-5" />,
       label: "Templates",
-      match: "/admin/templates",
+      match: "/templates",
     },
     {
-      to: "/admin/organization",
+      to: "/organization",
       icon: <Building2 className="h-5 w-5" />,
       label: "Empresa",
-      match: "/admin/organization",
+      match: "/organization",
     },
     {
       to: "/profile",

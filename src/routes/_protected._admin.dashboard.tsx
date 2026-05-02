@@ -37,7 +37,7 @@ function DashboardPage() {
 
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-base font-semibold">Próximas viagens</h2>
-        <Link to="/admin/trips" className="text-sm text-primary">
+        <Link to="/trips" className="text-sm text-primary">
           Ver todas
         </Link>
       </div>
