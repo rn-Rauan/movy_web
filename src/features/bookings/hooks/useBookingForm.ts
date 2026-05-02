@@ -45,7 +45,7 @@ export function useBookingForm(tripId: string) {
     try {
       await bookingsService.create({ tripInstanceId: tripId, ...parsed.data });
       toast.success("Inscrição realizada!");
-      navigate({ to: "/_protected/my-bookings" });
+      navigate({ to: "/my-bookings" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha na inscrição");
     } finally {

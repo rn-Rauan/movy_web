@@ -1,5 +1,14 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Compass, Building2, Ticket, Settings2, Truck } from "lucide-react";
+import {
+  Compass,
+  Building2,
+  Ticket,
+  Truck,
+  LayoutDashboard,
+  Bus,
+  FileText,
+  User,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
 
@@ -32,26 +41,37 @@ const passengerTabs: NavItem[] = [
   },
 ];
 
-function adminTabs(orgId: string): NavItem[] {
+function adminTabs(): NavItem[] {
   return [
     {
-      to: "/public/trip-instances",
-      icon: <Compass className="h-5 w-5" />,
-      label: "Explorar",
-      match: "/public",
+      to: "/dashboard",
+      icon: <LayoutDashboard className="h-5 w-5" />,
+      label: "Dashboard",
+      match: "/dashboard",
     },
     {
-      to: "/trips/$orgId" as string,
-      params: { orgId },
-      icon: <Building2 className="h-5 w-5" />,
+      to: "/trips",
+      icon: <Bus className="h-5 w-5" />,
       label: "Viagens",
       match: "/trips",
     },
     {
-      to: "/setup",
-      icon: <Settings2 className="h-5 w-5" />,
-      label: "Configurar",
-      match: "/setup",
+      to: "/templates",
+      icon: <FileText className="h-5 w-5" />,
+      label: "Templates",
+      match: "/templates",
+    },
+    {
+      to: "/organization",
+      icon: <Building2 className="h-5 w-5" />,
+      label: "Empresa",
+      match: "/organization",
+    },
+    {
+      to: "/profile",
+      icon: <User className="h-5 w-5" />,
+      label: "Perfil",
+      match: "/profile",
     },
   ];
 }
@@ -86,14 +106,16 @@ export function BottomNav() {
 
   const tabs =
     isAdmin && adminOrgId
-      ? adminTabs(adminOrgId)
+      ? adminTabs()
       : isDriver
         ? driverTabs
         : passengerTabs;
 
+  const cols = tabs.length === 5 ? "grid-cols-5" : "grid-cols-3";
+
   return (
     <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-20">
-      <div className="mx-auto max-w-md grid grid-cols-3">
+      <div className={`mx-auto max-w-2xl grid ${cols}`}>
         {tabs.map((tab) => {
           const active = Array.isArray(tab.match)
             ? tab.match.some((m) => path.startsWith(m))
@@ -104,7 +126,7 @@ export function BottomNav() {
               key={tab.to}
               to={tab.to as any}
               params={tab.params as any}
-              className={`flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors ${
+              className={`flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors ${
                 active ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >

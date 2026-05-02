@@ -13,6 +13,6 @@ function IndexPage() {
   if (authLoading || (isAuthenticated && roleLoading)) return null;
 
   if (!isAuthenticated) return <Navigate to="/public/trip-instances" />;
-  if (isAdmin && adminOrgId) return <Navigate to="/organizations" />;
+  if (isAdmin && adminOrgId) return <Navigate to="/dashboard" />;
   return <Navigate to="/public/trip-instances" />;
 }
