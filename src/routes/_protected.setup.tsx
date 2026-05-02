@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { X, Plus } from "lucide-react";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import type { Organization, Paginated, TripTemplate } from "@/lib/types";
 
-export const Route = createFileRoute("/setup")({
+export const Route = createFileRoute("/_protected/setup")({
   component: SetupPage,
 });
 
@@ -70,7 +70,7 @@ function toISO(localStr: string): string {
 }
 
 function SetupPage() {
-  const { isAuthenticated, loading, refreshUser } = useAuth();
+  const { refreshUser } = useAuth();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -106,12 +106,6 @@ function SetupPage() {
   });
 
   const [form4, setForm4] = useState({ userEmail: "", cnh: "" });
-
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate({ to: "/login" });
-    }
-  }, [loading, isAuthenticated, navigate]);
 
   async function handleStep1(e: React.FormEvent) {
     e.preventDefault();
@@ -214,15 +208,13 @@ function SetupPage() {
         body: JSON.stringify(parsed.data),
       });
       toast.success("Motorista associado!");
-      navigate({ to: "/organizations" });
+      navigate({ to: "/_protected/organizations" });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Erro ao associar motorista");
     } finally {
       setSubmitting(false);
     }
   }
-
-  if (loading) return null;
 
   return (
     <AppShell title="Configuração inicial" showTabs={false}>
@@ -543,7 +535,7 @@ function SetupPage() {
               type="button"
               variant="ghost"
               className="w-full"
-              onClick={() => navigate({ to: "/organizations" })}
+              onClick={() => navigate({ to: "/_protected/organizations" })}
             >
               Pular
             </Button>

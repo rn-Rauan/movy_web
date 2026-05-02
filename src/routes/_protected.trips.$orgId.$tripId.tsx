@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
+import { tripsService } from "@/services/trips.service";
+import { bookingsService } from "@/services/bookings.service";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,26 +18,20 @@ import {
   statusVariant,
 } from "@/lib/format";
 
-export const Route = createFileRoute("/trips/$orgId/$tripId")({
+export const Route = createFileRoute("/_protected/trips/$orgId/$tripId")({
   component: TripDetailPage,
 });
 
 function TripDetailPage() {
   const { orgId, tripId } = Route.useParams();
-  const { isAuthenticated, loading } = useAuth();
-  const navigate = useNavigate();
   const [trip, setTrip] = useState<TripInstance | null>(null);
   const [availability, setAvailability] = useState<BookingAvailability | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) navigate({ to: "/login" });
-  }, [loading, isAuthenticated, navigate]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
     let cancelled = false;
-    api<TripInstance>(`/public/trip-instances/${tripId}`, { auth: false })
+    tripsService
+      .getPublicById(tripId)
       .then((res) => {
         if (!cancelled) setTrip(res);
       })
@@ -47,17 +41,18 @@ function TripDetailPage() {
           toast.error(err.message);
         }
       });
-    api<BookingAvailability>(`/bookings/availability/${tripId}`)
+    bookingsService
+      .checkAvailability(tripId)
       .then((res) => {
         if (!cancelled) setAvailability(res);
       })
       .catch(() => {
-        /* opcional */
+        /* optional */
       });
     return () => {
       cancelled = true;
     };
-  }, [tripId, isAuthenticated]);
+  }, [tripId]);
 
   if (error) {
     return (
@@ -126,7 +121,7 @@ function TripDetailPage() {
       ) : null}
 
       {enrollable ? (
-        <Link to="/trips/$orgId/$tripId/book" params={{ orgId, tripId }} className="block">
+        <Link to="/_protected/trips/$orgId/$tripId/book" params={{ orgId, tripId }} className="block">
           <Button className="w-full h-12 text-base">Inscrever-se</Button>
         </Link>
       ) : (

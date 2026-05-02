@@ -10,38 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SetupRouteImport } from './routes/setup'
-import { Route as OrganizationsRouteImport } from './routes/organizations'
-import { Route as MyBookingsRouteImport } from './routes/my-bookings'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TripsOrgIdRouteImport } from './routes/trips.$orgId'
 import { Route as PublicTripInstancesRouteImport } from './routes/public.trip-instances'
-import { Route as MyBookingsBookingIdRouteImport } from './routes/my-bookings.$bookingId'
+import { Route as ProtectedSetupRouteImport } from './routes/_protected.setup'
+import { Route as ProtectedOrganizationsRouteImport } from './routes/_protected.organizations'
+import { Route as ProtectedMyBookingsRouteImport } from './routes/_protected.my-bookings'
 import { Route as PublicTripInstancesIndexRouteImport } from './routes/public.trip-instances.index'
-import { Route as TripsOrgIdTripIdRouteImport } from './routes/trips.$orgId.$tripId'
 import { Route as PublicTripInstancesIdRouteImport } from './routes/public.trip-instances.$id'
 import { Route as PublicOrganizationsSlugRouteImport } from './routes/public.organizations.$slug'
-import { Route as TripsOrgIdTripIdBookRouteImport } from './routes/trips.$orgId.$tripId.book'
+import { Route as ProtectedTripsOrgIdRouteImport } from './routes/_protected.trips.$orgId'
+import { Route as ProtectedMyBookingsBookingIdRouteImport } from './routes/_protected.my-bookings.$bookingId'
+import { Route as ProtectedTripsOrgIdTripIdRouteImport } from './routes/_protected.trips.$orgId.$tripId'
+import { Route as ProtectedTripsOrgIdTripIdBookRouteImport } from './routes/_protected.trips.$orgId.$tripId.book'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SetupRoute = SetupRouteImport.update({
-  id: '/setup',
-  path: '/setup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrganizationsRoute = OrganizationsRouteImport.update({
-  id: '/organizations',
-  path: '/organizations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MyBookingsRoute = MyBookingsRouteImport.update({
-  id: '/my-bookings',
-  path: '/my-bookings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -49,14 +35,13 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtectedRoute = ProtectedRouteImport.update({
+  id: '/_protected',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TripsOrgIdRoute = TripsOrgIdRouteImport.update({
-  id: '/trips/$orgId',
-  path: '/trips/$orgId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicTripInstancesRoute = PublicTripInstancesRouteImport.update({
@@ -64,10 +49,20 @@ const PublicTripInstancesRoute = PublicTripInstancesRouteImport.update({
   path: '/public/trip-instances',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MyBookingsBookingIdRoute = MyBookingsBookingIdRouteImport.update({
-  id: '/$bookingId',
-  path: '/$bookingId',
-  getParentRoute: () => MyBookingsRoute,
+const ProtectedSetupRoute = ProtectedSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedOrganizationsRoute = ProtectedOrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedMyBookingsRoute = ProtectedMyBookingsRouteImport.update({
+  id: '/my-bookings',
+  path: '/my-bookings',
+  getParentRoute: () => ProtectedRoute,
 } as any)
 const PublicTripInstancesIndexRoute =
   PublicTripInstancesIndexRouteImport.update({
@@ -75,11 +70,6 @@ const PublicTripInstancesIndexRoute =
     path: '/',
     getParentRoute: () => PublicTripInstancesRoute,
   } as any)
-const TripsOrgIdTripIdRoute = TripsOrgIdTripIdRouteImport.update({
-  id: '/$tripId',
-  path: '/$tripId',
-  getParentRoute: () => TripsOrgIdRoute,
-} as any)
 const PublicTripInstancesIdRoute = PublicTripInstancesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -90,119 +80,136 @@ const PublicOrganizationsSlugRoute = PublicOrganizationsSlugRouteImport.update({
   path: '/public/organizations/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TripsOrgIdTripIdBookRoute = TripsOrgIdTripIdBookRouteImport.update({
-  id: '/book',
-  path: '/book',
-  getParentRoute: () => TripsOrgIdTripIdRoute,
+const ProtectedTripsOrgIdRoute = ProtectedTripsOrgIdRouteImport.update({
+  id: '/trips/$orgId',
+  path: '/trips/$orgId',
+  getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedMyBookingsBookingIdRoute =
+  ProtectedMyBookingsBookingIdRouteImport.update({
+    id: '/$bookingId',
+    path: '/$bookingId',
+    getParentRoute: () => ProtectedMyBookingsRoute,
+  } as any)
+const ProtectedTripsOrgIdTripIdRoute =
+  ProtectedTripsOrgIdTripIdRouteImport.update({
+    id: '/$tripId',
+    path: '/$tripId',
+    getParentRoute: () => ProtectedTripsOrgIdRoute,
+  } as any)
+const ProtectedTripsOrgIdTripIdBookRoute =
+  ProtectedTripsOrgIdTripIdBookRouteImport.update({
+    id: '/book',
+    path: '/book',
+    getParentRoute: () => ProtectedTripsOrgIdTripIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/my-bookings': typeof MyBookingsRouteWithChildren
-  '/organizations': typeof OrganizationsRoute
-  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
-  '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
+  '/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
+  '/organizations': typeof ProtectedOrganizationsRoute
+  '/setup': typeof ProtectedSetupRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
-  '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
+  '/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
+  '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
-  '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
   '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
-  '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
+  '/trips/$orgId/$tripId': typeof ProtectedTripsOrgIdTripIdRouteWithChildren
+  '/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/my-bookings': typeof MyBookingsRouteWithChildren
-  '/organizations': typeof OrganizationsRoute
-  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
-  '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
-  '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
+  '/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
+  '/organizations': typeof ProtectedOrganizationsRoute
+  '/setup': typeof ProtectedSetupRoute
+  '/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
+  '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
-  '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
   '/public/trip-instances': typeof PublicTripInstancesIndexRoute
-  '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
+  '/trips/$orgId/$tripId': typeof ProtectedTripsOrgIdTripIdRouteWithChildren
+  '/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_protected': typeof ProtectedRouteWithChildren
   '/login': typeof LoginRoute
-  '/my-bookings': typeof MyBookingsRouteWithChildren
-  '/organizations': typeof OrganizationsRoute
-  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
-  '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
+  '/_protected/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
+  '/_protected/organizations': typeof ProtectedOrganizationsRoute
+  '/_protected/setup': typeof ProtectedSetupRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
-  '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
+  '/_protected/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
+  '/_protected/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
-  '/trips/$orgId/$tripId': typeof TripsOrgIdTripIdRouteWithChildren
   '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
-  '/trips/$orgId/$tripId/book': typeof TripsOrgIdTripIdBookRoute
+  '/_protected/trips/$orgId/$tripId': typeof ProtectedTripsOrgIdTripIdRouteWithChildren
+  '/_protected/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/signup'
     | '/my-bookings'
     | '/organizations'
     | '/setup'
-    | '/signup'
-    | '/my-bookings/$bookingId'
     | '/public/trip-instances'
+    | '/my-bookings/$bookingId'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
-    | '/trips/$orgId/$tripId'
     | '/public/trip-instances/'
+    | '/trips/$orgId/$tripId'
     | '/trips/$orgId/$tripId/book'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/signup'
     | '/my-bookings'
     | '/organizations'
     | '/setup'
-    | '/signup'
     | '/my-bookings/$bookingId'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
-    | '/trips/$orgId/$tripId'
     | '/public/trip-instances'
+    | '/trips/$orgId/$tripId'
     | '/trips/$orgId/$tripId/book'
   id:
     | '__root__'
     | '/'
+    | '/_protected'
     | '/login'
-    | '/my-bookings'
-    | '/organizations'
-    | '/setup'
     | '/signup'
-    | '/my-bookings/$bookingId'
+    | '/_protected/my-bookings'
+    | '/_protected/organizations'
+    | '/_protected/setup'
     | '/public/trip-instances'
-    | '/trips/$orgId'
+    | '/_protected/my-bookings/$bookingId'
+    | '/_protected/trips/$orgId'
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
-    | '/trips/$orgId/$tripId'
     | '/public/trip-instances/'
-    | '/trips/$orgId/$tripId/book'
+    | '/_protected/trips/$orgId/$tripId'
+    | '/_protected/trips/$orgId/$tripId/book'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProtectedRoute: typeof ProtectedRouteWithChildren
   LoginRoute: typeof LoginRoute
-  MyBookingsRoute: typeof MyBookingsRouteWithChildren
-  OrganizationsRoute: typeof OrganizationsRoute
-  SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
   PublicTripInstancesRoute: typeof PublicTripInstancesRouteWithChildren
-  TripsOrgIdRoute: typeof TripsOrgIdRouteWithChildren
   PublicOrganizationsSlugRoute: typeof PublicOrganizationsSlugRoute
 }
 
@@ -215,32 +222,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/setup': {
-      id: '/setup'
-      path: '/setup'
-      fullPath: '/setup'
-      preLoaderRoute: typeof SetupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/organizations': {
-      id: '/organizations'
-      path: '/organizations'
-      fullPath: '/organizations'
-      preLoaderRoute: typeof OrganizationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/my-bookings': {
-      id: '/my-bookings'
-      path: '/my-bookings'
-      fullPath: '/my-bookings'
-      preLoaderRoute: typeof MyBookingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_protected': {
+      id: '/_protected'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -250,13 +243,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/trips/$orgId': {
-      id: '/trips/$orgId'
-      path: '/trips/$orgId'
-      fullPath: '/trips/$orgId'
-      preLoaderRoute: typeof TripsOrgIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/public/trip-instances': {
       id: '/public/trip-instances'
       path: '/public/trip-instances'
@@ -264,12 +250,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicTripInstancesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/my-bookings/$bookingId': {
-      id: '/my-bookings/$bookingId'
-      path: '/$bookingId'
-      fullPath: '/my-bookings/$bookingId'
-      preLoaderRoute: typeof MyBookingsBookingIdRouteImport
-      parentRoute: typeof MyBookingsRoute
+    '/_protected/setup': {
+      id: '/_protected/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof ProtectedSetupRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/organizations': {
+      id: '/_protected/organizations'
+      path: '/organizations'
+      fullPath: '/organizations'
+      preLoaderRoute: typeof ProtectedOrganizationsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/my-bookings': {
+      id: '/_protected/my-bookings'
+      path: '/my-bookings'
+      fullPath: '/my-bookings'
+      preLoaderRoute: typeof ProtectedMyBookingsRouteImport
+      parentRoute: typeof ProtectedRoute
     }
     '/public/trip-instances/': {
       id: '/public/trip-instances/'
@@ -277,13 +277,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/public/trip-instances/'
       preLoaderRoute: typeof PublicTripInstancesIndexRouteImport
       parentRoute: typeof PublicTripInstancesRoute
-    }
-    '/trips/$orgId/$tripId': {
-      id: '/trips/$orgId/$tripId'
-      path: '/$tripId'
-      fullPath: '/trips/$orgId/$tripId'
-      preLoaderRoute: typeof TripsOrgIdTripIdRouteImport
-      parentRoute: typeof TripsOrgIdRoute
     }
     '/public/trip-instances/$id': {
       id: '/public/trip-instances/$id'
@@ -299,26 +292,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicOrganizationsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/trips/$orgId/$tripId/book': {
-      id: '/trips/$orgId/$tripId/book'
+    '/_protected/trips/$orgId': {
+      id: '/_protected/trips/$orgId'
+      path: '/trips/$orgId'
+      fullPath: '/trips/$orgId'
+      preLoaderRoute: typeof ProtectedTripsOrgIdRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/my-bookings/$bookingId': {
+      id: '/_protected/my-bookings/$bookingId'
+      path: '/$bookingId'
+      fullPath: '/my-bookings/$bookingId'
+      preLoaderRoute: typeof ProtectedMyBookingsBookingIdRouteImport
+      parentRoute: typeof ProtectedMyBookingsRoute
+    }
+    '/_protected/trips/$orgId/$tripId': {
+      id: '/_protected/trips/$orgId/$tripId'
+      path: '/$tripId'
+      fullPath: '/trips/$orgId/$tripId'
+      preLoaderRoute: typeof ProtectedTripsOrgIdTripIdRouteImport
+      parentRoute: typeof ProtectedTripsOrgIdRoute
+    }
+    '/_protected/trips/$orgId/$tripId/book': {
+      id: '/_protected/trips/$orgId/$tripId/book'
       path: '/book'
       fullPath: '/trips/$orgId/$tripId/book'
-      preLoaderRoute: typeof TripsOrgIdTripIdBookRouteImport
-      parentRoute: typeof TripsOrgIdTripIdRoute
+      preLoaderRoute: typeof ProtectedTripsOrgIdTripIdBookRouteImport
+      parentRoute: typeof ProtectedTripsOrgIdTripIdRoute
     }
   }
 }
 
-interface MyBookingsRouteChildren {
-  MyBookingsBookingIdRoute: typeof MyBookingsBookingIdRoute
+interface ProtectedMyBookingsRouteChildren {
+  ProtectedMyBookingsBookingIdRoute: typeof ProtectedMyBookingsBookingIdRoute
 }
 
-const MyBookingsRouteChildren: MyBookingsRouteChildren = {
-  MyBookingsBookingIdRoute: MyBookingsBookingIdRoute,
+const ProtectedMyBookingsRouteChildren: ProtectedMyBookingsRouteChildren = {
+  ProtectedMyBookingsBookingIdRoute: ProtectedMyBookingsBookingIdRoute,
 }
 
-const MyBookingsRouteWithChildren = MyBookingsRoute._addFileChildren(
-  MyBookingsRouteChildren,
+const ProtectedMyBookingsRouteWithChildren =
+  ProtectedMyBookingsRoute._addFileChildren(ProtectedMyBookingsRouteChildren)
+
+interface ProtectedTripsOrgIdTripIdRouteChildren {
+  ProtectedTripsOrgIdTripIdBookRoute: typeof ProtectedTripsOrgIdTripIdBookRoute
+}
+
+const ProtectedTripsOrgIdTripIdRouteChildren: ProtectedTripsOrgIdTripIdRouteChildren =
+  {
+    ProtectedTripsOrgIdTripIdBookRoute: ProtectedTripsOrgIdTripIdBookRoute,
+  }
+
+const ProtectedTripsOrgIdTripIdRouteWithChildren =
+  ProtectedTripsOrgIdTripIdRoute._addFileChildren(
+    ProtectedTripsOrgIdTripIdRouteChildren,
+  )
+
+interface ProtectedTripsOrgIdRouteChildren {
+  ProtectedTripsOrgIdTripIdRoute: typeof ProtectedTripsOrgIdTripIdRouteWithChildren
+}
+
+const ProtectedTripsOrgIdRouteChildren: ProtectedTripsOrgIdRouteChildren = {
+  ProtectedTripsOrgIdTripIdRoute: ProtectedTripsOrgIdTripIdRouteWithChildren,
+}
+
+const ProtectedTripsOrgIdRouteWithChildren =
+  ProtectedTripsOrgIdRoute._addFileChildren(ProtectedTripsOrgIdRouteChildren)
+
+interface ProtectedRouteChildren {
+  ProtectedMyBookingsRoute: typeof ProtectedMyBookingsRouteWithChildren
+  ProtectedOrganizationsRoute: typeof ProtectedOrganizationsRoute
+  ProtectedSetupRoute: typeof ProtectedSetupRoute
+  ProtectedTripsOrgIdRoute: typeof ProtectedTripsOrgIdRouteWithChildren
+}
+
+const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedMyBookingsRoute: ProtectedMyBookingsRouteWithChildren,
+  ProtectedOrganizationsRoute: ProtectedOrganizationsRoute,
+  ProtectedSetupRoute: ProtectedSetupRoute,
+  ProtectedTripsOrgIdRoute: ProtectedTripsOrgIdRouteWithChildren,
+}
+
+const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
+  ProtectedRouteChildren,
 )
 
 interface PublicTripInstancesRouteChildren {
@@ -334,38 +390,12 @@ const PublicTripInstancesRouteChildren: PublicTripInstancesRouteChildren = {
 const PublicTripInstancesRouteWithChildren =
   PublicTripInstancesRoute._addFileChildren(PublicTripInstancesRouteChildren)
 
-interface TripsOrgIdTripIdRouteChildren {
-  TripsOrgIdTripIdBookRoute: typeof TripsOrgIdTripIdBookRoute
-}
-
-const TripsOrgIdTripIdRouteChildren: TripsOrgIdTripIdRouteChildren = {
-  TripsOrgIdTripIdBookRoute: TripsOrgIdTripIdBookRoute,
-}
-
-const TripsOrgIdTripIdRouteWithChildren =
-  TripsOrgIdTripIdRoute._addFileChildren(TripsOrgIdTripIdRouteChildren)
-
-interface TripsOrgIdRouteChildren {
-  TripsOrgIdTripIdRoute: typeof TripsOrgIdTripIdRouteWithChildren
-}
-
-const TripsOrgIdRouteChildren: TripsOrgIdRouteChildren = {
-  TripsOrgIdTripIdRoute: TripsOrgIdTripIdRouteWithChildren,
-}
-
-const TripsOrgIdRouteWithChildren = TripsOrgIdRoute._addFileChildren(
-  TripsOrgIdRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProtectedRoute: ProtectedRouteWithChildren,
   LoginRoute: LoginRoute,
-  MyBookingsRoute: MyBookingsRouteWithChildren,
-  OrganizationsRoute: OrganizationsRoute,
-  SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
   PublicTripInstancesRoute: PublicTripInstancesRouteWithChildren,
-  TripsOrgIdRoute: TripsOrgIdRouteWithChildren,
   PublicOrganizationsSlugRoute: PublicOrganizationsSlugRoute,
 }
 export const routeTree = rootRouteImport

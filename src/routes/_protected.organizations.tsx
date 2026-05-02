@@ -1,32 +1,22 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, ChevronRight } from "lucide-react";
 import type { Organization } from "@/lib/types";
 
-export const Route = createFileRoute("/organizations")({
+export const Route = createFileRoute("/_protected/organizations")({
   component: OrganizationsPage,
 });
 
 function OrganizationsPage() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
   const [orgs, setOrgs] = useState<Organization[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate({ to: "/login" });
-    }
-  }, [authLoading, isAuthenticated, navigate]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
     let cancelled = false;
     api<Organization[] | { data: Organization[] }>("/organizations/active")
       .then((res) => {
@@ -42,7 +32,7 @@ function OrganizationsPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated]);
+  }, []);
 
   return (
     <AppShell title="Empresas">
@@ -66,7 +56,7 @@ function OrganizationsPage() {
           {orgs!.map((org) => (
             <li key={org.id}>
               <Link
-                to="/trips/$orgId"
+                to="/_protected/trips/$orgId"
                 params={{ orgId: org.id }}
                 search={{ slug: org.slug }}
                 className="block"

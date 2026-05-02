@@ -1,8 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
+import { bookingsService } from "@/services/bookings.service";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,24 +29,19 @@ import {
 } from "@/lib/format";
 import { Calendar, MapPin, CreditCard, Hash, Users, Clock } from "lucide-react";
 
-export const Route = createFileRoute("/my-bookings/$bookingId")({
+export const Route = createFileRoute("/_protected/my-bookings/$bookingId")({
   component: BookingDetailPage,
 });
 
 function BookingDetailPage() {
   const { bookingId } = Route.useParams();
-  const { isAuthenticated, loading } = useAuth();
-  const navigate = useNavigate();
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) navigate({ to: "/login" });
-  }, [loading, isAuthenticated, navigate]);
-
   function load() {
-    api<BookingDetails>(`/bookings/${bookingId}/details`)
+    bookingsService
+      .getDetails(bookingId)
       .then(setBooking)
       .catch((err) => {
         setError(err.message);
@@ -56,14 +50,14 @@ function BookingDetailPage() {
   }
 
   useEffect(() => {
-    if (isAuthenticated) load();
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookingId, isAuthenticated]);
+  }, [bookingId]);
 
   async function onCancel() {
     setCancelling(true);
     try {
-      await api(`/bookings/${bookingId}/cancel`, { method: "PATCH" });
+      await bookingsService.cancel(bookingId);
       toast.success("Inscrição cancelada.");
       load();
     } catch (err) {

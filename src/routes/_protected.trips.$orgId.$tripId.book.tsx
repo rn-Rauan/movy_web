@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
+import { tripsService } from "@/services/trips.service";
+import { bookingsService } from "@/services/bookings.service";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
 import type { TripInstance, EnrollmentType, PaymentMethod } from "@/lib/types";
 import { canEnroll, formatDateTime, tripPriceFor } from "@/lib/format";
 
-export const Route = createFileRoute("/trips/$orgId/$tripId/book")({
+export const Route = createFileRoute("/_protected/trips/$orgId/$tripId/book")({
   component: BookPage,
 });
 
@@ -32,7 +32,6 @@ const schema = z.object({
 
 function BookPage() {
   const { tripId } = Route.useParams();
-  const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [trip, setTrip] = useState<TripInstance | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -44,12 +43,8 @@ function BookPage() {
   });
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) navigate({ to: "/login" });
-  }, [loading, isAuthenticated, navigate]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    api<TripInstance>(`/public/trip-instances/${tripId}`, { auth: false })
+    tripsService
+      .getPublicById(tripId)
       .then((t) => {
         setTrip(t);
         setForm((f) => ({
@@ -59,7 +54,7 @@ function BookPage() {
         }));
       })
       .catch(() => {});
-  }, [tripId, isAuthenticated]);
+  }, [tripId]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,12 +69,9 @@ function BookPage() {
     }
     setSubmitting(true);
     try {
-      await api("/bookings", {
-        method: "POST",
-        body: JSON.stringify({ tripInstanceId: tripId, ...parsed.data }),
-      });
+      await bookingsService.create({ tripInstanceId: tripId, ...parsed.data });
       toast.success("Inscrição realizada!");
-      navigate({ to: "/my-bookings" });
+      navigate({ to: "/_protected/my-bookings" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha na inscrição");
     } finally {

@@ -40,12 +40,7 @@ function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      if (redirect) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        navigate({ to: redirect as any });
-      } else {
-        navigate({ to: "/organizations" });
-      }
+      navigate({ to: redirect ? (redirect as any) : "/" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao entrar");
     } finally {
