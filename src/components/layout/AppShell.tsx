@@ -36,7 +36,7 @@ export function AppShell({ title, back, children, showTabs = true }: Props) {
           ) : null}
         </div>
       </header>
-      <main className="flex-1 mx-auto w-full max-w-md px-4 py-4 pb-24">{children}</main>
+      <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-4 pb-24">{children}</main>
       {showTabs && <BottomNav />}
     </div>
   );
