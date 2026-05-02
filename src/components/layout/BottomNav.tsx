@@ -61,8 +61,7 @@ export function BottomNav() {
   const { isAdmin, adminOrgId, roleLoading } = useRole();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
-  if (!isAuthenticated) return null;
-  if (roleLoading) return null;
+  if (!isAuthenticated || roleLoading) return null;
 
   const tabs = isAdmin && adminOrgId ? adminTabs(adminOrgId) : passengerTabs;
 
@@ -80,9 +79,7 @@ export function BottomNav() {
               to={tab.to as any}
               params={tab.params as any}
               className={`flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors ${
-                active
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                active ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {tab.icon}

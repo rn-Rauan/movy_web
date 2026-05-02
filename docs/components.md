@@ -1,29 +1,27 @@
 # Componentes — movy_web
 
-## AppShell
+## Layout
 
-**Arquivo:** `src/components/AppShell.tsx`
+### `AppShell`
 
-Componente de layout principal que envolve todas as páginas autenticadas (e algumas públicas). Fornece cabeçalho fixo, área de conteúdo com largura máxima e navegação inferior por abas.
+**Arquivo:** `src/components/layout/AppShell.tsx`
+
+Componente de layout principal. Fornece cabeçalho fixo, área de conteúdo com largura máxima e navega inferior por role.
 
 ### Props
 
 | Prop | Tipo | Padrão | Descrição |
 |---|---|---|---|
 | `title` | `string` | — | Título exibido no cabeçalho |
-| `back` | `boolean` | `false` | Se `true`, exibe botão de voltar (usa `router.history.back()`) |
+| `back` | `boolean` | `false` | Se `true`, exibe botão de voltar (`router.history.back()`) |
 | `children` | `React.ReactNode` | — | Conteúdo da página |
-| `showTabs` | `boolean` | `true` | Se `false`, oculta a navegação inferior por abas |
+| `showTabs` | `boolean` | `true` | Se `false`, oculta o `BottomNav` |
 
 ### Comportamento
 
-- **Header:** Sticky no topo, altura de 56px. Exibe título, botão voltar (opcional) e botão de logout (se autenticado).
-- **Main:** Área de conteúdo centralizada, `max-w-md`, com padding `px-4 py-4 pb-24`.
-- **Bottom Nav:** Fixo no rodapé, visível apenas quando `isAuthenticated && showTabs`. Duas abas:
-  - **Viagens** (`/organizations`) — ativo em rotas que começam com `/organizations` ou `/trips`
-  - **Inscrições** (`/my-bookings`) — ativo em rotas que começam com `/my-bookings`
-
-### Exemplo de uso
+- **Header:** Sticky, altura `h-14`. Exibe título, botão voltar (opcional) e botão de logout (se autenticado).
+- **Main:** `max-w-md`, `px-4 py-4 pb-24`.
+- **BottomNav:** Renderizado condicionalmente via `{showTabs && <BottomNav />}`. O próprio `BottomNav` oculta se não autenticado ou durante `roleLoading`.
 
 ```tsx
 <AppShell title="Minhas inscrições">
@@ -37,35 +35,146 @@ Componente de layout principal que envolve todas as páginas autenticadas (e alg
 
 ---
 
+### `BottomNav`
+
+**Arquivo:** `src/components/layout/BottomNav.tsx`
+
+Navegação inferior por abas. Exibe tabs diferentes de acordo com o role detectado. Retorna `null` se não autenticado ou durante `roleLoading`.
+
+**Tabs — Passenger/Driver:**
+
+| Tab | Ícone | Rota |
+|---|---|---|
+| Explorar | Compass | `/public/trip-instances` |
+| Empresas | Building2 | `/_protected/organizations` |
+| Inscrições | Ticket | `/_protected/my-bookings` |
+
+**Tabs — Admin:**
+
+| Tab | Ícone | Rota |
+|---|---|---|
+| Explorar | Compass | `/public/trip-instances` |
+| Viagens | Building2 | `/_protected/trips/:adminOrgId` |
+| Configurar | Settings2 | `/_protected/setup` |
+
+---
+
+## Feedback
+
+### `LoadingList`
+
+**Arquivo:** `src/components/feedback/LoadingList.tsx`
+
+Skeletons de lista para estados de carregamento.
+
+```tsx
+<LoadingList />                    // 3 skeletons de h-24
+<LoadingList count={5} height="h-40" />
+```
+
+| Prop | Tipo | Padrão |
+|---|---|---|
+| `count` | `number` | `3` |
+| `height` | `string` | `"h-24"` |
+
+---
+
+### `ErrorCard`
+
+**Arquivo:** `src/components/feedback/ErrorCard.tsx`
+
+Card de erro simples.
+
+```tsx
+<ErrorCard message={error} />
+```
+
+---
+
+## Padrão de Feature Component
+
+Componentes de feature **recebem dados via props** — não fazem fetch próprio.
+
+```tsx
+// Rota thin — busca e passa props
+function TripsPage() {
+  const { orgId } = Route.useParams();
+  const { trips, loading, error } = useTrips({ orgId });
+  return (
+    <AppShell title="Viagens" back>
+      {loading ? <LoadingList /> : error ? <ErrorCard message={error} /> : <TripsList trips={trips ?? []} orgId={orgId} />}
+    </AppShell>
+  );
+}
+
+// Componente de feature — só apresentação
+function TripsList({ trips, orgId }: { trips: TripInstance[]; orgId: string }) {
+  if (trips.length === 0) return <Card className="p-4 text-center text-muted-foreground">Nenhuma viagem</Card>;
+  return <div className="space-y-3">{trips.map((t) => <TripCard key={t.id} trip={t} orgId={orgId} />)}</div>;
+}
+```
+
+---
+
+## Componentes de Feature
+
+### trips
+
+| Componente | Descrição |
+|---|---|
+| `TripCard` | Card compacto — lista privada |
+| `TripsList` | Lista com links para detalhe |
+| `PublicTripCard` | Card rico do marketplace (botões "ver empresa"/"ver viagem") |
+| `TripDetailView` | Detalhe completo + botão de inscrição |
+
+### bookings
+
+| Componente | Descrição |
+|---|---|
+| `BookingCard` | Card de inscrição na lista |
+| `BookingsList` | Lista com empty state |
+| `BookingDetailView` | Detalhe + AlertDialog de cancelamento |
+
+### organizations
+
+| Componente | Descrição |
+|---|---|
+| `OrgCard` | Card de empresa |
+| `OrgsList` | Lista com links para trips |
+
+---
+
 ## Componentes UI (shadcn/ui)
 
-Todos os componentes UI estão em `src/components/ui/` e são baseados na biblioteca **shadcn/ui** com primitivos **Radix UI**. São componentes sem estado próprio de negócio — puramente visuais e acessíveis.
+Todos em `src/components/ui/`. Baseados em **Radix UI**. **Não modificar diretamente** — atualizar via CLI:
 
-### Componentes utilizados nas páginas
+```bash
+bunx shadcn@latest add <nome>
+```
 
-| Componente | Arquivo | Uso no projeto |
-|---|---|---|
-| `Button` | `button.tsx` | CTAs em toda a aplicação |
-| `Input` | `input.tsx` | Campos de formulário |
-| `Label` | `label.tsx` | Rótulos de campos |
-| `Card` | `card.tsx` | Containers de conteúdo e listas |
-| `Badge` | `badge.tsx` | Status de viagens e inscrições |
-| `Skeleton` | `skeleton.tsx` | Placeholders durante carregamento |
-| `Select` | `select.tsx` | Seleção de tipo de viagem e pagamento |
-| `AlertDialog` | `alert-dialog.tsx` | Confirmação de cancelamento de inscrição |
-| `Separator` | `separator.tsx` | Divisores visuais |
-| `Toaster` (Sonner) | `sonner.tsx` | Notificações de feedback (toasts) |
+### Componentes utilizados
+
+| Componente | Uso |
+|---|---|
+| `Button` | CTAs em toda a aplicação |
+| `Input` | Campos de formulário |
+| `Label` | Rótulos de campos |
+| `Card` | Containers de conteúdo |
+| `Badge` | Status de viagens e inscrições |
+| `Skeleton` | Placeholders (via `LoadingList`) |
+| `Select` | Tipo de viagem, pagamento |
+| `AlertDialog` | Confirmação de cancelamento |
+| `Separator` | Divisores visuais |
+| `Sonner` (Toaster) | Notificações de feedback |
 
 ### Variantes de Badge por status
 
-O componente `Badge` é usado com variantes mapeadas pela função `statusVariant()` de `lib/format.ts`:
-
-| Status de Viagem | Variante do Badge |
+| Status | Variante |
 |---|---|
-| `CONFIRMED`, `IN_PROGRESS` | `default` (cor primária) |
+| `CONFIRMED`, `IN_PROGRESS` | `default` |
 | `SCHEDULED` | `secondary` |
-| `CANCELLED` | `destructive` (vermelho) |
-| `DRAFT`, `COMPLETED` | `outline` |
+| `CANCELED` | `destructive` |
+| `DRAFT`, `FINISHED` | `outline` |
 
 ---
 
@@ -75,47 +184,45 @@ O componente `Badge` é usado com variantes mapeadas pela função `statusVarian
 
 **Arquivo:** `src/hooks/use-mobile.tsx`
 
-Detecta se o viewport é mobile (< 768px) usando `window.matchMedia`. Reativo a mudanças de tamanho de janela.
+Detecta se viewport < 768px. Reativo a mudanças de janela.
 
 ```tsx
 const isMobile = useIsMobile(); // boolean
 ```
 
-> Atualmente instalado mas não utilizado diretamente nas páginas — disponível para uso em componentes que precisem adaptar layout.
-
 ---
 
 ## Padrões de UI Recorrentes
 
-### Skeleton Loading
-
-Todas as páginas que buscam dados remotos exibem Skeletons enquanto `data === null && error === null`:
+### Loading / Error / Conteúdo
 
 ```tsx
-{data === null && !error ? (
-  <div className="space-y-3">
-    {[1, 2, 3].map((i) => (
-      <Skeleton key={i} className="h-40 w-full rounded-xl" />
-    ))}
-  </div>
+{loading ? (
+  <LoadingList />
 ) : error ? (
-  <Card className="p-4 text-sm text-destructive">{error}</Card>
+  <ErrorCard message={error} />
 ) : (
-  // conteúdo real
+  <MeuComponente data={data} />
 )}
 ```
 
 ### Estado Vazio
 
-Quando uma lista é carregada com sucesso mas está vazia, é exibido um `Card` centralizado com ícone e mensagem informativa.
+```tsx
+{items.length === 0 && (
+  <Card className="p-6 text-center text-muted-foreground">
+    Nenhum item encontrado.
+  </Card>
+)}
+```
 
 ### Toast de Feedback
 
-Todas as ações assíncronas (login, inscrição, cancelamento) usam `sonner` para feedback:
-
 ```tsx
+import { toast } from "sonner";
+
 toast.success("Inscrição realizada!");
-toast.error(err.message ?? "Falha na operação");
+toast.error(err instanceof Error ? err.message : "Erro desconhecido");
 ```
 
-Os toasts são configurados na raiz com `position="top-center" richColors`.
+Toasts configurados na raiz com `position="top-center" richColors`.

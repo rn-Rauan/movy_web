@@ -1,33 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { bookingsService } from "@/services/bookings.service";
-import { AppShell } from "@/components/AppShell";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import type { BookingDetails } from "@/lib/types";
-import {
-  bookingStatusLabel,
-  enrollmentTypeLabel,
-  formatDateTime,
-  formatFullDate,
-  statusLabel,
-  statusVariant,
-} from "@/lib/format";
-import { Calendar, MapPin, CreditCard, Hash, Users, Clock } from "lucide-react";
+import { AppShell } from "@/components/layout/AppShell";
+import { LoadingList } from "@/components/feedback/LoadingList";
+import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { useBookingDetail } from "@/features/bookings/hooks/useBookingDetail";
+import { BookingDetailView } from "@/features/bookings/components/BookingDetailView";
 
 export const Route = createFileRoute("/_protected/my-bookings/$bookingId")({
   component: BookingDetailPage,
@@ -35,152 +11,14 @@ export const Route = createFileRoute("/_protected/my-bookings/$bookingId")({
 
 function BookingDetailPage() {
   const { bookingId } = Route.useParams();
-  const [booking, setBooking] = useState<BookingDetails | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [cancelling, setCancelling] = useState(false);
+  const { booking, loading, error, cancel, cancelling } = useBookingDetail(bookingId);
 
-  function load() {
-    bookingsService
-      .getDetails(bookingId)
-      .then(setBooking)
-      .catch((err) => {
-        setError(err.message);
-        toast.error(err.message);
-      });
+  function renderContent() {
+    if (loading) return <LoadingList count={2} height="h-32" />;
+    if (error) return <ErrorCard message={error} />;
+    if (booking) return <BookingDetailView booking={booking} onCancel={cancel} cancelling={cancelling} />;
+    return null;
   }
 
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookingId]);
-
-  async function onCancel() {
-    setCancelling(true);
-    try {
-      await bookingsService.cancel(bookingId);
-      toast.success("Inscrição cancelada.");
-      load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao cancelar");
-    } finally {
-      setCancelling(false);
-    }
-  }
-
-  if (error) {
-    return (
-      <AppShell title="Inscrição" back>
-        <Card className="p-4 text-sm text-destructive">{error}</Card>
-      </AppShell>
-    );
-  }
-
-  if (!booking) {
-    return (
-      <AppShell title="Inscrição" back>
-        <div className="space-y-3">
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-24 w-full rounded-xl" />
-        </div>
-      </AppShell>
-    );
-  }
-
-  const isActive = booking.status === "ACTIVE";
-  const departure = booking.tripDepartureTime || booking.enrollmentDate;
-
-  return (
-    <AppShell title="Inscrição" back>
-      <Card className="p-5 mb-4">
-        <div className="flex items-start justify-between gap-2 mb-4">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Data da viagem</p>
-            <p className="font-semibold capitalize">{formatFullDate(departure)}</p>
-          </div>
-          <div className="flex flex-col items-end gap-1">
-            <Badge variant={isActive ? "default" : "destructive"}>
-              {bookingStatusLabel(booking.status)}
-            </Badge>
-            {booking.tripStatus ? (
-              <Badge variant={statusVariant(booking.tripStatus)}>
-                {statusLabel(booking.tripStatus)}
-              </Badge>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <Row icon={<Calendar className="h-4 w-4" />} label="Saída">
-            {formatDateTime(departure, true)}
-          </Row>
-          {booking.tripArrivalEstimate ? (
-            <Row icon={<Clock className="h-4 w-4" />} label="Chegada">
-              {formatDateTime(booking.tripArrivalEstimate, true)}
-            </Row>
-          ) : null}
-          <Row icon={<MapPin className="h-4 w-4" />} label="Embarque">
-            {booking.boardingStop}
-          </Row>
-          <Row icon={<MapPin className="h-4 w-4" />} label="Desembarque">
-            {booking.alightingStop}
-          </Row>
-          <Row icon={<Hash className="h-4 w-4" />} label="Tipo">
-            {enrollmentTypeLabel(booking.enrollmentType)}
-          </Row>
-          {booking.availableSlots != null && booking.totalCapacity != null ? (
-            <Row icon={<Users className="h-4 w-4" />} label="Vagas">
-              {booking.availableSlots} de {booking.totalCapacity}
-            </Row>
-          ) : null}
-          {booking.recordedPrice != null ? (
-            <Row icon={<CreditCard className="h-4 w-4" />} label="Valor">
-              R$ {booking.recordedPrice.toFixed(2)}
-            </Row>
-          ) : null}
-        </div>
-      </Card>
-
-      {isActive ? (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="w-full h-12 text-base" disabled={cancelling}>
-              {cancelling ? "Cancelando..." : "Cancelar inscrição"}
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Cancelar inscrição?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Você não poderá desfazer esta ação. Sua vaga será liberada.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Voltar</AlertDialogCancel>
-              <AlertDialogAction onClick={onCancel}>Cancelar inscrição</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      ) : null}
-    </AppShell>
-  );
-}
-
-function Row({
-  icon,
-  label,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="flex items-center gap-2 text-muted-foreground">
-        {icon}
-        {label}
-      </span>
-      <span className="font-medium">{children}</span>
-    </div>
-  );
+  return <AppShell title="Inscrição" back>{renderContent()}</AppShell>;
 }

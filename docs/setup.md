@@ -66,7 +66,7 @@ bun format
 
 ## Estrutura do Build
 
-O build é realizado pelo **Vite** usando `@lovable.dev/vite-tanstack-config`, que inclui internamente:
+O build é realizado pelo **Vite** usando `@lovable.dev/vite-tanstack-config`, que inclui:
 
 - TanStack Start server handler
 - React JSX transform
@@ -88,55 +88,52 @@ bunx wrangler deploy
 bunx wrangler deploy --env staging
 ```
 
-A configuração do deploy está em `wrangler.jsonc`:
-
-```jsonc
-{
-  "name": "tanstack-start-app",
-  "compatibility_date": "2025-09-24",
-  "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry"
-}
-```
+A configuração está em `wrangler.jsonc`.
 
 ---
 
 ## Adicionando Novos Componentes UI (shadcn/ui)
 
-O projeto usa shadcn/ui configurado em `components.json`. Para adicionar novos componentes:
-
 ```bash
 bunx shadcn@latest add <nome-do-componente>
 ```
 
-Os componentes são instalados em `src/components/ui/`.
+Os componentes são instalados em `src/components/ui/`. **Nunca modificar diretamente.**
+
+---
+
+## Adicionando Novas Features
+
+Siga o padrão de **feature modules**:
+
+1. Crie `src/features/<nome>/hooks/use<Feature>.ts` — fetch + state + side effects
+2. Crie `src/features/<nome>/components/<Feature>View.tsx` — apresentação pura (recebe dados via props)
+3. Crie/atualize o service em `src/services/<nome>.service.ts` — chamadas de API
+4. Crie a rota thin em `src/routes/` — apenas conecta hook → componente
 
 ---
 
 ## Adicionando Novas Rotas
 
-O TanStack Router usa **file-based routing**. Para criar uma nova rota:
-
 1. Crie o arquivo em `src/routes/` seguindo a convenção de nomes:
-   - Pontos (`.`) representam segmentos de caminho: `minha.rota.tsx` → `/minha/rota`
-   - Segmentos dinâmicos são prefixados com `$`: `perfil.$userId.tsx` → `/perfil/:userId`
-   - Índice de uma rota pai: `minha.rota.index.tsx` → `/minha/rota/`
+   - Pontos (`.`) = segmentos de caminho: `minha.rota.tsx` → `/minha/rota`
+   - `$` prefix = parâmetro dinâmico: `perfil.$userId.tsx` → `/perfil/:userId`
+   - `_` prefix = pathless layout: `_protected.tsx` (não adiciona segmento)
+   - `.index` = índice da rota pai
 
-2. Exporte a constante `Route` usando `createFileRoute`:
+2. **Rotas privadas:** prefixe o arquivo com `_protected.` — não implementar guard individual.
+
+3. Exporte a constante `Route` via `createFileRoute`:
 
 ```tsx
-import { createFileRoute } from "@tanstack/react-router";
+// Rota pública
+export const Route = createFileRoute("/minha/rota")({ component: MinhaPage });
 
-export const Route = createFileRoute("/minha/rota")({
-  component: MinhaPage,
-});
-
-function MinhaPage() {
-  return <div>Conteúdo</div>;
-}
+// Rota protegida
+export const Route = createFileRoute("/_protected/minha-rota")({ component: MinhaPage });
 ```
 
-3. A `routeTree.gen.ts` é **gerada automaticamente** ao iniciar `bun dev` — não edite manualmente.
+4. A `routeTree.gen.ts` é **gerada automaticamente** ao iniciar `bun dev` — não edite manualmente.
 
 ---
 
@@ -144,59 +141,66 @@ function MinhaPage() {
 
 ### Importações
 
-Use o alias `@/` para importar de `src/`:
-
 ```ts
 import { api } from "@/lib/api";
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
+import { LoadingList } from "@/components/feedback/LoadingList";
+import { ErrorCard } from "@/components/feedback/ErrorCard";
 import type { TripInstance } from "@/lib/types";
 ```
 
-### Proteção de Rotas Privadas
-
-Toda página que requer autenticação deve incluir:
+### Padrão de Rota Thin
 
 ```tsx
-const { isAuthenticated, loading } = useAuth();
-const navigate = useNavigate();
-
-useEffect(() => {
-  if (!loading && !isAuthenticated) {
-    navigate({ to: "/login" });
-  }
-}, [loading, isAuthenticated, navigate]);
+function TripsPage() {
+  const { orgId } = Route.useParams();
+  const { slug } = Route.useSearch();
+  const { trips, loading, error } = useTrips({ orgId, slug });
+  return (
+    <AppShell title="Viagens" back>
+      {loading ? <LoadingList /> : error ? <ErrorCard message={error} /> : <TripsList trips={trips ?? []} orgId={orgId} />}
+    </AppShell>
+  );
+}
 ```
 
-### Busca de Dados
-
-Use o padrão `useEffect` + `useState` com flag de cancelamento para evitar race conditions:
+### Padrão de Hook de Feature
 
 ```tsx
-useEffect(() => {
-  let cancelled = false;
-  api<T>("/endpoint")
-    .then((res) => { if (!cancelled) setData(res); })
-    .catch((err) => { if (!cancelled) setError(err.message); });
-  return () => { cancelled = true; };
-}, [deps]);
+export function useTrips({ orgId, slug }: UseTripsOptions) {
+  const [trips, setTrips] = useState<TripInstance[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    tripsService.listByOrgId(orgId)
+      .then((res) => { if (!cancelled) setTrips(Array.isArray(res) ? res : (res.data ?? [])); })
+      .catch((err) => { if (!cancelled) { setError(err instanceof Error ? err.message : "Erro"); toast.error(err.message); } });
+    return () => { cancelled = true; };
+  }, [orgId, slug]);
+
+  return { trips, loading: trips === null && !error, error };
+}
 ```
 
 ### Feedback ao Usuário
 
-Sempre use `toast.error()` para erros de API e `toast.success()` para ações bem-sucedidas:
-
 ```tsx
 import { toast } from "sonner";
-
 toast.success("Operação realizada!");
-toast.error(err.message ?? "Ocorreu um erro");
+toast.error(err instanceof Error ? err.message : "Ocorreu um erro");
 ```
 
 ---
 
 ## Linting e Formatação
 
-O projeto usa **ESLint** (configurado em `eslint.config.js`) e **Prettier** para formatação.
+O projeto usa **ESLint** (configurado em `eslint.config.js`) e **Prettier**.
+
+```bash
+bun lint    # verificar erros
+bun format  # formatar código
+```
 
 ```bash
 # Verifica erros de lint

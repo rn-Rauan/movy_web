@@ -2,7 +2,7 @@ import { useRouter } from "@tanstack/react-router";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { BottomNav } from "@/components/BottomNav";
+import { BottomNav } from "./BottomNav";
 
 type Props = {
   title: string;

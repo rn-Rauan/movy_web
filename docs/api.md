@@ -4,7 +4,7 @@
 
 O projeto consome uma API REST externa. A URL base é configurada via variável de ambiente `VITE_API_URL`.
 
-Todo acesso à API passa pela função `api()` definida em `src/lib/api.ts`.
+Todo acesso à API passa pela função `api()` definida em `src/lib/api.ts`. **Nunca chamar `api()` diretamente em rotas ou componentes** — usar os services em `src/services/`.
 
 ---
 
@@ -19,16 +19,42 @@ api<T>(path: string, init?: RequestInit & { auth?: boolean }): Promise<T>
 - Concatena `API_BASE_URL + path` e executa `fetch`
 - Adiciona `Content-Type: application/json` automaticamente
 - Se `auth !== false` (padrão: `true`): injeta o header `Authorization: Bearer <token>`
-- Em resposta não-ok: lança `ApiError` com `message`, `status` e `data`
+- Em resposta `401`: tenta renovar o token via `POST /auth/refresh` automaticamente e re-executa a requisição (com deduplicação de chamadas concorrentes)
+- Em resposta não-ok após eventual refresh: lança `ApiError` com `message`, `status` e `data`
 - Trata resposta vazia (sem body) retornando `null`
 
 ### `ApiError`
 
 ```ts
 class ApiError extends Error {
-  status: number;  // HTTP status code
-  data: any;       // corpo da resposta (parseado como JSON quando possível)
+  status: number;   // HTTP status code
+  data: unknown;    // corpo da resposta (parseado como JSON quando possível)
 }
+```
+
+---
+
+## Services (Repository Pattern)
+
+Cada domínio tem um service que encapsula as chamadas de API:
+
+```ts
+// src/services/trips.service.ts
+tripsService.listPublic()                 // GET /public/trip-instances
+tripsService.listByOrgId(orgId)           // GET /trip-instances/organization/:orgId
+tripsService.listBySlug(slug)             // GET /public/trip-instances/org/:slug (sem auth)
+tripsService.getPublicById(id)            // GET /public/trip-instances/:id (sem auth)
+
+// src/services/bookings.service.ts
+bookingsService.listForUser()             // GET /bookings/user
+bookingsService.getDetails(bookingId)     // GET /bookings/:id/details
+bookingsService.checkAvailability(tripId) // GET /bookings/availability/:tripId
+bookingsService.create({ tripInstanceId, enrollmentType, boardingStop, alightingStop, method })
+bookingsService.cancel(bookingId)         // PATCH /bookings/:id/cancel
+
+// src/services/organizations.service.ts
+organizationsService.listActive()         // GET /organizations/active
+organizationsService.listMine()           // GET /organizations/me
 ```
 
 ---
@@ -43,7 +69,15 @@ Os tokens JWT são armazenados no `localStorage` com as seguintes chaves:
 | `tt_refresh` | Refresh token |
 | `tt_user` | Objeto `AuthUser` serializado em JSON |
 
-> **Nota:** O refresh token é armazenado mas não existe lógica de renovação automática implementada. Se o access token expirar, o usuário precisará fazer login novamente.
+```ts
+tokenStorage.access    // lê tt_access
+tokenStorage.refresh   // lê tt_refresh
+tokenStorage.user      // lê tt_user (parseado como JSON)
+tokenStorage.set({ accessToken, refreshToken, user })  // salva os 3
+tokenStorage.clear()   // remove os 3
+```
+
+> Safe server-side: todas as operações verificam `typeof window !== "undefined"` antes de acessar o `localStorage`.
 
 ---
 
@@ -90,12 +124,34 @@ Cadastra um novo usuário.
 
 ---
 
+#### `POST /auth/refresh`
+Renovação automática de token. Chamado internamente pelo `api.ts` em respostas `401`.
+
+**Request body:** `{ "refreshToken": "string" }`
+**Response:** Mesmo formato de `/auth/login`.
+
+---
+
+#### `POST /auth/logout`
+Revoga o refresh token server-side. Chamado pelo `logout()` do `AuthProvider`. Idempotente.
+
+**Request body:** `{ "refreshToken": "string" }`
+
+---
+
 ### Organizações
 
 #### `GET /organizations/active` 🔒
 Lista todas as organizações ativas.
 
-**Response:** `Organization[]` ou `{ data: Organization[] }`
+**Response:** `Organization[]` ou `Paginated<Organization>`
+
+---
+
+#### `GET /organizations/me` 🔒
+Lista organizações às quais o usuário pertence.
+
+**Response:** `Paginated<Organization>`
 
 ---
 
@@ -104,7 +160,7 @@ Lista todas as organizações ativas.
 #### `GET /public/trip-instances`
 Lista todas as instâncias de viagem públicas.
 
-**Response:** `TripInstance[]` ou `Paginated<TripInstance>` (com campo `organizationName` e `organizationSlug` adicionais)
+**Response:** `Paginated<TripInstance>` (com campos `organizationName` e `organizationSlug`)
 
 ---
 
@@ -118,16 +174,16 @@ Retorna detalhes de uma viagem específica.
 #### `GET /public/trip-instances/org/:slug`
 Lista viagens de uma organização pelo seu slug público.
 
-**Response:** `TripInstance[]` ou `Paginated<TripInstance>` (com campo `organizationName` adicional)
+**Response:** `TripInstance[]` ou `Paginated<TripInstance>`
 
 ---
 
 ### Viagens (Privadas)
 
 #### `GET /trip-instances/organization/:orgId` 🔒
-Lista viagens de uma organização pelo ID (requer auth).
+Lista viagens de uma organização pelo ID.
 
-**Response:** `TripInstance[]` ou `{ data: TripInstance[] }`
+**Response:** `TripInstance[]` ou `Paginated<TripInstance>`
 
 ---
 
@@ -140,10 +196,10 @@ Lista todas as inscrições do usuário autenticado.
 
 ---
 
-#### `GET /bookings/:bookingId` 🔒
-Retorna detalhes de uma inscrição específica.
+#### `GET /bookings/:bookingId/details` 🔒
+Retorna detalhes completos de uma inscrição específica.
 
-**Response:** `Booking`
+**Response:** `BookingDetails`
 
 ---
 
@@ -153,9 +209,12 @@ Retorna disponibilidade de vagas de uma viagem.
 **Response:**
 ```json
 {
+  "tripInstanceId": "string",
+  "tripStatus": "SCHEDULED",
   "totalCapacity": 40,
-  "bookedCount": 12,
-  "availableSeats": 28
+  "activeCount": 12,
+  "availableSlots": 28,
+  "isBookable": true
 }
 ```
 
@@ -168,10 +227,10 @@ Cria uma nova inscrição em uma viagem.
 ```json
 {
   "tripInstanceId": "string",
-  "enrollmentType": "ONE_WAY" | "ROUND_TRIP",
+  "enrollmentType": "ONE_WAY | RETURN | ROUND_TRIP",
   "boardingStop": "string",
   "alightingStop": "string",
-  "method": "PIX" | "CREDIT_CARD" | "CASH" | "SUBSCRIPTION"
+  "method": "MONEY | PIX | CREDIT_CARD | DEBIT_CARD"
 }
 ```
 
@@ -182,7 +241,7 @@ Cria uma nova inscrição em uma viagem.
 #### `PATCH /bookings/:bookingId/cancel` 🔒
 Cancela uma inscrição ativa.
 
-**Response:** `Booking` (com status atualizado para `CANCELLED`)
+**Response:** `Booking` atualizado
 
 ---
 
@@ -190,14 +249,21 @@ Cancela uma inscrição ativa.
 
 | Método | Endpoint | Auth | Usado em |
 |---|---|---|---|
-| POST | `/auth/login` | ❌ | `/login` |
-| POST | `/auth/register` | ❌ | `/signup` |
-| GET | `/public/trip-instances` | ❌ | `/public/trip-instances/` |
-| GET | `/public/trip-instances/:id` | ❌ | `/public/trip-instances/:id`, `/trips/:orgId/:tripId`, `/trips/:orgId/:tripId/book` |
-| GET | `/public/trip-instances/org/:slug` | ❌ | `/public/organizations/:slug`, `/trips/:orgId` |
-| GET | `/organizations/active` | ✅ | `/organizations` |
-| GET | `/trip-instances/organization/:orgId` | ✅ | `/trips/:orgId` |
-| GET | `/bookings/user` | ✅ | `/my-bookings` |
+| POST | `/auth/login` | ❌ | `auth-context` |
+| POST | `/auth/register` | ❌ | `auth-context` |
+| POST | `/auth/logout` | ❌ | `auth-context` |
+| POST | `/auth/refresh` | ❌ | `api.ts` (automático) |
+| GET | `/public/trip-instances` | ❌ | `tripsService.listPublic()` |
+| GET | `/public/trip-instances/:id` | ❌ | `tripsService.getPublicById()` |
+| GET | `/public/trip-instances/org/:slug` | ❌ | `tripsService.listBySlug()` |
+| GET | `/organizations/active` | ✅ | `organizationsService.listActive()` |
+| GET | `/organizations/me` | ✅ | `organizationsService.listMine()` |
+| GET | `/trip-instances/organization/:orgId` | ✅ | `tripsService.listByOrgId()` |
+| GET | `/bookings/user` | ✅ | `bookingsService.listForUser()` |
+| GET | `/bookings/:id/details` | ✅ | `bookingsService.getDetails()` |
+| GET | `/bookings/availability/:tripId` | ✅ | `bookingsService.checkAvailability()` |
+| POST | `/bookings` | ✅ | `bookingsService.create()` |
+| PATCH | `/bookings/:id/cancel` | ✅ | `bookingsService.cancel()` |
 | GET | `/bookings/:bookingId` | ✅ | `/my-bookings/:bookingId` |
 | GET | `/bookings/availability/:tripId` | ✅ | `/trips/:orgId/:tripId` |
 | POST | `/bookings` | ✅ | `/trips/:orgId/:tripId/book` |

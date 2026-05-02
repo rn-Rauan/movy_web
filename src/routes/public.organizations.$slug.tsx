@@ -1,17 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { api } from "@/lib/api";
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
+import { LoadingList } from "@/components/feedback/LoadingList";
+import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, Calendar, Users, MapPin } from "lucide-react";
+import { useTrips } from "@/features/trips/hooks/useTrips";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
-import type { TripInstance, Paginated } from "@/lib/types";
-
-type PublicOrgTrip = TripInstance & { organizationName?: string };
 
 export const Route = createFileRoute("/public/organizations/$slug")({
   head: () => ({
@@ -25,17 +21,7 @@ export const Route = createFileRoute("/public/organizations/$slug")({
 
 function PublicOrgPage() {
   const { slug } = Route.useParams();
-  const [trips, setTrips] = useState<PublicOrgTrip[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    api<Paginated<PublicOrgTrip>>(`/public/trip-instances/org/${slug}`, { auth: false })
-      .then((res) => setTrips(Array.isArray(res) ? res : (res.data ?? [])))
-      .catch((err) => {
-        setError(err.message);
-        toast.error(err.message);
-      });
-  }, [slug]);
+  const { trips, loading, error } = useTrips({ orgId: "", slug });
 
   const orgName = (trips && trips.length > 0 && trips[0].organizationName) || slug;
 
@@ -62,21 +48,17 @@ function PublicOrgPage() {
         </Link>
       </div>
 
-      {trips === null && !error ? (
-        <div className="space-y-3">
-          {[1, 2].map((i) => (
-            <Skeleton key={i} className="h-36 w-full rounded-xl" />
-          ))}
-        </div>
+      {loading ? (
+        <LoadingList count={2} height="h-36" />
       ) : error ? (
-        <Card className="p-4 text-sm text-destructive">{error}</Card>
-      ) : trips && trips.length === 0 ? (
+        <ErrorCard message={error} />
+      ) : !trips || trips.length === 0 ? (
         <Card className="p-8 text-center text-sm text-muted-foreground">
           Nenhuma viagem disponível para esta empresa.
         </Card>
       ) : (
         <ul className="space-y-3">
-          {trips!.map((trip) => {
+          {trips.map((trip) => {
             const seats = trip.availableSeats ?? 0;
             const lotada = seats <= 0;
             return (

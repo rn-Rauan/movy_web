@@ -12,8 +12,6 @@ Base URL (dev): `http://localhost:5701`
 
 ## Camada de autenticação (`src/lib/auth-context.tsx`)
 
-Estas chamadas são feitas pelo contexto de auth, não por rotas diretamente.
-
 | Ação no frontend | Método | Endpoint | Acesso |
 |---|---|---|---|
 | `login()` | POST | `/auth/login` | 🌐 |
@@ -23,25 +21,37 @@ Estas chamadas são feitas pelo contexto de auth, não por rotas diretamente.
 
 ---
 
-## `/organizations` — Lista de empresas
+## Detecção de Roles (`src/lib/role-context.tsx`)
 
-**Arquivo:** `src/routes/organizations.tsx`
+Chamados automaticamente após login:
 
 | Ação | Método | Endpoint | Acesso |
 |---|---|---|---|
-| Carregar lista de organizações ativas | GET | `/organizations/active` | 🔒 JWT |
+| Verificar se é motorista | GET | `/drivers/me` | 🔒 JWT |
+| Listar orgs do usuário | GET | `/organizations/me` | 🔒 JWT |
+| Verificar role na org | GET | `/memberships/me/role/:orgId` | 🔒 JWT |
+
+---
+
+## `/organizations` — Lista de empresas
+
+**Arquivo:** `src/routes/_protected.organizations.tsx`
+
+| Ação | Método | Endpoint | Acesso |
+|---|---|---|---|
+| Carregar organizações ativas | GET | `/organizations/active` | 🔒 JWT |
 
 ---
 
 ## `/setup` — Wizard de configuração inicial
 
-**Arquivo:** `src/routes/setup.tsx`
+**Arquivo:** `src/routes/_protected.setup.tsx`
 
 | Passo | Ação | Método | Endpoint | Acesso |
 |---|---|---|---|---|
 | 1 | Criar organização | POST | `/auth/setup-organization` | 🔒 JWT |
 | 1 (pós-criação) | Buscar orgId da org criada | GET | `/organizations/me` | 🔒 JWT |
-| 2 | Criar roteiro de viagem | POST | `/trip-templates/organization/{orgId}` | 🛡️ ADMIN |
+| 2 | Criar template de viagem | POST | `/trip-templates/organization/{orgId}` | 🛡️ ADMIN |
 | 3 | Criar instância de viagem | POST | `/trip-instances/organization/{orgId}` | 🛡️ ADMIN |
 | 4 | Associar motorista via email + CNH | POST | `/memberships/driver` | 🛡️ ADMIN |
 
@@ -49,31 +59,29 @@ Estas chamadas são feitas pelo contexto de auth, não por rotas diretamente.
 
 ## `/trips/:orgId` — Lista de viagens de uma empresa
 
-**Arquivo:** `src/routes/trips.$orgId.tsx`
-
-Usa uma de duas rotas dependendo se o parâmetro `slug` está presente na URL:
+**Arquivo:** `src/routes/_protected.trips.$orgId.tsx`
 
 | Condição | Método | Endpoint | Acesso |
 |---|---|---|---|
-| Com `?slug=...` (link de empresa) | GET | `/public/trip-instances/org/{slug}` | 🌐 |
-| Sem slug (navegação interna) | GET | `/trip-instances/organization/{orgId}` | 🔒 JWT |
+| Com `?slug=...` | GET | `/public/trip-instances/org/{slug}` | 🌐 |
+| Sem slug | GET | `/trip-instances/organization/{orgId}` | 🔒 JWT |
 
 ---
 
 ## `/trips/:orgId/:tripId` — Detalhe de viagem
 
-**Arquivo:** `src/routes/trips.$orgId.$tripId.tsx`
+**Arquivo:** `src/routes/_protected.trips.$orgId.$tripId.tsx`
 
 | Ação | Método | Endpoint | Acesso |
 |---|---|---|---|
 | Carregar dados da viagem | GET | `/public/trip-instances/{tripId}` | 🌐 |
-| Verificar disponibilidade de vagas | GET | `/bookings/availability/{tripId}` | 🔒 JWT |
+| Verificar disponibilidade | GET | `/bookings/availability/{tripId}` | 🔒 JWT |
 
 ---
 
 ## `/trips/:orgId/:tripId/book` — Formulário de inscrição
 
-**Arquivo:** `src/routes/trips.$orgId.$tripId.book.tsx`
+**Arquivo:** `src/routes/_protected.trips.$orgId.$tripId.book.tsx`
 
 | Ação | Método | Endpoint | Acesso |
 |---|---|---|---|
@@ -87,7 +95,7 @@ Usa uma de duas rotas dependendo se o parâmetro `slug` está presente na URL:
   "enrollmentType": "ONE_WAY | RETURN | ROUND_TRIP",
   "boardingStop": "string",
   "alightingStop": "string",
-  "method": "PIX | CREDIT_CARD | DEBIT_CARD | MONEY"
+  "method": "MONEY | PIX | CREDIT_CARD | DEBIT_CARD"
 }
 ```
 
@@ -95,7 +103,7 @@ Usa uma de duas rotas dependendo se o parâmetro `slug` está presente na URL:
 
 ## `/my-bookings` — Minhas inscrições
 
-**Arquivo:** `src/routes/my-bookings.tsx`
+**Arquivo:** `src/routes/_protected.my-bookings.tsx`
 
 | Ação | Método | Endpoint | Acesso |
 |---|---|---|---|
@@ -105,7 +113,7 @@ Usa uma de duas rotas dependendo se o parâmetro `slug` está presente na URL:
 
 ## `/my-bookings/:bookingId` — Detalhe de inscrição
 
-**Arquivo:** `src/routes/my-bookings.$bookingId.tsx`
+**Arquivo:** `src/routes/_protected.my-bookings.$bookingId.tsx`
 
 | Ação | Método | Endpoint | Acesso |
 |---|---|---|---|
@@ -120,7 +128,7 @@ Usa uma de duas rotas dependendo se o parâmetro `slug` está presente na URL:
 
 | Ação | Método | Endpoint | Acesso |
 |---|---|---|---|
-| Listar todas as viagens públicas | GET | `/public/trip-instances` | 🌐 |
+| Listar viagens públicas | GET | `/public/trip-instances` | 🌐 |
 
 ---
 
@@ -140,7 +148,7 @@ Usa uma de duas rotas dependendo se o parâmetro `slug` está presente na URL:
 
 | Ação | Método | Endpoint | Acesso |
 |---|---|---|---|
-| Listar viagens da empresa pelo slug | GET | `/public/trip-instances/org/{slug}` | 🌐 |
+| Listar viagens da empresa | GET | `/public/trip-instances/org/{slug}` | 🌐 |
 
 ---
 
@@ -152,18 +160,20 @@ Usa uma de duas rotas dependendo se o parâmetro `slug` está presente na URL:
 | 2 | POST | `/auth/register` | auth-context |
 | 3 | POST | `/auth/logout` | auth-context |
 | 4 | POST | `/auth/refresh` | api.ts (automático) |
-| 5 | POST | `/auth/setup-organization` | `/setup` passo 1 |
-| 6 | GET | `/organizations/me` | `/setup` passo 1 |
-| 7 | GET | `/organizations/active` | `/organizations` |
-| 8 | POST | `/trip-templates/organization/{orgId}` | `/setup` passo 2 |
-| 9 | POST | `/trip-instances/organization/{orgId}` | `/setup` passo 3 |
-| 10 | POST | `/memberships/driver` | `/setup` passo 4 |
-| 11 | GET | `/public/trip-instances/org/{slug}` | `/trips/:orgId`, `/public/organizations/:slug` |
-| 12 | GET | `/trip-instances/organization/{orgId}` | `/trips/:orgId` |
-| 13 | GET | `/public/trip-instances/{id}` | `/trips/:orgId/:tripId`, `/trips/:orgId/:tripId/book`, `/public/trip-instances/:id` |
-| 14 | GET | `/bookings/availability/{tripId}` | `/trips/:orgId/:tripId` |
-| 15 | POST | `/bookings` | `/trips/:orgId/:tripId/book` |
-| 16 | GET | `/bookings/user` | `/my-bookings` |
-| 17 | GET | `/bookings/{id}/details` | `/my-bookings/:bookingId` |
-| 18 | PATCH | `/bookings/{id}/cancel` | `/my-bookings/:bookingId` |
-| 19 | GET | `/public/trip-instances` | `/public/trip-instances` |
+| 5 | GET | `/drivers/me` | role-context |
+| 6 | GET | `/organizations/me` | role-context, `/setup` passo 1 |
+| 7 | GET | `/memberships/me/role/:orgId` | role-context |
+| 8 | GET | `/organizations/active` | `/organizations` |
+| 9 | POST | `/auth/setup-organization` | `/setup` passo 1 |
+| 10 | POST | `/trip-templates/organization/{orgId}` | `/setup` passo 2 |
+| 11 | POST | `/trip-instances/organization/{orgId}` | `/setup` passo 3 |
+| 12 | POST | `/memberships/driver` | `/setup` passo 4 |
+| 13 | GET | `/public/trip-instances` | `/public/trip-instances/` |
+| 14 | GET | `/public/trip-instances/{id}` | `/public/trip-instances/:id`, `/trips/:orgId/:tripId`, `/trips/:orgId/:tripId/book` |
+| 15 | GET | `/public/trip-instances/org/{slug}` | `/trips/:orgId`, `/public/organizations/:slug` |
+| 16 | GET | `/trip-instances/organization/{orgId}` | `/trips/:orgId` |
+| 17 | GET | `/bookings/availability/{tripId}` | `/trips/:orgId/:tripId` |
+| 18 | POST | `/bookings` | `/trips/:orgId/:tripId/book` |
+| 19 | GET | `/bookings/user` | `/my-bookings` |
+| 20 | GET | `/bookings/{id}/details` | `/my-bookings/:bookingId` |
+| 21 | PATCH | `/bookings/{id}/cancel` | `/my-bookings/:bookingId` |

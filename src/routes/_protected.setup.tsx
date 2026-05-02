@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { X, Plus } from "lucide-react";
 import { api, tokenStorage } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import { AppShell } from "@/components/AppShell";
+import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

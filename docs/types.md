@@ -6,8 +6,6 @@ Todos os tipos de domínio estão definidos em `src/lib/types.ts`.
 
 ## `AuthUser`
 
-Representa o usuário autenticado, retornado pela API de login/cadastro e armazenado no `localStorage`.
-
 ```ts
 type AuthUser = {
   id: string;
@@ -20,15 +18,18 @@ type AuthUser = {
 
 ## `Organization`
 
-Representa uma empresa de transporte.
-
 ```ts
 type Organization = {
   id: string;
   name: string;
-  slug?: string;          // identificador público na URL (ex: "empresa-abc")
-  description?: string;  // descrição opcional exibida na listagem
-  isActive?: boolean;     // apenas organizações ativas são exibidas
+  slug: string;
+  cnpj?: string;
+  email?: string;
+  telephone?: string;
+  address?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 ```
 
@@ -36,70 +37,81 @@ type Organization = {
 
 ## `TripStatus`
 
-Union type com todos os possíveis estados de uma viagem:
-
 ```ts
 type TripStatus =
-  | "DRAFT"        // rascunho — não visível publicamente
+  | "DRAFT"        // rascunho
   | "SCHEDULED"    // agendada — inscrições abertas
   | "CONFIRMED"    // confirmada — inscrições abertas
   | "IN_PROGRESS"  // em andamento
-  | "COMPLETED"    // concluída
-  | "CANCELLED";   // cancelada
+  | "FINISHED"     // concluída
+  | "CANCELED";    // cancelada
 ```
 
-> Apenas `SCHEDULED` e `CONFIRMED` permitem novas inscrições (verificado por `canEnroll()`).
+> Apenas `SCHEDULED` e `CONFIRMED` permitem novas inscrições — verificado por `canEnroll()`.
 
 ---
 
 ## `TripInstance`
 
-Representa uma instância concreta de uma viagem (uma saída específica com data/hora).
-
 ```ts
 type TripInstance = {
   id: string;
   organizationId: string;
-  tripTemplateId: string;
+  tripTemplateId?: string;
   driverId?: string | null;
   vehicleId?: string | null;
   tripStatus: TripStatus;
-  minRevenue?: number;           // receita mínima para confirmação
-  autoCancelAt?: string;         // ISO date — data limite para cancelamento automático
+  minRevenue?: number;
+  autoCancelAt?: string;
   forceConfirm?: boolean;
-  totalCapacity: number;         // capacidade total do veículo
-  bookedCount?: number;          // inscrições confirmadas
-  availableSeats?: number;       // vagas disponíveis (calculado pelo backend)
-  departureTime: string;         // ISO date
-  arrivalEstimate?: string;      // ISO date — chegada estimada
-  origin?: string;               // nome/descrição da origem
-  destination?: string;          // nome/descrição do destino
-  price?: number;                // preço por passageiro
+  totalCapacity: number;
+  bookedCount?: number;
+  availableSeats?: number;
+  departureTime: string;           // ISO date
+  arrivalEstimate?: string;        // ISO date
+  /** Campos do endpoint público (PublicTripInstanceResponse) */
+  departurePoint?: string;
+  destination?: string;
+  priceOneWay?: number;
+  priceReturn?: number;
+  priceRoundTrip?: number;
+  isRecurring?: boolean;
+  /** Helpers retornados por alguns endpoints */
+  organizationName?: string;
+  organizationSlug?: string;
+  stops?: string[];
   createdAt?: string;
   updatedAt?: string;
 };
 ```
 
-**Campos derivados no cliente:**
-- Vagas disponíveis: `availableSeats ?? (totalCapacity - bookedCount)`
+---
 
-**Campos adicionais retornados pela API pública** (não no tipo base, mas usados nas páginas):
-- `organizationName?: string` — nome da empresa
-- `organizationSlug?: string` — slug da empresa
+## `EnrollmentType`
+
+```ts
+type EnrollmentType = "ONE_WAY" | "RETURN" | "ROUND_TRIP";
+```
+
+---
+
+## `PaymentMethod`
+
+```ts
+type PaymentMethod = "MONEY" | "PIX" | "CREDIT_CARD" | "DEBIT_CARD";
+```
 
 ---
 
 ## `BookingStatus`
 
 ```ts
-type BookingStatus = "ACTIVE" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+type BookingStatus = "ACTIVE" | "INACTIVE";
 ```
 
 ---
 
 ## `Booking`
-
-Representa uma inscrição de um usuário em uma viagem.
 
 ```ts
 type Booking = {
@@ -107,16 +119,73 @@ type Booking = {
   organizationId: string;
   userId: string;
   tripInstanceId: string;
-  enrollmentDate: string;                      // ISO date
+  enrollmentDate: string;          // ISO date
   status: BookingStatus;
   presenceConfirmed: boolean;
-  enrollmentType: "ONE_WAY" | "ROUND_TRIP";   // tipo de viagem
-  recordedPrice?: number;                      // preço registrado no momento da inscrição
-  boardingStop: string;                        // parada de embarque
-  alightingStop: string;                       // parada de desembarque
+  enrollmentType: EnrollmentType;
+  recordedPrice?: number;
+  boardingStop: string;
+  alightingStop: string;
   createdAt?: string;
   updatedAt?: string;
-  tripInstance?: TripInstance;                 // pode vir populado no detalhe
+  tripInstance?: TripInstance;     // populado no detalhe
+};
+```
+
+---
+
+## `BookingDetails`
+
+Retornado por `GET /bookings/:id/details`:
+
+```ts
+type BookingDetails = Booking & {
+  tripDepartureTime?: string;
+  tripArrivalEstimate?: string;
+  tripStatus?: TripStatus;
+  totalCapacity?: number;
+  availableSlots?: number;
+};
+```
+
+---
+
+## `BookingAvailability`
+
+Retornado por `GET /bookings/availability/:tripInstanceId`:
+
+```ts
+type BookingAvailability = {
+  tripInstanceId: string;
+  tripStatus: TripStatus;
+  totalCapacity: number;
+  activeCount: number;
+  availableSlots: number;
+  isBookable: boolean;
+};
+```
+
+---
+
+## `TripTemplate`
+
+```ts
+type TripTemplate = {
+  id: string;
+  organizationId: string;
+  departurePoint: string;
+  destination: string;
+  stops: string[];
+  shift: "MORNING" | "AFTERNOON" | "EVENING";
+  priceOneWay?: number;
+  priceReturn?: number;
+  priceRoundTrip?: number;
+  isPublic: boolean;
+  isRecurring?: boolean;
+  autoCancelEnabled?: boolean;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 ```
 
@@ -124,69 +193,81 @@ type Booking = {
 
 ## `Paginated<T>`
 
-Tipo genérico para respostas paginadas da API:
-
 ```ts
 type Paginated<T> = {
   data: T[];
   total?: number;
   page?: number;
   limit?: number;
+  totalPages?: number;
 };
 ```
 
-> **Nota de compatibilidade:** A API às vezes retorna arrays diretamente em vez de `Paginated<T>`. O código nas páginas sempre verifica: `Array.isArray(res) ? res : res.data ?? []`.
+> **Nota de compatibilidade:** A API pode retornar arrays diretamente. Os services e hooks sempre normalizam: `Array.isArray(res) ? res : (res.data ?? [])`.
 
 ---
 
 ## Utilitários de Formatação (`src/lib/format.ts`)
 
-Funções auxiliares relacionadas aos tipos de domínio:
-
 ### `formatDateTime(iso, timeOnly?)`
-Formata uma string ISO em data/hora legível em pt-BR.
 - `timeOnly = false` (padrão): `"DD/MM HH:mm"`
 - `timeOnly = true`: `"HH:mm"`
 
 ### `formatFullDate(iso)`
-Formata uma string ISO com dia da semana por extenso: `"sexta-feira, 02 de maio de 2025"`.
+Dia da semana por extenso: `"sexta-feira, 02 de maio de 2025"`
 
 ### `statusLabel(status)`
-Converte `TripStatus` para label em português:
 | Status | Label |
 |---|---|
 | `DRAFT` | Rascunho |
 | `SCHEDULED` | Agendada |
 | `CONFIRMED` | Confirmada |
 | `IN_PROGRESS` | Em curso |
-| `COMPLETED` | Concluída |
-| `CANCELLED` | Cancelada |
+| `FINISHED` | Concluída |
+| `CANCELED` | Cancelada |
 
 ### `statusVariant(status)`
-Retorna a variante de `Badge` correspondente ao status.
+Retorna a variante de `Badge`:
+| Status | Variante |
+|---|---|
+| `CONFIRMED`, `IN_PROGRESS` | `default` |
+| `SCHEDULED` | `secondary` |
+| `CANCELED` | `destructive` |
+| demais | `outline` |
 
 ### `canEnroll(status)`
-Retorna `true` se o status permite novas inscrições (`SCHEDULED` ou `CONFIRMED`).
+`true` se `SCHEDULED` ou `CONFIRMED`.
 
 ### `bookingStatusLabel(status)`
-Converte `BookingStatus` para label em português:
 | Status | Label |
 |---|---|
 | `ACTIVE` | Ativa |
-| `CANCELLED` | Cancelada |
-| `COMPLETED` | Concluída |
-| `NO_SHOW` | Faltou |
+| `INACTIVE` | Cancelada |
+
+### `enrollmentTypeLabel(type)`
+| Tipo | Label |
+|---|---|
+| `ONE_WAY` | Somente ida |
+| `RETURN` | Somente volta |
+| `ROUND_TRIP` | Ida e volta |
+
+### `paymentMethodLabel(method)`
+| Método | Label |
+|---|---|
+| `MONEY` | Dinheiro |
+| `PIX` | PIX |
+| `CREDIT_CARD` | Cartão de crédito |
+| `DEBIT_CARD` | Cartão de débito |
 
 ---
 
 ## Utilitários Gerais (`src/lib/utils.ts`)
 
 ### `cn(...inputs)`
-Combina classes Tailwind usando `clsx` + `tailwind-merge`, evitando conflitos:
+Combina classes Tailwind usando `clsx` + `tailwind-merge`:
 
 ```ts
 import { cn } from "@/lib/utils";
-
 cn("px-4 py-2", isActive && "bg-primary", "px-6")
-// → "py-2 bg-primary px-6" (px-4 sobrescrito por px-6)
+// → "py-2 bg-primary px-6"
 ```

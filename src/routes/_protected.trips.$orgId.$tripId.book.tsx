@@ -1,10 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { z } from "zod";
-import { tripsService } from "@/services/trips.service";
-import { bookingsService } from "@/services/bookings.service";
-import { AppShell } from "@/components/AppShell";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,68 +12,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { TripInstance, EnrollmentType, PaymentMethod } from "@/lib/types";
-import { canEnroll, formatDateTime, tripPriceFor } from "@/lib/format";
+import { useTripDetail } from "@/features/trips/hooks/useTripDetail";
+import { useBookingForm } from "@/features/bookings/hooks/useBookingForm";
+import { formatDateTime, tripPriceFor } from "@/lib/format";
+import type { EnrollmentType, PaymentMethod } from "@/lib/types";
 
 export const Route = createFileRoute("/_protected/trips/$orgId/$tripId/book")({
   component: BookPage,
 });
 
-const schema = z.object({
-  enrollmentType: z.enum(["ONE_WAY", "RETURN", "ROUND_TRIP"]),
-  boardingStop: z.string().trim().min(1, "Informe a parada de embarque"),
-  alightingStop: z.string().trim().min(1, "Informe a parada de desembarque"),
-  method: z.enum(["MONEY", "PIX", "CREDIT_CARD", "DEBIT_CARD"]),
-});
-
 function BookPage() {
   const { tripId } = Route.useParams();
-  const navigate = useNavigate();
-  const [trip, setTrip] = useState<TripInstance | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
-    enrollmentType: "ONE_WAY" as EnrollmentType,
-    boardingStop: "",
-    alightingStop: "",
-    method: "PIX" as PaymentMethod,
-  });
+  const { trip } = useTripDetail(tripId);
+  const { form, setForm, prefill, submit, submitting } = useBookingForm(tripId);
 
   useEffect(() => {
-    tripsService
-      .getPublicById(tripId)
-      .then((t) => {
-        setTrip(t);
-        setForm((f) => ({
-          ...f,
-          boardingStop: f.boardingStop || t.departurePoint || "",
-          alightingStop: f.alightingStop || t.destination || "",
-        }));
-      })
-      .catch(() => {});
-  }, [tripId]);
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (trip && !canEnroll(trip.tripStatus)) {
-      toast.error("Esta viagem não aceita inscrições no momento.");
-      return;
-    }
-    const parsed = schema.safeParse(form);
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await bookingsService.create({ tripInstanceId: tripId, ...parsed.data });
-      toast.success("Inscrição realizada!");
-      navigate({ to: "/_protected/my-bookings" });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha na inscrição");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    if (trip) prefill(trip);
+  }, [trip, prefill]);
 
   const price = trip ? tripPriceFor(trip, form.enrollmentType) : undefined;
 
@@ -95,7 +46,7 @@ function BookPage() {
         </Card>
       ) : null}
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={(e) => { e.preventDefault(); submit(trip); }} className="space-y-4">
         <div className="space-y-2">
           <Label>Tipo de viagem</Label>
           <Select

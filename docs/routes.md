@@ -2,47 +2,76 @@
 
 ## Visão Geral do Roteamento
 
-O projeto usa **TanStack Router** com roteamento baseado em arquivos. A `routeTree.gen.ts` é gerada automaticamente pelo plugin `@tanstack/router-plugin` do Vite a cada modificação de arquivo em `src/routes/`.
+O projeto usa **TanStack Router** com roteamento baseado em arquivos. A `routeTree.gen.ts` é gerada automaticamente pelo plugin do Vite a cada modificação em `src/routes/`.
+
+### Conceito: Pathless Layout (`_protected.tsx`)
+
+O prefixo `_` cria um layout sem segmento na URL. Todas as rotas cujo nome começa com `_protected.` ficam aninhadas sob esse layout, que executa o guard de autenticação uma única vez.
+
+- **Arquivo:** `_protected.organizations.tsx` → **URL:** `/organizations`
+- O `_protected` não aparece na URL do browser
 
 ---
 
 ## Árvore de Rotas
 
 ```
-/                                          (index.tsx)
-│  → Redireciona para /public/trip-instances
+/                                               (index.tsx) — redirect por role
 │
-├── /login                                 (login.tsx)
-├── /signup                                (signup.tsx)
+├── /login                                      (login.tsx)
+├── /signup                                     (signup.tsx)
 │
 ├── /public/
-│   ├── /trip-instances                    (public.trip-instances.tsx — layout)
-│   │   ├── /                              (public.trip-instances.index.tsx)
-│   │   └── /$id                           (public.trip-instances.$id.tsx)
-│   └── /organizations/$slug              (public.organizations.$slug.tsx)
+│   ├── /trip-instances/                        (public.trip-instances.tsx — layout Outlet)
+│   │   ├── /                                   (public.trip-instances.index.tsx)
+│   │   └── /$id                                (public.trip-instances.$id.tsx)
+│   └── /organizations/$slug                   (public.organizations.$slug.tsx)
 │
-├── /organizations                         (organizations.tsx) 🔒
-│
-├── /trips/
-│   └── /$orgId                            (trips.$orgId.tsx) 🔒
-│       └── /$tripId                       (trips.$orgId.$tripId.tsx) 🔒
-│           └── /book                      (trips.$orgId.$tripId.book.tsx) 🔒
-│
-└── /my-bookings                           (my-bookings.tsx) 🔒
-    └── /$bookingId                        (my-bookings.$bookingId.tsx) 🔒
+└── _protected [pathless layout — guard auth]  (_protected.tsx)
+    ├── /organizations                          (_protected.organizations.tsx) 🔒
+    ├── /trips/$orgId                           (_protected.trips.$orgId.tsx) 🔒
+    │   └── /$tripId                            (_protected.trips.$orgId.$tripId.tsx) 🔒
+    │       └── /book                           (_protected.trips.$orgId.$tripId.book.tsx) 🔒
+    ├── /my-bookings                            (_protected.my-bookings.tsx) 🔒
+    │   └── /$bookingId                         (_protected.my-bookings.$bookingId.tsx) 🔒
+    └── /setup                                  (_protected.setup.tsx) 🔒 (wizard admin)
 
-🔒 = Requer autenticação (redireciona para /login se não autenticado)
+🔒 = Guard centralizado em _protected.tsx — não requer proteção individual
+```
+
+---
+
+## Guard de Autenticação
+
+**Arquivo:** `src/routes/_protected.tsx`
+
+Pathless layout que verifica autenticação para todas as rotas filhas. **Não duplicar em rotas individuais.**
+
+```tsx
+function ProtectedLayout() {
+  const { isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!loading && !isAuthenticated) navigate({ to: "/login" });
+  }, [loading, isAuthenticated, navigate]);
+  if (loading || !isAuthenticated) return null;
+  return <Outlet />;
+}
 ```
 
 ---
 
 ## Detalhamento por Rota
 
-### `/` — Redirect
+### `/` — Redirect por Role
 
 **Arquivo:** `src/routes/index.tsx`  
-**Auth:** Não requerida  
-**Comportamento:** Redireciona automaticamente para `/public/trip-instances`.
+**Auth:** Não requerida
+
+Redireciona por estado:
+- Não autenticado → `/public/trip-instances`
+- Admin (`isAdmin`) → `/_protected/organizations`
+- Usuário → `/public/trip-instances`
 
 ---
 
@@ -50,13 +79,11 @@ O projeto usa **TanStack Router** com roteamento baseado em arquivos. A `routeTr
 
 **Arquivo:** `src/routes/login.tsx`  
 **Auth:** Não requerida  
-**Search params:** `redirect?: string` — URL para redirecionar após login bem-sucedido
+**Search params:** `redirect?: string`
 
-**Funcionalidades:**
-- Formulário de email + senha
-- Validação via Zod antes de submeter
-- Em caso de sucesso: salva tokens e navega para `redirect` ou `/organizations`
-- Exibe toast de erro em falha
+- Formulário email + senha com validação Zod
+- Em sucesso: navega para `redirect` ou `/public/trip-instances`
+- Toast de erro em falha
 
 ---
 
@@ -65,54 +92,38 @@ O projeto usa **TanStack Router** com roteamento baseado em arquivos. A `routeTr
 **Arquivo:** `src/routes/signup.tsx`  
 **Auth:** Não requerida
 
-**Campos do formulário:**
-| Campo | Tipo | Validação |
-|---|---|---|
-| `name` | texto | mín. 2 caracteres |
-| `email` | email | formato válido |
-| `telephone` | tel | mín. 8 caracteres |
-| `password` | senha | mín. 6 caracteres |
+| Campo | Validação |
+|---|---|
+| `name` | mín. 2 chars |
+| `email` | formato válido |
+| `telephone` | mín. 8 chars |
+| `password` | mín. 6 chars |
 
-Em sucesso: navega para `/organizations`.
-
----
-
-### `/public/trip-instances` — Layout
-
-**Arquivo:** `src/routes/public.trip-instances.tsx`  
-**Auth:** Não requerida  
-**Função:** Apenas renderiza `<Outlet />` — é a rota pai que agrupa as sub-rotas públicas de viagens.
+Em sucesso: navega para `/public/trip-instances`.
 
 ---
 
-### `/public/trip-instances/` — Listagem Pública de Viagens
+### `/public/trip-instances/` — Marketplace de Viagens
 
 **Arquivo:** `src/routes/public.trip-instances.index.tsx`  
-**Auth:** Não requerida  
-**SEO:** `<title>Viagens disponíveis</title>`
+**Auth:** Não requerida
 
-**Funcionalidades:**
-- Lista todas as viagens públicas via `GET /public/trip-instances`
-- Campo de busca por origem/destino (filtro local no cliente)
-- Cada card exibe: organização, status badge, origem/destino, data, vagas, preço
-- Botões: "Ver empresa" → `/public/organizations/:slug` | "Ver viagem" → `/public/trip-instances/:id`
-- Skeleton loading (3 placeholders)
+- Hook: `usePublicTrips()`
+- Campo de busca por origem/destino (filtro local)
+- Cards: `PublicTripCard` — botões "Ver empresa" → `/public/organizations/:slug` | "Ver viagem" → `/public/trip-instances/:id`
 
 ---
 
-### `/public/trip-instances/$id` — Detalhe Público de Viagem
+### `/public/trip-instances/$id` — Detalhe Público
 
 **Arquivo:** `src/routes/public.trip-instances.$id.tsx`  
 **Auth:** Não requerida  
-**Parâmetros:** `id` (ID da TripInstance)  
-**SEO:** `<title>Detalhe da viagem</title>`
+**Parâmetros:** `id`
 
-**Funcionalidades:**
-- Busca dados via `GET /public/trip-instances/:id`
-- Exibe: data de saída, status badge, origem, destino, horário, chegada estimada, vagas, preço
-- **Se autenticado:** botão "Ver detalhes e reservar" → `/trips/:orgId/:tripId`
-- **Se não autenticado:** botão "Entrar para reservar" → `/login?redirect=...`
-- Botão desabilitado se viagem lotada
+- Hook: `useTripDetail(id)`
+- Se autenticado: botão "Ver detalhes e reservar" → `/_protected/trips/:orgId/:tripId`
+- Se não autenticado: botão "Entrar para reservar" → `/login?redirect=...`
+- Botão desabilitado se viagem lotada ou `!canEnroll(status)`
 
 ---
 
@@ -120,117 +131,117 @@ Em sucesso: navega para `/organizations`.
 
 **Arquivo:** `src/routes/public.organizations.$slug.tsx`  
 **Auth:** Não requerida  
-**Parâmetros:** `slug` (identificador da organização)  
-**SEO:** `<title>Empresa de transporte</title>`
+**Parâmetros:** `slug`
 
-**Funcionalidades:**
-- Busca viagens via `GET /public/trip-instances/org/:slug`
-- Exibe card da empresa (nome derivado das viagens ou o próprio slug)
-- Lista viagens com origem/destino, status, vagas, preço
-- Botão "Ver viagem" → `/public/trip-instances/:id`
+- Hook: `useTrips({ orgId: slug, slug })` com endpoint público
+- Lista viagens da empresa com botão "Ver viagem"
 
 ---
 
-### `/organizations` — Lista de Empresas (Privada) 🔒
+### `/organizations` — Lista de Empresas 🔒
 
-**Arquivo:** `src/routes/organizations.tsx`  
-**Auth:** Requerida → redireciona para `/login`
+**Arquivo:** `src/routes/_protected.organizations.tsx`  
+**Auth:** Requerida (guard via `_protected.tsx`)
 
-**Funcionalidades:**
-- Busca via `GET /organizations/active`
-- Lista empresas ativas em cards clicáveis
-- Clique → `/trips/:orgId?slug=:slug`
-- Exibe nome + descrição de cada organização
+- Hook: `useOrganizations()`
+- Service: `organizationsService.listActive()`
+- Cards: `OrgsList` → clique → `/_protected/trips/:orgId?slug=:slug`
 
 ---
 
 ### `/trips/$orgId` — Viagens de uma Empresa 🔒
 
-**Arquivo:** `src/routes/trips.$orgId.tsx`  
-**Auth:** Requerida  
-**Parâmetros:** `orgId` (ID da organização)  
+**Arquivo:** `src/routes/_protected.trips.$orgId.tsx`  
+**Parâmetros:** `orgId`  
 **Search params:** `slug?: string`
 
-**Funcionalidades:**
-- Se `slug` disponível: usa endpoint público `GET /public/trip-instances/org/:slug`
-- Caso contrário: usa `GET /trip-instances/organization/:orgId` (autenticado)
-- Lista viagens ordenadas por data de partida (crescente)
-- Cada card: data, status badge, vagas disponíveis, chegada estimada
+- Hook: `useTrips({ orgId, slug })`
+- Com `slug`: usa `tripsService.listBySlug(slug)` (público)
+- Sem `slug`: usa `tripsService.listByOrgId(orgId)` (autenticado)
+- Lista ordenada por `departureTime` crescente
 
 ---
 
-### `/trips/$orgId/$tripId` — Detalhe de Viagem (Privada) 🔒
+### `/trips/$orgId/$tripId` — Detalhe de Viagem 🔒
 
-**Arquivo:** `src/routes/trips.$orgId.$tripId.tsx`  
-**Auth:** Requerida  
+**Arquivo:** `src/routes/_protected.trips.$orgId.$tripId.tsx`  
 **Parâmetros:** `orgId`, `tripId`
 
-**Funcionalidades:**
-- Busca detalhes da viagem em paralelo:
-  - `GET /public/trip-instances/:tripId` — dados gerais
-  - `GET /bookings/availability/:tripId` — disponibilidade real de vagas
-- Exibe horário de saída, chegada estimada, vagas, preço mínimo
-- Aviso se viagem não aceita inscrições (`canEnroll()`)
-- Botão "Inscrever-se" → `/trips/:orgId/:tripId/book`
+- Hook: `useTripDetail(tripId)`
+- Busca paralela: dados da viagem + disponibilidade
+- Botão "Inscrever-se" → `/_protected/trips/:orgId/:tripId/book`
 
 ---
 
 ### `/trips/$orgId/$tripId/book` — Formulário de Inscrição 🔒
 
-**Arquivo:** `src/routes/trips.$orgId.$tripId.book.tsx`  
-**Auth:** Requerida  
+**Arquivo:** `src/routes/_protected.trips.$orgId.$tripId.book.tsx`  
 **Parâmetros:** `orgId`, `tripId`
 
-**Campos do formulário:**
+| Campo | Opções |
+|---|---|
+| `enrollmentType` | `ONE_WAY` · `RETURN` · `ROUND_TRIP` |
+| `boardingStop` | texto livre |
+| `alightingStop` | texto livre |
+| `method` | `MONEY` · `PIX` · `CREDIT_CARD` · `DEBIT_CARD` |
 
-| Campo | Tipo | Opções |
-|---|---|---|
-| `enrollmentType` | select | `ONE_WAY` (Somente ida) / `ROUND_TRIP` (Ida e volta) |
-| `boardingStop` | texto | parada de embarque |
-| `alightingStop` | texto | parada de desembarque |
-| `method` | select | PIX / Cartão de crédito / Dinheiro / Assinatura |
-
-- Submete via `POST /bookings`
-- Em sucesso: navega para `/my-bookings`
+- Hook: `useBookingForm()`
+- Service: `bookingsService.create()`
+- Em sucesso: navega para `/_protected/my-bookings`
 
 ---
 
 ### `/my-bookings` — Minhas Inscrições 🔒
 
-**Arquivo:** `src/routes/my-bookings.tsx`  
-**Auth:** Requerida
+**Arquivo:** `src/routes/_protected.my-bookings.tsx`
 
-**Funcionalidades:**
-- Busca via `GET /bookings/user`
-- Lista inscrições com data, status badge, rota (embarque → desembarque)
-- Clique no item → `/my-bookings/:bookingId`
-- Estado vazio: ícone + mensagem informativa
+- Hook: `useBookings()`
+- Service: `bookingsService.listForUser()`
+- Lista: `BookingsList` → clique → `/_protected/my-bookings/:bookingId`
 
 ---
 
 ### `/my-bookings/$bookingId` — Detalhe de Inscrição 🔒
 
-**Arquivo:** `src/routes/my-bookings.$bookingId.tsx`  
-**Auth:** Requerida  
+**Arquivo:** `src/routes/_protected.my-bookings.$bookingId.tsx`  
 **Parâmetros:** `bookingId`
 
-**Funcionalidades:**
-- Busca via `GET /bookings/:bookingId`
-- Exibe: data, horário, parada de embarque, parada de desembarque, tipo de viagem, valor
-- Se `status === "ACTIVE"`: exibe botão de cancelamento com `AlertDialog` de confirmação
-- Cancelamento via `PATCH /bookings/:bookingId/cancel`
+- Hook: `useBookingDetail(bookingId)`
+- Se `status === "ACTIVE"`: botão cancelar com `AlertDialog` de confirmação
+- Service: `bookingsService.cancel(bookingId)`
 
 ---
 
-## Convenções de Nomenclatura de Arquivos
+### `/setup` — Wizard Admin 🔒
 
-O TanStack Router usa pontos (`.`) no nome do arquivo para representar segmentos aninhados da URL:
+**Arquivo:** `src/routes/_protected.setup.tsx`
 
-| Arquivo | URL |
+Wizard de 4 passos para configuração inicial de organização:
+
+| Passo | Ação | Endpoint |
+|---|---|---|
+| 1 | Criar organização | `POST /auth/setup-organization` |
+| 2 | Criar template de viagem | `POST /trip-templates/organization/:orgId` |
+| 3 | Criar instância de viagem | `POST /trip-instances/organization/:orgId` |
+| 4 | Associar motorista (opcional) | `POST /memberships/driver` |
+
+Usa `api()` diretamente (não via service) por ser fluxo de setup único. Após conclusão → `/_protected/organizations`.
+
+---
+
+## Convenções de Nomenclatura
+
+| Arquivo | URL no browser |
 |---|---|
-| `public.trip-instances.tsx` | `/public/trip-instances` |
+| `_protected.tsx` | (pathless — sem URL) |
+| `_protected.organizations.tsx` | `/organizations` |
+| `_protected.trips.$orgId.tsx` | `/trips/:orgId` |
+| `_protected.trips.$orgId.$tripId.book.tsx` | `/trips/:orgId/:tripId/book` |
 | `public.trip-instances.index.tsx` | `/public/trip-instances/` |
 | `public.trip-instances.$id.tsx` | `/public/trip-instances/:id` |
-| `trips.$orgId.$tripId.book.tsx` | `/trips/:orgId/:tripId/book` |
 
-Parâmetros dinâmicos são prefixados com `$` no nome do arquivo.
+**Regras:**
+- Pontos (`.`) = segmentos de path
+- `$` prefix = parâmetro dinâmico
+- `_` prefix = pathless layout (não adiciona segmento)
+- `.index` = índice da rota pai

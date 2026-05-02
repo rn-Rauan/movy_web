@@ -1,60 +1,25 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { bookingsService } from "@/services/bookings.service";
-import { AppShell } from "@/components/AppShell";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Ticket } from "lucide-react";
-import { BookingCard } from "@/components/domain/BookingCard";
-import type { Booking } from "@/lib/types";
+import { createFileRoute } from "@tanstack/react-router";
+import { AppShell } from "@/components/layout/AppShell";
+import { LoadingList } from "@/components/feedback/LoadingList";
+import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { useBookings } from "@/features/bookings/hooks/useBookings";
+import { BookingsList } from "@/features/bookings/components/BookingsList";
 
 export const Route = createFileRoute("/_protected/my-bookings")({
   component: MyBookingsPage,
 });
 
 function MyBookingsPage() {
-  const [items, setItems] = useState<Booking[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    bookingsService
-      .listForUser()
-      .then((res) => {
-        const list = Array.isArray(res) ? res : (res.data ?? []);
-        setItems(list);
-      })
-      .catch((err) => {
-        setError(err.message);
-        toast.error(err.message);
-      });
-  }, []);
+  const { bookings, loading, error } = useBookings();
 
   return (
     <AppShell title="Minhas inscrições">
-      {items === null && !error ? (
-        <div className="space-y-3">
-          {[1, 2].map((i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-xl" />
-          ))}
-        </div>
+      {loading ? (
+        <LoadingList count={2} />
       ) : error ? (
-        <Card className="p-4 text-sm text-destructive">{error}</Card>
-      ) : items && items.length === 0 ? (
-        <Card className="p-8 text-center">
-          <Ticket className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">Você ainda não tem inscrições.</p>
-        </Card>
+        <ErrorCard message={error} />
       ) : (
-        <ul className="space-y-3">
-          {items!.map((b) => (
-            <li key={b.id}>
-              <Link to="/_protected/my-bookings/$bookingId" params={{ bookingId: b.id }} className="block">
-                <BookingCard booking={b} />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <BookingsList bookings={bookings ?? []} />
       )}
     </AppShell>
   );
