@@ -40,7 +40,7 @@ function PublicOrgPage() {
   const orgName = (trips && trips.length > 0 && trips[0].organizationName) || slug;
 
   return (
-    <AppShell title="Empresa" back showTabs={false}>
+    <AppShell title="Empresa" back>
       <Card className="p-5 mb-4">
         <div className="flex items-start gap-3 mb-4">
           <div className="h-14 w-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">

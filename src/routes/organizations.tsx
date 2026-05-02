@@ -77,8 +77,8 @@ function OrganizationsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{org.name}</p>
-                    {org.description ? (
-                      <p className="text-xs text-muted-foreground truncate">{org.description}</p>
+                    {org.address ? (
+                      <p className="text-xs text-muted-foreground truncate">{org.address}</p>
                     ) : null}
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />

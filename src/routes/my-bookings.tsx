@@ -64,13 +64,7 @@ function MyBookingsPage() {
                       <Calendar className="h-4 w-4 text-primary" />
                       {formatDateTime(b.enrollmentDate)}
                     </div>
-                    <Badge
-                      variant={
-                        b.status === "ACTIVE"
-                          ? "default"
-                          : "destructive"
-                      }
-                    >
+                    <Badge variant={b.status === "ACTIVE" ? "default" : "destructive"}>
                       {bookingStatusLabel(b.status)}
                     </Badge>
                   </div>

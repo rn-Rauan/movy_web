@@ -230,6 +230,25 @@ Get the current user's role in a specific organization.
 
 ---
 
+### `POST /memberships/driver` 🛡️ ADMIN
+Associate a driver to the organization by email **and** CNH. Both must match the same user — this prevents linking someone whose CNH you don't know.
+
+Use `GET /drivers/lookup` first if you only have one of the two identifiers.
+
+**Body**
+| Field | Type | Required |
+|---|---|---|
+| `userEmail` | string | ✅ |
+| `cnh` | string | ✅ |
+
+**Response `201`** → [MembershipResponse](#membershipresponse)  
+**`400`** → CNH doesn't match the user or user has no driver profile  
+**`403`** → Driver plan limit exceeded  
+**`404`** → No user found with that email  
+**`409`** → Active DRIVER membership already exists
+
+---
+
 ### `POST /memberships` 🛡️ ADMIN
 Add a user to an organization with a specific role. Lookup the user by email first.
 
@@ -618,9 +637,20 @@ Get a booking with enriched trip data (departure time, trip status, available sl
 ---
 
 ### `GET /bookings/trip-instance/{tripInstanceId}` 🔒 JWT
-List all bookings for a specific trip instance (paginated).
+List all bookings for a specific trip instance (paginated). Requires org membership.
 
 **Response `200`** → Paginated [[BookingResponse](#bookingresponse)]
+
+---
+
+### `GET /bookings/trip-instance/{tripInstanceId}/passengers` 🔒 JWT
+List the name and boarding stop of every active passenger on a trip instance.
+
+Access is granted if the caller has an `ACTIVE` booking on the trip **or** is a member of the owning organization. Sensitive fields (email, phone, userId) are never included.
+
+**Response `200`** → [[TripPassengerResponse](#trippassengerresponse)]  
+**`403`** → Caller has no active booking and is not an org member  
+**`404`** → Trip instance not found
 
 ---
 
@@ -892,6 +922,14 @@ Fail a PENDING payment (simulated).
   "createdAt": "...",
   "updatedAt": "..."
 }
+```
+
+### TripPassengerResponse
+```json
+[
+  { "name": "João Silva", "boardingStop": "A2" },
+  { "name": "Maria Souza", "boardingStop": "B1" }
+]
 ```
 
 ### BookingDetailsResponse

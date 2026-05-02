@@ -14,6 +14,7 @@ type AuthContextValue = {
     telephone: string;
   }) => Promise<void>;
   logout: () => void;
+  refreshUser: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -56,7 +57,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const refreshUser = useCallback(() => {
+    setUser(tokenStorage.user);
+  }, []);
+
   const logout = useCallback(() => {
+    const refreshToken = tokenStorage.refresh;
+    if (refreshToken) {
+      // Revoke the refresh token server-side; fire-and-forget
+      api("/auth/logout", {
+        method: "POST",
+        auth: false,
+        body: JSON.stringify({ refreshToken }),
+      }).catch(() => {});
+    }
     tokenStorage.clear();
     setUser(null);
   }, []);
@@ -70,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         signup,
         logout,
+        refreshUser,
       }}
     >
       {children}

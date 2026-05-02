@@ -1,7 +1,8 @@
-import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { ArrowLeft, LogOut, Ticket, MapPin } from "lucide-react";
+import { useRouter } from "@tanstack/react-router";
+import { ArrowLeft, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
+import { BottomNav } from "@/components/BottomNav";
 
 type Props = {
   title: string;
@@ -13,7 +14,6 @@ type Props = {
 export function AppShell({ title, back, children, showTabs = true }: Props) {
   const router = useRouter();
   const { logout, isAuthenticated } = useAuth();
-  const path = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -37,48 +37,7 @@ export function AppShell({ title, back, children, showTabs = true }: Props) {
         </div>
       </header>
       <main className="flex-1 mx-auto w-full max-w-md px-4 py-4 pb-24">{children}</main>
-      {isAuthenticated && showTabs ? (
-        <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border">
-          <div className="mx-auto max-w-md grid grid-cols-2">
-            <TabLink
-              to="/organizations"
-              icon={<MapPin className="h-5 w-5" />}
-              label="Viagens"
-              active={path.startsWith("/organizations") || path.startsWith("/trips")}
-            />
-            <TabLink
-              to="/my-bookings"
-              icon={<Ticket className="h-5 w-5" />}
-              label="Inscrições"
-              active={path.startsWith("/my-bookings")}
-            />
-          </div>
-        </nav>
-      ) : null}
+      {showTabs && <BottomNav />}
     </div>
-  );
-}
-
-function TabLink({
-  to,
-  icon,
-  label,
-  active,
-}: {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  active: boolean;
-}) {
-  return (
-    <Link
-      to={to}
-      className={`flex flex-col items-center gap-1 py-3 text-xs font-medium ${
-        active ? "text-primary" : "text-muted-foreground"
-      }`}
-    >
-      {icon}
-      {label}
-    </Link>
   );
 }

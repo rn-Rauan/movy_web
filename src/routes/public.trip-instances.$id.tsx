@@ -39,7 +39,7 @@ function PublicTripDetailPage() {
 
   if (error) {
     return (
-      <AppShell title="Viagem" back showTabs={false}>
+      <AppShell title="Viagem" back>
         <Card className="p-4 text-sm text-destructive">{error}</Card>
       </AppShell>
     );
@@ -47,7 +47,7 @@ function PublicTripDetailPage() {
 
   if (!trip) {
     return (
-      <AppShell title="Viagem" back showTabs={false}>
+      <AppShell title="Viagem" back>
         <div className="space-y-3">
           <Skeleton className="h-32 w-full rounded-xl" />
           <Skeleton className="h-24 w-full rounded-xl" />
@@ -61,7 +61,7 @@ function PublicTripDetailPage() {
   const lotada = seats <= 0;
 
   return (
-    <AppShell title="Detalhes" back showTabs={false}>
+    <AppShell title="Detalhes" back>
       <Card className="p-5 mb-4">
         <div className="flex items-start justify-between gap-2 mb-4">
           <div>

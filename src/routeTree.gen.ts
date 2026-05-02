@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SetupRouteImport } from './routes/setup'
 import { Route as OrganizationsRouteImport } from './routes/organizations'
 import { Route as MyBookingsRouteImport } from './routes/my-bookings'
 import { Route as LoginRouteImport } from './routes/login'
@@ -26,6 +27,11 @@ import { Route as TripsOrgIdTripIdBookRouteImport } from './routes/trips.$orgId.
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrganizationsRoute = OrganizationsRouteImport.update({
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/my-bookings': typeof MyBookingsRouteWithChildren
   '/organizations': typeof OrganizationsRoute
+  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/my-bookings': typeof MyBookingsRouteWithChildren
   '/organizations': typeof OrganizationsRoute
+  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
   '/trips/$orgId': typeof TripsOrgIdRouteWithChildren
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/my-bookings': typeof MyBookingsRouteWithChildren
   '/organizations': typeof OrganizationsRoute
+  '/setup': typeof SetupRoute
   '/signup': typeof SignupRoute
   '/my-bookings/$bookingId': typeof MyBookingsBookingIdRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/my-bookings'
     | '/organizations'
+    | '/setup'
     | '/signup'
     | '/my-bookings/$bookingId'
     | '/public/trip-instances'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/my-bookings'
     | '/organizations'
+    | '/setup'
     | '/signup'
     | '/my-bookings/$bookingId'
     | '/trips/$orgId'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/my-bookings'
     | '/organizations'
+    | '/setup'
     | '/signup'
     | '/my-bookings/$bookingId'
     | '/public/trip-instances'
@@ -187,6 +199,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MyBookingsRoute: typeof MyBookingsRouteWithChildren
   OrganizationsRoute: typeof OrganizationsRoute
+  SetupRoute: typeof SetupRoute
   SignupRoute: typeof SignupRoute
   PublicTripInstancesRoute: typeof PublicTripInstancesRouteWithChildren
   TripsOrgIdRoute: typeof TripsOrgIdRouteWithChildren
@@ -200,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/organizations': {
@@ -342,6 +362,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MyBookingsRoute: MyBookingsRouteWithChildren,
   OrganizationsRoute: OrganizationsRoute,
+  SetupRoute: SetupRoute,
   SignupRoute: SignupRoute,
   PublicTripInstancesRoute: PublicTripInstancesRouteWithChildren,
   TripsOrgIdRoute: TripsOrgIdRouteWithChildren,

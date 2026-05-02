@@ -108,9 +108,7 @@ function BookPage() {
           <Label>Tipo de viagem</Label>
           <Select
             value={form.enrollmentType}
-            onValueChange={(v) =>
-              setForm((f) => ({ ...f, enrollmentType: v as EnrollmentType }))
-            }
+            onValueChange={(v) => setForm((f) => ({ ...f, enrollmentType: v as EnrollmentType }))}
           >
             <SelectTrigger className="h-12 text-base">
               <SelectValue />

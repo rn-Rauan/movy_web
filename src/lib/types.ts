@@ -7,9 +7,14 @@ export type AuthUser = {
 export type Organization = {
   id: string;
   name: string;
-  slug?: string;
-  description?: string;
-  isActive?: boolean;
+  slug: string;
+  cnpj?: string;
+  email?: string;
+  telephone?: string;
+  address?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type TripStatus =
@@ -92,9 +97,28 @@ export type BookingAvailability = {
   isBookable: boolean;
 };
 
+export type TripTemplate = {
+  id: string;
+  organizationId: string;
+  departurePoint: string;
+  destination: string;
+  stops: string[];
+  shift: "MORNING" | "AFTERNOON" | "EVENING";
+  priceOneWay?: number;
+  priceReturn?: number;
+  priceRoundTrip?: number;
+  isPublic: boolean;
+  isRecurring?: boolean;
+  autoCancelEnabled?: boolean;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type Paginated<T> = {
   data: T[];
   total?: number;
   page?: number;
   limit?: number;
+  totalPages?: number;
 };
