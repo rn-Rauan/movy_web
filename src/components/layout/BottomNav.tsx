@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Compass, Building2, Ticket, Settings2 } from "lucide-react";
+import { Compass, Building2, Ticket, Settings2, Truck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
 
@@ -56,14 +56,40 @@ function adminTabs(orgId: string): NavItem[] {
   ];
 }
 
+const driverTabs: NavItem[] = [
+  {
+    to: "/public/trip-instances",
+    icon: <Compass className="h-5 w-5" />,
+    label: "Explorar",
+    match: "/public",
+  },
+  {
+    to: "/my-trips",
+    icon: <Truck className="h-5 w-5" />,
+    label: "Como motorista",
+    match: "/my-trips",
+  },
+  {
+    to: "/my-bookings",
+    icon: <Ticket className="h-5 w-5" />,
+    label: "Inscrições",
+    match: "/my-bookings",
+  },
+];
+
 export function BottomNav() {
   const { isAuthenticated } = useAuth();
-  const { isAdmin, adminOrgId, roleLoading } = useRole();
+  const { isAdmin, isDriver, adminOrgId, roleLoading } = useRole();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   if (!isAuthenticated || roleLoading) return null;
 
-  const tabs = isAdmin && adminOrgId ? adminTabs(adminOrgId) : passengerTabs;
+  const tabs =
+    isAdmin && adminOrgId
+      ? adminTabs(adminOrgId)
+      : isDriver
+        ? driverTabs
+        : passengerTabs;
 
   return (
     <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-20">

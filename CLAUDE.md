@@ -55,18 +55,26 @@ Roles detectados em runtime via `RoleContext` após autenticação.
 1. **Público** (`/public/*`) — sem autenticação
 2. **Usuário autenticado** (`/_protected/*`) — guard em `_protected.tsx`
 3. **Admin** (`/_protected/_admin/*`) — guard adicional em `_protected/_admin.tsx` (redireciona não-admins para `/`)
-4. **Onboarding** (`/setup`) — exceção: aberto a usuários autenticados sem org (transforma user em admin); redireciona admins existentes para `/organizations`
+4. **Driver** (`/_protected/_driver/*`) — guard adicional em `_protected/_driver.tsx` (redireciona não-drivers para `/`)
+5. **Onboarding** (`/setup`) — exceção: aberto a usuários autenticados sem org (transforma user em admin); redireciona admins existentes para `/organizations`
 
-### Como adicionar uma rota admin-only
+### Como adicionar uma rota guardada por role
 
-Crie o arquivo sob `_protected._admin.<nome>.tsx` (em flat naming). A URL fica sem o prefixo `_admin` — `/_protected/_admin/drivers.tsx` vira URL `/drivers`. O guard do `_admin.tsx` verifica `isAdmin` antes de renderizar.
+Use o padrão flat naming com prefixo pathless. A URL fica sem o prefixo do guard — `_protected._admin.drivers.tsx` vira URL `/drivers`, `_protected._driver.my-trips.tsx` vira URL `/my-trips`. O guard do layout pai (`_admin.tsx` ou `_driver.tsx`) verifica o role antes de renderizar.
 
 ```tsx
-// src/routes/_protected._admin.drivers.tsx
+// src/routes/_protected._admin.drivers.tsx (admin only)
 export const Route = createFileRoute("/_protected/_admin/drivers")({
   component: DriversPage,
 });
+
+// src/routes/_protected._driver.my-trips.tsx (driver only)
+export const Route = createFileRoute("/_protected/_driver/my-trips")({
+  component: DriverTripsPage,
+});
 ```
+
+**Importante:** o arquivo do layout (`_admin.tsx` / `_driver.tsx`) precisa ter pelo menos uma rota filha — senão TanStack Router trata o layout como rota leaf e gera conflito de URL com `/`.
 
 ---
 
@@ -198,8 +206,9 @@ function TripsPage() {
 
 ## Navegação por Role
 
-`BottomNav.tsx` mostra tabs diferentes por role:
-- **Passenger/Driver:** Explorar · Empresas · Inscrições
+`BottomNav.tsx` mostra tabs diferentes por role (precedência: admin > driver > passenger):
+- **Passenger:** Explorar · Empresas · Inscrições
+- **Driver:** Explorar · Como motorista · Inscrições
 - **Admin:** Explorar · Viagens · Configurar
 
 `index.tsx` redireciona:
