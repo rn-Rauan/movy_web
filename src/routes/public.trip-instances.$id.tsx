@@ -5,7 +5,7 @@ import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, MapPin, DollarSign } from "lucide-react";
+import { Calendar, Clock, Users, MapPin, DollarSign, Route as RouteIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useTripDetail } from "@/features/trips/hooks/useTripDetail";
 import { formatDateTime, formatFullDate, statusLabel, statusVariant } from "@/lib/format";
@@ -84,6 +84,25 @@ function PublicTripDetailPage() {
             ) : null}
           </div>
         </Card>
+
+        {trip.stops && trip.stops.length > 0 ? (
+          <Card className="p-5 mb-4">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <RouteIcon className="h-4 w-4 text-primary" />
+              Paradas
+            </h3>
+            <ol className="space-y-2">
+              {trip.stops.map((stop, i) => (
+                <li key={`${stop}-${i}`} className="flex items-start gap-3 text-sm">
+                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary shrink-0">
+                    {i + 1}
+                  </span>
+                  <span>{stop}</span>
+                </li>
+              ))}
+            </ol>
+          </Card>
+        ) : null}
 
         {isAuthenticated && trip.organizationId ? (
           <Link
