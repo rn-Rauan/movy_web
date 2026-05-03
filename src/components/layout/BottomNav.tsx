@@ -117,7 +117,6 @@ export function BottomNav() {
         ? driverTabs
         : passengerTabs;
 
-  const cols = tabs.length === 5 ? "grid-cols-5" : "grid-cols-3";
   const colsClass =
     tabs.length === 5 ? "grid-cols-5" : tabs.length === 4 ? "grid-cols-4" : "grid-cols-3";
 
