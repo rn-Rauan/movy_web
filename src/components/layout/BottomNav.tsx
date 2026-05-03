@@ -39,6 +39,12 @@ const passengerTabs: NavItem[] = [
     label: "Inscrições",
     match: "/my-bookings",
   },
+  {
+    to: "/profile",
+    icon: <User className="h-5 w-5" />,
+    label: "Perfil",
+    match: "/profile",
+  },
 ];
 
 function adminTabs(): NavItem[] {
@@ -112,10 +118,12 @@ export function BottomNav() {
         : passengerTabs;
 
   const cols = tabs.length === 5 ? "grid-cols-5" : "grid-cols-3";
+  const colsClass =
+    tabs.length === 5 ? "grid-cols-5" : tabs.length === 4 ? "grid-cols-4" : "grid-cols-3";
 
   return (
     <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-20">
-      <div className={`mx-auto max-w-2xl grid ${cols}`}>
+      <div className={`mx-auto max-w-2xl grid ${colsClass}`}>
         {tabs.map((tab) => {
           const active = Array.isArray(tab.match)
             ? tab.match.some((m) => path.startsWith(m))
