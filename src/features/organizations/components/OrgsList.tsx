@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { OrgCard } from "./OrgCard";
 import type { Organization } from "@/lib/types";
@@ -20,14 +19,7 @@ export function OrgsList({ orgs }: OrgsListProps) {
     <ul className="space-y-3">
       {orgs.map((org) => (
         <li key={org.id}>
-          <Link
-            to="/trips/$orgId"
-            params={{ orgId: org.id }}
-            search={{ slug: org.slug }}
-            className="block"
-          >
-            <OrgCard org={org} />
-          </Link>
+          <OrgCard org={org} />
         </li>
       ))}
     </ul>

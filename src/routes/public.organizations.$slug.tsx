@@ -1,13 +1,31 @@
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
+import { ContextBanner } from "@/components/layout/ContextBanner";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Calendar, Users, MapPin } from "lucide-react";
+import { Building2, Calendar, Users, MapPin, Mail, Phone } from "lucide-react";
 import { useTrips } from "@/features/trips/hooks/useTrips";
+import { organizationsService } from "@/services/organizations.service";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
+import type { Organization } from "@/lib/types";
+
+type Shift = "ALL" | "MORNING" | "AFTERNOON" | "EVENING";
+const SHIFTS: { value: Shift; label: string }[] = [
+  { value: "ALL", label: "Todos" },
+  { value: "MORNING", label: "Manhã" },
+  { value: "AFTERNOON", label: "Tarde" },
+  { value: "EVENING", label: "Noite" },
+];
+function shiftOf(iso: string): Exclude<Shift, "ALL"> {
+  const h = new Date(iso).getUTCHours();
+  if (h < 12) return "MORNING";
+  if (h < 18) return "AFTERNOON";
+  return "EVENING";
+}
 
 export const Route = createFileRoute("/public/organizations/$slug")({
   head: () => ({
@@ -22,11 +40,32 @@ export const Route = createFileRoute("/public/organizations/$slug")({
 function PublicOrgPage() {
   const { slug } = Route.useParams();
   const { trips, loading, error } = useTrips({ orgId: "", slug });
+  const [org, setOrg] = useState<Organization | null>(null);
+  const [shift, setShift] = useState<Shift>("ALL");
 
-  const orgName = (trips && trips.length > 0 && trips[0].organizationName) || slug;
+  useEffect(() => {
+    let cancelled = false;
+    organizationsService.getBySlug(slug).then(
+      (res) => { if (!cancelled) setOrg(res); },
+      () => {},
+    );
+    return () => { cancelled = true; };
+  }, [slug]);
+
+  const orgName = org?.name || (trips && trips.length > 0 && trips[0].organizationName) || slug;
+  const visible = useMemo(
+    () =>
+      shift === "ALL"
+        ? trips ?? []
+        : (trips ?? []).filter((t) => shiftOf(t.departureTime) === shift),
+    [trips, shift],
+  );
+  const contactHref = org?.email ? `mailto:${org.email}` : org?.telephone ? `tel:${org.telephone}` : undefined;
 
   return (
     <AppShell title="Empresa" back>
+      <ContextBanner variant="org" orgName={orgName} slug={slug} />
+
       <Card className="p-5 mb-4">
         <div className="flex items-start gap-3 mb-4">
           <div className="h-14 w-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -37,6 +76,26 @@ function PublicOrgPage() {
             <p className="text-xs text-muted-foreground mt-0.5">@{slug}</p>
           </div>
         </div>
+
+        {(org?.email || org?.telephone || org?.address) ? (
+          <div className="space-y-1.5 text-xs text-muted-foreground border-t pt-3">
+            {org?.address ? (
+              <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 shrink-0" />{org.address}</p>
+            ) : null}
+            {org?.email ? (
+              <p className="flex items-center gap-2 truncate"><Mail className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{org.email}</span></p>
+            ) : null}
+            {org?.telephone ? (
+              <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 shrink-0" />{org.telephone}</p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {contactHref ? (
+          <a href={contactHref} className="block mt-3">
+            <Button variant="outline" className="w-full h-10">Entrar em contato</Button>
+          </a>
+        ) : null}
       </Card>
 
       <div className="flex items-center justify-between mb-3">
@@ -48,17 +107,34 @@ function PublicOrgPage() {
         </Link>
       </div>
 
+      <div className="flex flex-wrap gap-2 mb-3">
+        {SHIFTS.map((s) => (
+          <button
+            key={s.value}
+            type="button"
+            onClick={() => setShift(s.value)}
+            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+              shift === s.value
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <LoadingList count={2} height="h-36" />
       ) : error ? (
         <ErrorCard message={error} />
-      ) : !trips || trips.length === 0 ? (
+      ) : visible.length === 0 ? (
         <Card className="p-8 text-center text-sm text-muted-foreground">
-          Nenhuma viagem disponível para esta empresa.
+          Nenhuma viagem disponível com esses filtros.
         </Card>
       ) : (
         <ul className="space-y-3">
-          {trips.map((trip) => {
+          {visible.map((trip) => {
             const seats = trip.availableSeats ?? 0;
             const lotada = seats <= 0;
             return (

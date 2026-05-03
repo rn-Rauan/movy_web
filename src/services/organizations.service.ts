@@ -17,6 +17,9 @@ export const organizationsService = {
   listMine: () =>
     api<Paginated<Organization>>("/organizations/me"),
 
+  getBySlug: (slug: string) =>
+    api<Organization>(`/public/organizations/${slug}`, { auth: false }),
+
   update: (id: string, data: OrgUpdatePayload) =>
     api<Organization>(`/organizations/${id}`, {
       method: "PUT",
