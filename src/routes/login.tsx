@@ -40,7 +40,7 @@ function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate({ to: redirect ? (redirect as any) : "/" });
+      navigate({ to: redirect ? (redirect as string) : "/" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao entrar");
     } finally {

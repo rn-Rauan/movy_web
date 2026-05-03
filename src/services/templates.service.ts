@@ -16,9 +16,7 @@ type TemplatePayload = {
 
 export const templatesService = {
   listByOrgId: (orgId: string) =>
-    api<TripTemplate[] | Paginated<TripTemplate>>(
-      `/trip-templates/organization/${orgId}`,
-    ),
+    api<TripTemplate[] | Paginated<TripTemplate>>(`/trip-templates/organization/${orgId}`),
 
   getById: (id: string) => api<TripTemplate>(`/trip-templates/${id}`),
 
@@ -34,6 +32,5 @@ export const templatesService = {
       body: JSON.stringify(data),
     }),
 
-  remove: (id: string) =>
-    api<void>(`/trip-templates/${id}`, { method: "DELETE" }),
+  remove: (id: string) => api<void>(`/trip-templates/${id}`, { method: "DELETE" }),
 };

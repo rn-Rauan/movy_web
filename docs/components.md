@@ -10,12 +10,12 @@ Componente de layout principal. Fornece cabeçalho fixo, área de conteúdo com 
 
 ### Props
 
-| Prop | Tipo | Padrão | Descrição |
-|---|---|---|---|
-| `title` | `string` | — | Título exibido no cabeçalho |
-| `back` | `boolean` | `false` | Se `true`, exibe botão de voltar (`router.history.back()`) |
-| `children` | `React.ReactNode` | — | Conteúdo da página |
-| `showTabs` | `boolean` | `true` | Se `false`, oculta o `BottomNav` |
+| Prop       | Tipo              | Padrão  | Descrição                                                  |
+| ---------- | ----------------- | ------- | ---------------------------------------------------------- |
+| `title`    | `string`          | —       | Título exibido no cabeçalho                                |
+| `back`     | `boolean`         | `false` | Se `true`, exibe botão de voltar (`router.history.back()`) |
+| `children` | `React.ReactNode` | —       | Conteúdo da página                                         |
+| `showTabs` | `boolean`         | `true`  | Se `false`, oculta o `BottomNav`                           |
 
 ### Comportamento
 
@@ -43,19 +43,19 @@ Navegação inferior por abas. Exibe tabs diferentes de acordo com o role detect
 
 **Tabs — Passenger/Driver:**
 
-| Tab | Ícone | Rota |
-|---|---|---|
-| Explorar | Compass | `/public/trip-instances` |
-| Empresas | Building2 | `/_protected/organizations` |
-| Inscrições | Ticket | `/_protected/my-bookings` |
+| Tab        | Ícone     | Rota                        |
+| ---------- | --------- | --------------------------- |
+| Explorar   | Compass   | `/public/trip-instances`    |
+| Empresas   | Building2 | `/_protected/organizations` |
+| Inscrições | Ticket    | `/_protected/my-bookings`   |
 
 **Tabs — Admin:**
 
-| Tab | Ícone | Rota |
-|---|---|---|
-| Explorar | Compass | `/public/trip-instances` |
-| Viagens | Building2 | `/_protected/trips/:adminOrgId` |
-| Configurar | Settings2 | `/_protected/setup` |
+| Tab        | Ícone     | Rota                            |
+| ---------- | --------- | ------------------------------- |
+| Explorar   | Compass   | `/public/trip-instances`        |
+| Viagens    | Building2 | `/_protected/trips/:adminOrgId` |
+| Configurar | Settings2 | `/_protected/setup`             |
 
 ---
 
@@ -72,9 +72,9 @@ Skeletons de lista para estados de carregamento.
 <LoadingList count={5} height="h-40" />
 ```
 
-| Prop | Tipo | Padrão |
-|---|---|---|
-| `count` | `number` | `3` |
+| Prop     | Tipo     | Padrão   |
+| -------- | -------- | -------- |
+| `count`  | `number` | `3`      |
 | `height` | `string` | `"h-24"` |
 
 ---
@@ -102,15 +102,28 @@ function TripsPage() {
   const { trips, loading, error } = useTrips({ orgId });
   return (
     <AppShell title="Viagens" back>
-      {loading ? <LoadingList /> : error ? <ErrorCard message={error} /> : <TripsList trips={trips ?? []} orgId={orgId} />}
+      {loading ? (
+        <LoadingList />
+      ) : error ? (
+        <ErrorCard message={error} />
+      ) : (
+        <TripsList trips={trips ?? []} orgId={orgId} />
+      )}
     </AppShell>
   );
 }
 
 // Componente de feature — só apresentação
 function TripsList({ trips, orgId }: { trips: TripInstance[]; orgId: string }) {
-  if (trips.length === 0) return <Card className="p-4 text-center text-muted-foreground">Nenhuma viagem</Card>;
-  return <div className="space-y-3">{trips.map((t) => <TripCard key={t.id} trip={t} orgId={orgId} />)}</div>;
+  if (trips.length === 0)
+    return <Card className="p-4 text-center text-muted-foreground">Nenhuma viagem</Card>;
+  return (
+    <div className="space-y-3">
+      {trips.map((t) => (
+        <TripCard key={t.id} trip={t} orgId={orgId} />
+      ))}
+    </div>
+  );
 }
 ```
 
@@ -120,26 +133,26 @@ function TripsList({ trips, orgId }: { trips: TripInstance[]; orgId: string }) {
 
 ### trips
 
-| Componente | Descrição |
-|---|---|
-| `TripCard` | Card compacto — lista privada |
-| `TripsList` | Lista com links para detalhe |
+| Componente       | Descrição                                                    |
+| ---------------- | ------------------------------------------------------------ |
+| `TripCard`       | Card compacto — lista privada                                |
+| `TripsList`      | Lista com links para detalhe                                 |
 | `PublicTripCard` | Card rico do marketplace (botões "ver empresa"/"ver viagem") |
-| `TripDetailView` | Detalhe completo + botão de inscrição |
+| `TripDetailView` | Detalhe completo + botão de inscrição                        |
 
 ### bookings
 
-| Componente | Descrição |
-|---|---|
-| `BookingCard` | Card de inscrição na lista |
-| `BookingsList` | Lista com empty state |
+| Componente          | Descrição                             |
+| ------------------- | ------------------------------------- |
+| `BookingCard`       | Card de inscrição na lista            |
+| `BookingsList`      | Lista com empty state                 |
 | `BookingDetailView` | Detalhe + AlertDialog de cancelamento |
 
 ### organizations
 
-| Componente | Descrição |
-|---|---|
-| `OrgCard` | Card de empresa |
+| Componente | Descrição                  |
+| ---------- | -------------------------- |
+| `OrgCard`  | Card de empresa            |
 | `OrgsList` | Lista com links para trips |
 
 ---
@@ -154,27 +167,27 @@ bunx shadcn@latest add <nome>
 
 ### Componentes utilizados
 
-| Componente | Uso |
-|---|---|
-| `Button` | CTAs em toda a aplicação |
-| `Input` | Campos de formulário |
-| `Label` | Rótulos de campos |
-| `Card` | Containers de conteúdo |
-| `Badge` | Status de viagens e inscrições |
-| `Skeleton` | Placeholders (via `LoadingList`) |
-| `Select` | Tipo de viagem, pagamento |
-| `AlertDialog` | Confirmação de cancelamento |
-| `Separator` | Divisores visuais |
-| `Sonner` (Toaster) | Notificações de feedback |
+| Componente         | Uso                              |
+| ------------------ | -------------------------------- |
+| `Button`           | CTAs em toda a aplicação         |
+| `Input`            | Campos de formulário             |
+| `Label`            | Rótulos de campos                |
+| `Card`             | Containers de conteúdo           |
+| `Badge`            | Status de viagens e inscrições   |
+| `Skeleton`         | Placeholders (via `LoadingList`) |
+| `Select`           | Tipo de viagem, pagamento        |
+| `AlertDialog`      | Confirmação de cancelamento      |
+| `Separator`        | Divisores visuais                |
+| `Sonner` (Toaster) | Notificações de feedback         |
 
 ### Variantes de Badge por status
 
-| Status | Variante |
-|---|---|
-| `CONFIRMED`, `IN_PROGRESS` | `default` |
-| `SCHEDULED` | `secondary` |
-| `CANCELED` | `destructive` |
-| `DRAFT`, `FINISHED` | `outline` |
+| Status                     | Variante      |
+| -------------------------- | ------------- |
+| `CONFIRMED`, `IN_PROGRESS` | `default`     |
+| `SCHEDULED`                | `secondary`   |
+| `CANCELED`                 | `destructive` |
+| `DRAFT`, `FINISHED`        | `outline`     |
 
 ---
 
@@ -197,23 +210,19 @@ const isMobile = useIsMobile(); // boolean
 ### Loading / Error / Conteúdo
 
 ```tsx
-{loading ? (
-  <LoadingList />
-) : error ? (
-  <ErrorCard message={error} />
-) : (
-  <MeuComponente data={data} />
-)}
+{
+  loading ? <LoadingList /> : error ? <ErrorCard message={error} /> : <MeuComponente data={data} />;
+}
 ```
 
 ### Estado Vazio
 
 ```tsx
-{items.length === 0 && (
-  <Card className="p-6 text-center text-muted-foreground">
-    Nenhum item encontrado.
-  </Card>
-)}
+{
+  items.length === 0 && (
+    <Card className="p-6 text-center text-muted-foreground">Nenhum item encontrado.</Card>
+  );
+}
 ```
 
 ### Toast de Feedback

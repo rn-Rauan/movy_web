@@ -33,18 +33,19 @@ Paginated endpoints accept `?page=1&limit=10` query params and always return:
 
 ## Access Levels
 
-| Label | Meaning |
-|---|---|
-| 🌐 Public | No auth required |
-| 🔒 JWT | Any logged-in user |
-| 🛡️ ADMIN | Requires ADMIN role in the relevant organization |
-| 🧑‍💻 DEV | Dev-only emails (bypass all tenant checks) |
+| Label     | Meaning                                          |
+| --------- | ------------------------------------------------ |
+| 🌐 Public | No auth required                                 |
+| 🔒 JWT    | Any logged-in user                               |
+| 🛡️ ADMIN  | Requires ADMIN role in the relevant organization |
+| 🧑‍💻 DEV    | Dev-only emails (bypass all tenant checks)       |
 
 ---
 
 ## Auth
 
 ### `POST /auth/register`
+
 Register a new individual user account (no organization).
 
 **Body**
@@ -60,6 +61,7 @@ Register a new individual user account (no organization).
 ---
 
 ### `POST /auth/register-organization`
+
 Atomically register a user + organization. Use this for the onboarding flow.
 
 **Body**
@@ -82,6 +84,7 @@ Atomically register a user + organization. Use this for the onboarding flow.
 ---
 
 ### `POST /auth/login`
+
 Login with email + password.
 
 **Body**
@@ -96,6 +99,7 @@ Login with email + password.
 ---
 
 ### `POST /auth/refresh`
+
 Exchange a refresh token for a new access token + refresh token pair. Always replace both tokens in storage.
 
 **Body**
@@ -109,6 +113,7 @@ Exchange a refresh token for a new access token + refresh token pair. Always rep
 ---
 
 ### `POST /auth/logout`
+
 Revoke the refresh token (server-side). Call on user logout. Idempotent — always returns 204 even if token is already expired.
 
 **Body**
@@ -121,6 +126,7 @@ Revoke the refresh token (server-side). Call on user logout. Idempotent — alwa
 ---
 
 ### `POST /auth/setup-organization` 🔒 JWT
+
 Create an organization for a user that already has an account (without a org yet). Returns new tokens with org context embedded.
 
 **Body**
@@ -141,6 +147,7 @@ Create an organization for a user that already has an account (without a org yet
 ## Users
 
 ### `GET /users/me` 🔒 JWT
+
 Get the current user's profile.
 
 **Response `200`** → [UserResponse](#userresponse)
@@ -148,6 +155,7 @@ Get the current user's profile.
 ---
 
 ### `PUT /users/me` 🔒 JWT
+
 Update the current user's profile. All fields are optional.
 
 **Body**
@@ -163,6 +171,7 @@ Update the current user's profile. All fields are optional.
 ---
 
 ### `DELETE /users/me` 🔒 JWT
+
 Soft-disable the current user's account (status → INACTIVE).
 
 **Response `200`** → no body
@@ -172,6 +181,7 @@ Soft-disable the current user's account (status → INACTIVE).
 ## Organizations
 
 ### `GET /public/organizations/{slug}` 🌐 Public
+
 Resolve an organization by its URL slug. Use on the landing/home page to identify the tenant.
 
 **Path params:** `slug` — e.g., `transport-xpto`
@@ -182,6 +192,7 @@ Resolve an organization by its URL slug. Use on the landing/home page to identif
 ---
 
 ### `GET /organizations/me` 🔒 JWT
+
 List all organizations the current user belongs to (paginated).
 
 **Query:** `?page=1&limit=10`
@@ -191,6 +202,7 @@ List all organizations the current user belongs to (paginated).
 ---
 
 ### `GET /organizations/{id}` 🛡️ ADMIN
+
 Get an organization by ID.
 
 **Response `200`** → [OrganizationResponse](#organizationresponse)
@@ -198,6 +210,7 @@ Get an organization by ID.
 ---
 
 ### `PUT /organizations/{id}` 🛡️ ADMIN
+
 Update an organization.
 
 **Body** (all optional)
@@ -215,6 +228,7 @@ Update an organization.
 ---
 
 ### `DELETE /organizations/{id}` 🛡️ ADMIN
+
 Soft-disable an organization (status → INACTIVE).
 
 **Response `200`** → `boolean`
@@ -224,6 +238,7 @@ Soft-disable an organization (status → INACTIVE).
 ## Memberships
 
 ### `GET /memberships/me/role/{organizationId}` 🔒 JWT
+
 Get the current user's role in a specific organization.
 
 **Response `200`** → `{ id: number, name: "ADMIN" | "DRIVER" }`
@@ -231,6 +246,7 @@ Get the current user's role in a specific organization.
 ---
 
 ### `POST /memberships/driver` 🛡️ ADMIN
+
 Associate a driver to the organization by email **and** CNH. Both must match the same user — this prevents linking someone whose CNH you don't know.
 
 Use `GET /drivers/lookup` first if you only have one of the two identifiers.
@@ -250,6 +266,7 @@ Use `GET /drivers/lookup` first if you only have one of the two identifiers.
 ---
 
 ### `POST /memberships` 🛡️ ADMIN
+
 Add a user to an organization with a specific role. Lookup the user by email first.
 
 **Body**
@@ -263,6 +280,7 @@ Add a user to an organization with a specific role. Lookup the user by email fir
 ---
 
 ### `GET /memberships/organization/{organizationId}` 🛡️ ADMIN
+
 List all memberships in an organization (paginated).
 
 **Response `200`** → Paginated [[MembershipResponse](#membershipresponse)]
@@ -270,6 +288,7 @@ List all memberships in an organization (paginated).
 ---
 
 ### `DELETE /memberships/{userId}/{roleId}/{organizationId}` 🛡️ ADMIN
+
 Soft-remove a membership (sets `removedAt`).
 
 **Response `200`** → `boolean`
@@ -277,6 +296,7 @@ Soft-remove a membership (sets `removedAt`).
 ---
 
 ### `PATCH /memberships/{userId}/{roleId}/{organizationId}/restore` 🛡️ ADMIN
+
 Restore a previously removed membership.
 
 **Response `200`** → `boolean`
@@ -286,6 +306,7 @@ Restore a previously removed membership.
 ## Drivers
 
 ### `POST /drivers` 🔒 JWT
+
 Register a driver profile for the current user. The user must be a member of the org.
 
 **Body**
@@ -300,6 +321,7 @@ Register a driver profile for the current user. The user must be a member of the
 ---
 
 ### `GET /drivers/me` 🔒 JWT
+
 Get the current user's driver profile.
 
 **Response `200`** → [DriverResponse](#driverresponse)
@@ -307,6 +329,7 @@ Get the current user's driver profile.
 ---
 
 ### `GET /drivers/lookup` 🛡️ ADMIN
+
 Look up a driver by email + CNH (to get their `userId` before creating a membership).
 
 **Query:** `?email=joao@email.com&cnh=123456789`
@@ -316,6 +339,7 @@ Look up a driver by email + CNH (to get their `userId` before creating a members
 ---
 
 ### `GET /drivers/organization/{organizationId}` 🛡️ ADMIN
+
 List all drivers in an organization (paginated).
 
 **Response `200`** → Paginated [[DriverResponse](#driverresponse)]
@@ -323,6 +347,7 @@ List all drivers in an organization (paginated).
 ---
 
 ### `GET /drivers/{id}` 🛡️ ADMIN
+
 Get a driver by ID.
 
 **Response `200`** → [DriverResponse](#driverresponse)
@@ -330,6 +355,7 @@ Get a driver by ID.
 ---
 
 ### `PUT /drivers/{id}` 🔒 JWT
+
 Update a driver profile. All fields optional.
 
 **Body**
@@ -345,6 +371,7 @@ Update a driver profile. All fields optional.
 ---
 
 ### `DELETE /drivers/{id}` 🛡️ ADMIN
+
 Delete a driver profile.
 
 **Response `200`** → no body
@@ -354,6 +381,7 @@ Delete a driver profile.
 ## Vehicles
 
 ### `POST /vehicles/organization/{organizationId}` 🛡️ ADMIN
+
 Register a vehicle for an organization.
 
 **Body**
@@ -369,6 +397,7 @@ Register a vehicle for an organization.
 ---
 
 ### `GET /vehicles/organization/{organizationId}` 🛡️ ADMIN
+
 List all vehicles in an organization (paginated).
 
 **Response `200`** → Paginated [[VehicleResponse](#vehicleresponse)]
@@ -376,6 +405,7 @@ List all vehicles in an organization (paginated).
 ---
 
 ### `GET /vehicles/{id}` 🛡️ ADMIN
+
 Get a vehicle by ID.
 
 **Response `200`** → [VehicleResponse](#vehicleresponse)
@@ -383,6 +413,7 @@ Get a vehicle by ID.
 ---
 
 ### `PUT /vehicles/{id}` 🛡️ ADMIN
+
 Update a vehicle. All fields optional.
 
 **Body**
@@ -399,6 +430,7 @@ Update a vehicle. All fields optional.
 ---
 
 ### `DELETE /vehicles/{id}` 🛡️ ADMIN
+
 Soft-deactivate a vehicle (status → INACTIVE).
 
 **Response `200`** → no body
@@ -410,6 +442,7 @@ Soft-deactivate a vehicle (status → INACTIVE).
 A trip template defines the recurring structure of a route (stops, prices, schedule).
 
 ### `POST /trip-templates/organization/{organizationId}` 🛡️ ADMIN
+
 Create a trip template.
 
 **Body**
@@ -434,6 +467,7 @@ Create a trip template.
 ---
 
 ### `GET /trip-templates/organization/{organizationId}` 🛡️ ADMIN
+
 List all trip templates in an organization (paginated).
 
 **Response `200`** → Paginated [[TripTemplateResponse](#triptemplateresponse)]
@@ -441,6 +475,7 @@ List all trip templates in an organization (paginated).
 ---
 
 ### `GET /trip-templates/{id}` 🛡️ ADMIN
+
 Get a trip template by ID.
 
 **Response `200`** → [TripTemplateResponse](#triptemplateresponse)
@@ -448,6 +483,7 @@ Get a trip template by ID.
 ---
 
 ### `PUT /trip-templates/{id}` 🛡️ ADMIN
+
 Update a trip template. All fields optional.
 
 **Response `200`** → [TripTemplateResponse](#triptemplateresponse)
@@ -455,6 +491,7 @@ Update a trip template. All fields optional.
 ---
 
 ### `DELETE /trip-templates/{id}` 🛡️ ADMIN
+
 Deactivate a trip template (soft delete).
 
 **Response `200`** → no body
@@ -466,6 +503,7 @@ Deactivate a trip template (soft delete).
 A trip instance is a scheduled occurrence of a trip template (a real departure on a specific date/time).
 
 ### `POST /trip-instances/organization/{organizationId}` 🛡️ ADMIN
+
 Create a trip instance from a template.
 
 **Body**
@@ -485,6 +523,7 @@ Create a trip instance from a template.
 ---
 
 ### `GET /trip-instances/organization/{organizationId}` 🛡️ ADMIN
+
 List all trip instances for an organization (paginated).
 
 **Response `200`** → Paginated [[TripInstanceResponse](#tripinstanceresponse)]
@@ -492,6 +531,7 @@ List all trip instances for an organization (paginated).
 ---
 
 ### `GET /trip-instances/template/{templateId}` 🛡️ ADMIN
+
 List all instances for a specific template (paginated).
 
 **Response `200`** → Paginated [[TripInstanceResponse](#tripinstanceresponse)]
@@ -499,6 +539,7 @@ List all instances for a specific template (paginated).
 ---
 
 ### `GET /trip-instances/{id}` 🔒 JWT
+
 Get a trip instance by ID.
 
 **Response `200`** → [TripInstanceResponse](#tripinstanceresponse)
@@ -506,6 +547,7 @@ Get a trip instance by ID.
 ---
 
 ### `PATCH /trip-instances/{id}/status` 🛡️ ADMIN
+
 Transition a trip instance to a new lifecycle status.
 
 **Status flow:** `DRAFT → SCHEDULED → CONFIRMED → IN_PROGRESS → FINISHED`  
@@ -521,6 +563,7 @@ Can also go to `CANCELED` from `DRAFT`, `SCHEDULED`, or `CONFIRMED`.
 ---
 
 ### `PUT /trip-instances/{id}/driver` 🛡️ ADMIN
+
 Assign or unassign a driver to a trip instance.
 
 **Query:** `?driverId=<uuid>` (omit to unassign)
@@ -530,6 +573,7 @@ Assign or unassign a driver to a trip instance.
 ---
 
 ### `PUT /trip-instances/{id}/vehicle` 🛡️ ADMIN
+
 Assign or unassign a vehicle to a trip instance.
 
 **Query:** `?vehicleId=<uuid>` (omit to unassign)
@@ -543,6 +587,7 @@ Assign or unassign a vehicle to a trip instance.
 No authentication required. Used for the public listing/booking pages.
 
 ### `GET /public/trip-instances` 🌐 Public
+
 List all public trips (from `isPublic = true` templates) with status `SCHEDULED` or `CONFIRMED`, ordered by departure time.
 
 **Query**
@@ -557,6 +602,7 @@ List all public trips (from `isPublic = true` templates) with status `SCHEDULED`
 ---
 
 ### `GET /public/trip-instances/{id}` 🌐 Public
+
 Get a single bookable trip instance by ID (must be `SCHEDULED` or `CONFIRMED`).
 
 **Response `200`** → [PublicTripInstanceResponse](#publictripinstanceresponse)  
@@ -565,6 +611,7 @@ Get a single bookable trip instance by ID (must be `SCHEDULED` or `CONFIRMED`).
 ---
 
 ### `GET /public/trip-instances/org/{slug}` 🌐 Public
+
 List all `SCHEDULED`/`CONFIRMED` trips for an organization by its slug (org-specific share link page). Returns all trips regardless of `isPublic`.
 
 **Query:** `?page=1&limit=10`
@@ -576,6 +623,7 @@ List all `SCHEDULED`/`CONFIRMED` trips for an organization by its slug (org-spec
 ## Bookings
 
 ### `POST /bookings` 🔒 JWT
+
 Enroll the authenticated user in a trip instance. Creates a booking + payment record.
 
 **Body**
@@ -592,9 +640,11 @@ Enroll the authenticated user in a trip instance. Creates a booking + payment re
 ---
 
 ### `GET /bookings/availability/{tripInstanceId}` 🔒 JWT
+
 Check available slots before booking (use before showing the booking form).
 
 **Response `200`**
+
 ```json
 {
   "tripInstanceId": "uuid",
@@ -609,6 +659,7 @@ Check available slots before booking (use before showing the booking form).
 ---
 
 ### `GET /bookings/user` 🔒 JWT
+
 List the current user's bookings (paginated).
 
 **Query**
@@ -623,6 +674,7 @@ List the current user's bookings (paginated).
 ---
 
 ### `GET /bookings/{id}` 🔒 JWT
+
 Get a booking by ID.
 
 **Response `200`** → [BookingResponse](#bookingresponse)
@@ -630,6 +682,7 @@ Get a booking by ID.
 ---
 
 ### `GET /bookings/{id}/details` 🔒 JWT
+
 Get a booking with enriched trip data (departure time, trip status, available slots). Use on the booking detail page.
 
 **Response `200`** → [BookingDetailsResponse](#bookingdetailsresponse)
@@ -637,6 +690,7 @@ Get a booking with enriched trip data (departure time, trip status, available sl
 ---
 
 ### `GET /bookings/trip-instance/{tripInstanceId}` 🔒 JWT
+
 List all bookings for a specific trip instance (paginated). Requires org membership.
 
 **Response `200`** → Paginated [[BookingResponse](#bookingresponse)]
@@ -644,6 +698,7 @@ List all bookings for a specific trip instance (paginated). Requires org members
 ---
 
 ### `GET /bookings/trip-instance/{tripInstanceId}/passengers` 🔒 JWT
+
 List the name and boarding stop of every active passenger on a trip instance.
 
 Access is granted if the caller has an `ACTIVE` booking on the trip **or** is a member of the owning organization. Sensitive fields (email, phone, userId) are never included.
@@ -655,6 +710,7 @@ Access is granted if the caller has an `ACTIVE` booking on the trip **or** is a 
 ---
 
 ### `GET /bookings/organization/{organizationId}` 🛡️ ADMIN
+
 List all bookings in an organization (paginated).
 
 **Response `200`** → Paginated [[BookingResponse](#bookingresponse)]
@@ -662,6 +718,7 @@ List all bookings in an organization (paginated).
 ---
 
 ### `PATCH /bookings/{id}/cancel` 🔒 JWT
+
 Cancel a booking (status → INACTIVE). Frees up a seat.
 
 **Response `200`** → [BookingResponse](#bookingresponse)
@@ -669,6 +726,7 @@ Cancel a booking (status → INACTIVE). Frees up a seat.
 ---
 
 ### `PATCH /bookings/{id}/confirm-presence` 🔒 JWT (or ADMIN)
+
 Mark passenger as present on the trip.
 
 **Response `200`** → [BookingResponse](#bookingresponse)
@@ -678,6 +736,7 @@ Mark passenger as present on the trip.
 ## Subscriptions
 
 ### `POST /organizations/{organizationId}/subscriptions` 🛡️ ADMIN
+
 Subscribe an organization to a plan.
 
 **Body**
@@ -690,6 +749,7 @@ Subscribe an organization to a plan.
 ---
 
 ### `GET /organizations/{organizationId}/subscriptions/active` 🛡️ ADMIN
+
 Get the current active subscription for an organization.
 
 **Response `200`** → [SubscriptionResponse](#subscriptionresponse)
@@ -697,6 +757,7 @@ Get the current active subscription for an organization.
 ---
 
 ### `GET /organizations/{organizationId}/subscriptions` 🛡️ ADMIN
+
 List all subscriptions for an organization (paginated).
 
 **Response `200`** → Paginated [[SubscriptionResponse](#subscriptionresponse)]
@@ -704,6 +765,7 @@ List all subscriptions for an organization (paginated).
 ---
 
 ### `PATCH /organizations/{organizationId}/subscriptions/{id}/cancel` 🛡️ ADMIN
+
 Cancel a subscription. Takes effect at `expiresAt`.
 
 **Response `200`** → [SubscriptionResponse](#subscriptionresponse)
@@ -713,6 +775,7 @@ Cancel a subscription. Takes effect at `expiresAt`.
 ## Plans
 
 ### `GET /plans` 🔒 JWT
+
 List all available plans (paginated).
 
 **Response `200`** → Paginated [[PlanResponse](#planresponse)]
@@ -720,6 +783,7 @@ List all available plans (paginated).
 ---
 
 ### `GET /plans/{id}` 🔒 JWT
+
 Get a plan by ID.
 
 **Response `200`** → [PlanResponse](#planresponse)
@@ -731,6 +795,7 @@ Get a plan by ID.
 Payments are created automatically when a booking is made. Use these endpoints to display payment history.
 
 ### `GET /organizations/{organizationId}/payments` 🛡️ ADMIN
+
 List all payments for an organization (paginated).
 
 **Response `200`** → Paginated [[PaymentResponse](#paymentresponse)]
@@ -738,6 +803,7 @@ List all payments for an organization (paginated).
 ---
 
 ### `GET /organizations/{organizationId}/payments/{id}` 🛡️ ADMIN
+
 Get a payment by ID.
 
 **Response `200`** → [PaymentResponse](#paymentresponse)
@@ -745,6 +811,7 @@ Get a payment by ID.
 ---
 
 ### `PATCH /organizations/{organizationId}/payments/{id}/confirm` 🛡️ ADMIN
+
 Confirm a PENDING payment (simulated — no real payment gateway).
 
 **Response `200`** → [PaymentResponse](#paymentresponse)
@@ -752,6 +819,7 @@ Confirm a PENDING payment (simulated — no real payment gateway).
 ---
 
 ### `PATCH /organizations/{organizationId}/payments/{id}/fail` 🛡️ ADMIN
+
 Fail a PENDING payment (simulated).
 
 **Response `200`** → [PaymentResponse](#paymentresponse)
@@ -761,6 +829,7 @@ Fail a PENDING payment (simulated).
 ## Response Schemas
 
 ### TokenResponse
+
 ```json
 {
   "accessToken": "eyJ...",
@@ -774,6 +843,7 @@ Fail a PENDING payment (simulated).
 ```
 
 ### UserResponse
+
 ```json
 {
   "id": "uuid",
@@ -787,6 +857,7 @@ Fail a PENDING payment (simulated).
 ```
 
 ### OrganizationResponse
+
 ```json
 {
   "id": "uuid",
@@ -803,6 +874,7 @@ Fail a PENDING payment (simulated).
 ```
 
 ### MembershipResponse
+
 ```json
 {
   "userId": "uuid",
@@ -814,6 +886,7 @@ Fail a PENDING payment (simulated).
 ```
 
 ### DriverResponse
+
 ```json
 {
   "id": "uuid",
@@ -828,6 +901,7 @@ Fail a PENDING payment (simulated).
 ```
 
 ### VehicleResponse
+
 ```json
 {
   "id": "uuid",
@@ -843,6 +917,7 @@ Fail a PENDING payment (simulated).
 ```
 
 ### TripTemplateResponse
+
 ```json
 {
   "id": "uuid",
@@ -852,9 +927,9 @@ Fail a PENDING payment (simulated).
   "stops": ["Terminal Rodoviário", "Praça Central", "Universidade Federal"],
   "shift": "MORNING",
   "frequency": ["MONDAY", "WEDNESDAY", "FRIDAY"],
-  "priceOneWay": 12.50,
-  "priceReturn": 12.50,
-  "priceRoundTrip": 20.00,
+  "priceOneWay": 12.5,
+  "priceReturn": 12.5,
+  "priceRoundTrip": 20.0,
   "isPublic": false,
   "isRecurring": true,
   "autoCancelEnabled": false,
@@ -867,6 +942,7 @@ Fail a PENDING payment (simulated).
 ```
 
 ### TripInstanceResponse
+
 ```json
 {
   "id": "uuid",
@@ -887,6 +963,7 @@ Fail a PENDING payment (simulated).
 ```
 
 ### PublicTripInstanceResponse
+
 ```json
 {
   "id": "uuid",
@@ -898,14 +975,15 @@ Fail a PENDING payment (simulated).
   "totalCapacity": 40,
   "departurePoint": "Terminal Rodoviário",
   "destination": "Universidade Federal",
-  "priceOneWay": 12.50,
-  "priceReturn": 12.50,
-  "priceRoundTrip": 20.00,
+  "priceOneWay": 12.5,
+  "priceReturn": 12.5,
+  "priceRoundTrip": 20.0,
   "isRecurring": true
 }
 ```
 
 ### BookingResponse
+
 ```json
 {
   "id": "uuid",
@@ -916,7 +994,7 @@ Fail a PENDING payment (simulated).
   "status": "ACTIVE",
   "presenceConfirmed": false,
   "enrollmentType": "ONE_WAY",
-  "recordedPrice": 12.50,
+  "recordedPrice": 12.5,
   "boardingStop": "Terminal Rodoviário",
   "alightingStop": "Universidade Federal",
   "createdAt": "...",
@@ -925,6 +1003,7 @@ Fail a PENDING payment (simulated).
 ```
 
 ### TripPassengerResponse
+
 ```json
 [
   { "name": "João Silva", "boardingStop": "A2" },
@@ -933,7 +1012,9 @@ Fail a PENDING payment (simulated).
 ```
 
 ### BookingDetailsResponse
+
 Same as BookingResponse plus:
+
 ```json
 {
   "tripDepartureTime": "2026-06-15T07:30:00.000Z",
@@ -945,6 +1026,7 @@ Same as BookingResponse plus:
 ```
 
 ### SubscriptionResponse
+
 ```json
 {
   "id": "uuid",
@@ -959,6 +1041,7 @@ Same as BookingResponse plus:
 ```
 
 ### PlanResponse
+
 ```json
 {
   "id": 1,
@@ -975,13 +1058,14 @@ Same as BookingResponse plus:
 ```
 
 ### PaymentResponse
+
 ```json
 {
   "id": "uuid",
   "organizationId": "uuid",
   "enrollmentId": "uuid",
   "method": "PIX",
-  "amount": 12.50,
+  "amount": 12.5,
   "status": "PENDING",
   "createdAt": "...",
   "updatedAt": "..."
@@ -992,10 +1076,10 @@ Same as BookingResponse plus:
 
 ## Common Errors
 
-| HTTP | When |
-|---|---|
-| `400` | Validation failed (missing/invalid fields) |
+| HTTP  | When                                           |
+| ----- | ---------------------------------------------- |
+| `400` | Validation failed (missing/invalid fields)     |
 | `401` | Missing or invalid JWT / expired refresh token |
-| `403` | Insufficient role or plan limit exceeded |
-| `404` | Resource not found |
-| `409` | Duplicate (user/org/vehicle already exists) |
+| `403` | Insufficient role or plan limit exceeded       |
+| `404` | Resource not found                             |
+| `409` | Duplicate (user/org/vehicle already exists)    |

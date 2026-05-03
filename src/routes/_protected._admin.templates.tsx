@@ -16,12 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -239,8 +234,7 @@ function TemplatesPage() {
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>
-                  {SHIFT_LABEL[tpl.shift] ?? tpl.shift} ·{" "}
-                  {tpl.stops?.length ?? 0} paradas
+                  {SHIFT_LABEL[tpl.shift] ?? tpl.shift} · {tpl.stops?.length ?? 0} paradas
                 </span>
                 <div className="flex gap-1">
                   <Button
@@ -302,9 +296,7 @@ function TemplatesPage() {
               <Label>Turno</Label>
               <Select
                 value={form.shift}
-                onValueChange={(v) =>
-                  setForm((f) => ({ ...f, shift: v as typeof f.shift }))
-                }
+                onValueChange={(v) => setForm((f) => ({ ...f, shift: v as typeof f.shift }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -360,9 +352,7 @@ function TemplatesPage() {
                   )}
                 </div>
               ))}
-              {fieldErrors.stops && (
-                <p className="text-xs text-destructive">{fieldErrors.stops}</p>
-              )}
+              {fieldErrors.stops && <p className="text-xs text-destructive">{fieldErrors.stops}</p>}
             </div>
 
             <div className="grid grid-cols-3 gap-3">
@@ -435,7 +425,8 @@ function TemplatesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remover template?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteTarget?.departurePoint} → {deleteTarget?.destination} será desativado. Esta ação não pode ser desfeita.
+              {deleteTarget?.departurePoint} → {deleteTarget?.destination} será desativado. Esta
+              ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -22,9 +22,7 @@ export function TripCard({ trip }: TripCardProps) {
           <Calendar className="h-4 w-4 text-primary" />
           {formatDateTime(trip.departureTime)}
         </div>
-        <Badge variant={statusVariant(trip.tripStatus)}>
-          {statusLabel(trip.tripStatus)}
-        </Badge>
+        <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
       </div>
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span className="flex items-center gap-1.5">

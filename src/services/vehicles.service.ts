@@ -26,6 +26,5 @@ export const vehiclesService = {
       body: JSON.stringify(data),
     }),
 
-  deactivate: (id: string) =>
-    api<void>(`/vehicles/${id}`, { method: "DELETE" }),
+  deactivate: (id: string) => api<void>(`/vehicles/${id}`, { method: "DELETE" }),
 };

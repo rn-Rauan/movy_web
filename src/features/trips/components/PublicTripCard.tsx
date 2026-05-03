@@ -17,9 +17,7 @@ export function PublicTripCard({ trip }: PublicTripCardProps) {
     <Card className="p-4">
       <div className="flex items-start justify-between gap-2 mb-3">
         <p className="text-xs font-medium text-primary">{trip.organizationName}</p>
-        <Badge variant={statusVariant(trip.tripStatus)}>
-          {statusLabel(trip.tripStatus)}
-        </Badge>
+        <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
       </div>
 
       <div className="space-y-1.5 mb-3">
@@ -51,10 +49,7 @@ export function PublicTripCard({ trip }: PublicTripCardProps) {
 
       <div className="grid grid-cols-2 gap-2 mt-3">
         {trip.organizationSlug ? (
-          <Link
-            to="/public/organizations/$slug"
-            params={{ slug: trip.organizationSlug }}
-          >
+          <Link to="/public/organizations/$slug" params={{ slug: trip.organizationSlug }}>
             <Button variant="outline" className="w-full h-10">
               Ver empresa
             </Button>

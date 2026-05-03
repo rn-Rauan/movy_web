@@ -46,7 +46,13 @@ function BookPage() {
         </Card>
       ) : null}
 
-      <form onSubmit={(e) => { e.preventDefault(); submit(trip); }} className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit(trip);
+        }}
+        className="space-y-4"
+      >
         <div className="space-y-2">
           <Label>Tipo de viagem</Label>
           <Select

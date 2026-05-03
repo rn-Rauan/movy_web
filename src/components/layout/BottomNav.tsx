@@ -110,12 +110,7 @@ export function BottomNav() {
 
   if (!isAuthenticated || roleLoading) return null;
 
-  const tabs =
-    isAdmin && adminOrgId
-      ? adminTabs()
-      : isDriver
-        ? driverTabs
-        : passengerTabs;
+  const tabs = isAdmin && adminOrgId ? adminTabs() : isDriver ? driverTabs : passengerTabs;
 
   const colsClass =
     tabs.length === 5 ? "grid-cols-5" : tabs.length === 4 ? "grid-cols-4" : "grid-cols-3";
@@ -131,8 +126,8 @@ export function BottomNav() {
           return (
             <Link
               key={tab.to}
-              to={tab.to as any}
-              params={tab.params as any}
+              to={tab.to as string}
+              params={tab.params as Record<string, string>}
               className={`flex flex-col items-center gap-1 py-3 text-[11px] font-medium transition-colors ${
                 active ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}

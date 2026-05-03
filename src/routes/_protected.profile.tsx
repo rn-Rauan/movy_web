@@ -8,12 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 
@@ -66,7 +61,9 @@ function ProfilePage() {
     const parsed = profileSchema.safeParse(form);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => { errs[e.path.join(".")] = e.message; });
+      parsed.error.errors.forEach((e) => {
+        errs[e.path.join(".")] = e.message;
+      });
       setFormErrors(errs);
       return;
     }
@@ -92,7 +89,9 @@ function ProfilePage() {
     const parsed = passwordSchema.safeParse(pwForm);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => { errs[e.path.join(".")] = e.message; });
+      parsed.error.errors.forEach((e) => {
+        errs[e.path.join(".")] = e.message;
+      });
       setPwErrors(errs);
       return;
     }

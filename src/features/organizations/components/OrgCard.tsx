@@ -9,7 +9,11 @@ interface OrgCardProps {
 
 /** Public org card — does NOT expose slug; shows name + contact info. */
 export function OrgCard({ org }: OrgCardProps) {
-  const contactHref = org.email ? `mailto:${org.email}` : org.telephone ? `tel:${org.telephone}` : undefined;
+  const contactHref = org.email
+    ? `mailto:${org.email}`
+    : org.telephone
+      ? `tel:${org.telephone}`
+      : undefined;
 
   return (
     <Card className="p-4">

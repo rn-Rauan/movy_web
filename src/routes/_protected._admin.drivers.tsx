@@ -9,12 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,7 +79,9 @@ function DriversPage() {
     const parsed = addDriverSchema.safeParse(form);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => { errs[e.path.join(".")] = e.message; });
+      parsed.error.errors.forEach((e) => {
+        errs[e.path.join(".")] = e.message;
+      });
       setFieldErrors(errs);
       return;
     }
@@ -107,14 +104,8 @@ function DriversPage() {
     if (!removeTarget || !adminOrgId) return;
     setRemoving(true);
     try {
-      await driversService.removeMembership(
-        removeTarget.userId,
-        DRIVER_ROLE_ID,
-        adminOrgId,
-      );
-      setDrivers((prev) =>
-        prev ? prev.filter((d) => d.id !== removeTarget.id) : prev,
-      );
+      await driversService.removeMembership(removeTarget.userId, DRIVER_ROLE_ID, adminOrgId);
+      setDrivers((prev) => (prev ? prev.filter((d) => d.id !== removeTarget.id) : prev));
       toast.success("Motorista removido");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao remover motorista");
@@ -164,10 +155,7 @@ function DriversPage() {
                     <span>·</span>
                     <span>Cat. {d.cnhCategory}</span>
                     <span>·</span>
-                    <span>
-                      Val.{" "}
-                      {new Date(d.cnhExpiresAt).toLocaleDateString("pt-BR")}
-                    </span>
+                    <span>Val. {new Date(d.cnhExpiresAt).toLocaleDateString("pt-BR")}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -225,9 +213,7 @@ function DriversPage() {
                 onChange={(e) => setForm((f) => ({ ...f, cnh: e.target.value }))}
                 placeholder="123456789"
               />
-              {fieldErrors.cnh && (
-                <p className="text-xs text-destructive">{fieldErrors.cnh}</p>
-              )}
+              {fieldErrors.cnh && <p className="text-xs text-destructive">{fieldErrors.cnh}</p>}
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? "Adicionando..." : "Adicionar motorista"}

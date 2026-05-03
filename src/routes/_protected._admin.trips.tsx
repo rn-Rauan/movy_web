@@ -16,12 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { useRole } from "@/lib/role-context";
 import { useTrips } from "@/features/trips/hooks/useTrips";
@@ -195,20 +190,11 @@ function TripsList() {
       ) : (
         <div className="space-y-2">
           {list.map((t) => (
-            <Link
-              key={t.id}
-              to="/trips/$tripId"
-              params={{ tripId: t.id }}
-              className="block"
-            >
+            <Link key={t.id} to="/trips/$tripId" params={{ tripId: t.id }} className="block">
               <Card className="p-4 hover:bg-accent/50 transition-colors">
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="text-sm font-semibold">
-                    {formatDateTime(t.departureTime)}
-                  </div>
-                  <Badge variant={statusVariant(t.tripStatus)}>
-                    {statusLabel(t.tripStatus)}
-                  </Badge>
+                  <div className="text-sm font-semibold">{formatDateTime(t.departureTime)}</div>
+                  <Badge variant={statusVariant(t.tripStatus)}>{statusLabel(t.tripStatus)}</Badge>
                 </div>
                 {(t.departurePoint || t.destination) && (
                   <div className="text-sm text-muted-foreground mb-2">
@@ -216,7 +202,9 @@ function TripsList() {
                   </div>
                 )}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{t.totalCapacity} lugares · {t.bookedCount ?? 0} inscritos</span>
+                  <span>
+                    {t.totalCapacity} lugares · {t.bookedCount ?? 0} inscritos
+                  </span>
                   <ChevronRight className="h-4 w-4" />
                 </div>
               </Card>

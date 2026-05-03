@@ -54,10 +54,7 @@ const step2Schema = z.object({
 const step3Schema = z.object({
   departureTime: z.string().min(1, "Informe a data/hora de partida"),
   arrivalEstimate: z.string().min(1, "Informe a estimativa de chegada"),
-  totalCapacity: z.coerce
-    .number()
-    .int()
-    .min(1, "Capacidade deve ser ao menos 1"),
+  totalCapacity: z.coerce.number().int().min(1, "Capacidade deve ser ao menos 1"),
   initialStatus: z.enum(["DRAFT", "SCHEDULED"]),
 });
 
@@ -124,10 +121,11 @@ function SetupPage() {
     }
     setSubmitting(true);
     try {
-      const res = await api<{ accessToken: string; refreshToken: string; user: { id: string; name: string; email: string } }>(
-        "/auth/setup-organization",
-        { method: "POST", body: JSON.stringify(parsed.data) },
-      );
+      const res = await api<{
+        accessToken: string;
+        refreshToken: string;
+        user: { id: string; name: string; email: string };
+      }>("/auth/setup-organization", { method: "POST", body: JSON.stringify(parsed.data) });
       tokenStorage.set(res);
       refreshUser();
       const orgsRes = await api<Paginated<Organization>>("/organizations/me");
@@ -161,10 +159,10 @@ function SetupPage() {
     }
     setSubmitting(true);
     try {
-      const res = await api<TripTemplate>(
-        `/trip-templates/organization/${orgId}`,
-        { method: "POST", body: JSON.stringify(parsed.data) },
-      );
+      const res = await api<TripTemplate>(`/trip-templates/organization/${orgId}`, {
+        method: "POST",
+        body: JSON.stringify(parsed.data),
+      });
       setTemplateId(res.id);
       toast.success("Roteiro criado!");
       setStep(3);
@@ -304,7 +302,10 @@ function SetupPage() {
                 id="slug"
                 value={form1.slug}
                 onChange={(e) =>
-                  setForm1((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-") }))
+                  setForm1((f) => ({
+                    ...f,
+                    slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+                  }))
                 }
                 placeholder="transportes-xyz"
                 required
@@ -490,7 +491,9 @@ function SetupPage() {
               <Label htmlFor="initStatus">Status inicial</Label>
               <Select
                 value={form3.initialStatus}
-                onValueChange={(v) => setForm3((f) => ({ ...f, initialStatus: v as InitialStatus }))}
+                onValueChange={(v) =>
+                  setForm3((f) => ({ ...f, initialStatus: v as InitialStatus }))
+                }
               >
                 <SelectTrigger id="initStatus" className="h-12">
                   <SelectValue />

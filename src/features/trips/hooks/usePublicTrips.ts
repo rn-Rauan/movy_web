@@ -22,9 +22,7 @@ export function usePublicTrips() {
   const filtered = (trips ?? []).filter((t) => {
     const q = search.toLowerCase();
     return (
-      !q ||
-      t.departurePoint?.toLowerCase().includes(q) ||
-      t.destination?.toLowerCase().includes(q)
+      !q || t.departurePoint?.toLowerCase().includes(q) || t.destination?.toLowerCase().includes(q)
     );
   });
 

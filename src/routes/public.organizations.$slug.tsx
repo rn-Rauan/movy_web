@@ -46,21 +46,29 @@ function PublicOrgPage() {
   useEffect(() => {
     let cancelled = false;
     organizationsService.getBySlug(slug).then(
-      (res) => { if (!cancelled) setOrg(res); },
+      (res) => {
+        if (!cancelled) setOrg(res);
+      },
       () => {},
     );
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   const orgName = org?.name || (trips && trips.length > 0 && trips[0].organizationName) || slug;
   const visible = useMemo(
     () =>
       shift === "ALL"
-        ? trips ?? []
+        ? (trips ?? [])
         : (trips ?? []).filter((t) => shiftOf(t.departureTime) === shift),
     [trips, shift],
   );
-  const contactHref = org?.email ? `mailto:${org.email}` : org?.telephone ? `tel:${org.telephone}` : undefined;
+  const contactHref = org?.email
+    ? `mailto:${org.email}`
+    : org?.telephone
+      ? `tel:${org.telephone}`
+      : undefined;
 
   return (
     <AppShell title="Empresa" back>
@@ -77,23 +85,34 @@ function PublicOrgPage() {
           </div>
         </div>
 
-        {(org?.email || org?.telephone || org?.address) ? (
+        {org?.email || org?.telephone || org?.address ? (
           <div className="space-y-1.5 text-xs text-muted-foreground border-t pt-3">
             {org?.address ? (
-              <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 shrink-0" />{org.address}</p>
+              <p className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                {org.address}
+              </p>
             ) : null}
             {org?.email ? (
-              <p className="flex items-center gap-2 truncate"><Mail className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{org.email}</span></p>
+              <p className="flex items-center gap-2 truncate">
+                <Mail className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{org.email}</span>
+              </p>
             ) : null}
             {org?.telephone ? (
-              <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 shrink-0" />{org.telephone}</p>
+              <p className="flex items-center gap-2">
+                <Phone className="h-3.5 w-3.5 shrink-0" />
+                {org.telephone}
+              </p>
             ) : null}
           </div>
         ) : null}
 
         {contactHref ? (
           <a href={contactHref} className="block mt-3">
-            <Button variant="outline" className="w-full h-10">Entrar em contato</Button>
+            <Button variant="outline" className="w-full h-10">
+              Entrar em contato
+            </Button>
           </a>
         ) : null}
       </Card>

@@ -118,11 +118,7 @@ export function TripDetailView({ trip, availability, orgId, passengers }: TripDe
       ) : null}
 
       {enrollable ? (
-        <Link
-          to="/trips/$orgId/$tripId/book"
-          params={{ orgId, tripId: trip.id }}
-          className="block"
-        >
+        <Link to="/trips/$orgId/$tripId/book" params={{ orgId, tripId: trip.id }} className="block">
           <Button className="w-full h-12 text-base">Inscrever-se</Button>
         </Link>
       ) : (

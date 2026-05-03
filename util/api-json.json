@@ -10,9 +10,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "App"
-        ]
+        "tags": ["App"]
       }
     },
     "/users": {
@@ -42,9 +40,7 @@
           }
         },
         "summary": "Create a new user (for dev only)",
-        "tags": [
-          "users"
-        ]
+        "tags": ["users"]
       },
       "get": {
         "operationId": "UserController_findAll",
@@ -81,9 +77,7 @@
           }
         },
         "summary": "Find all users (for dev only)",
-        "tags": [
-          "users"
-        ]
+        "tags": ["users"]
       }
     },
     "/users/me": {
@@ -103,9 +97,7 @@
           }
         },
         "summary": "Get current user profile",
-        "tags": [
-          "users"
-        ]
+        "tags": ["users"]
       },
       "put": {
         "operationId": "UserController_updateMe",
@@ -133,9 +125,7 @@
           }
         },
         "summary": "Update current user profile",
-        "tags": [
-          "users"
-        ]
+        "tags": ["users"]
       },
       "delete": {
         "operationId": "UserController_disableMe",
@@ -146,9 +136,7 @@
           }
         },
         "summary": "Disable current user account",
-        "tags": [
-          "users"
-        ]
+        "tags": ["users"]
       }
     },
     "/users/active": {
@@ -187,9 +175,7 @@
           }
         },
         "summary": "Find all active users (for dev only)",
-        "tags": [
-          "users"
-        ]
+        "tags": ["users"]
       }
     },
     "/users/{id}": {
@@ -220,9 +206,7 @@
           }
         },
         "summary": "Find a user by ID - DEPRECATED, use /users/me (for dev only)",
-        "tags": [
-          "users"
-        ]
+        "tags": ["users"]
       },
       "delete": {
         "description": "This endpoint is deprecated. Please use DELETE /users/me instead.",
@@ -244,9 +228,7 @@
           }
         },
         "summary": "Disable a user - DEPRECATED, use /users/me (for dev only)",
-        "tags": [
-          "users"
-        ]
+        "tags": ["users"]
       }
     },
     "/organizations": {
@@ -276,9 +258,7 @@
           }
         },
         "summary": "Create a new organization (dev only)",
-        "tags": [
-          "organizations"
-        ]
+        "tags": ["organizations"]
       },
       "get": {
         "operationId": "OrganizationController_findAll",
@@ -315,9 +295,7 @@
           }
         },
         "summary": "Find all organizations of a tenant (for ADMIN)",
-        "tags": [
-          "organizations"
-        ]
+        "tags": ["organizations"]
       }
     },
     "/organizations/me": {
@@ -356,9 +334,7 @@
           }
         },
         "summary": "Find all organizations the authenticated user belongs to",
-        "tags": [
-          "organizations"
-        ]
+        "tags": ["organizations"]
       }
     },
     "/organizations/active": {
@@ -397,9 +373,7 @@
           }
         },
         "summary": "Find all active organizations",
-        "tags": [
-          "organizations"
-        ]
+        "tags": ["organizations"]
       }
     },
     "/organizations/{id}": {
@@ -429,9 +403,7 @@
           }
         },
         "summary": "Find an organization by ID (for ADMIN)",
-        "tags": [
-          "organizations"
-        ]
+        "tags": ["organizations"]
       },
       "put": {
         "operationId": "OrganizationController_update",
@@ -469,9 +441,7 @@
           }
         },
         "summary": "Update an existing organization (for ADMIN)",
-        "tags": [
-          "organizations"
-        ]
+        "tags": ["organizations"]
       },
       "delete": {
         "operationId": "OrganizationController_delete",
@@ -499,9 +469,7 @@
           }
         },
         "summary": "Disable an organization (for ADMIN)",
-        "tags": [
-          "organizations"
-        ]
+        "tags": ["organizations"]
       }
     },
     "/public/organizations/{slug}": {
@@ -536,9 +504,7 @@
           }
         },
         "summary": "Find active organisation by URL slug (no auth required)",
-        "tags": [
-          "Public"
-        ]
+        "tags": ["Public"]
       }
     },
     "/memberships/me/role/{organizationId}": {
@@ -568,9 +534,7 @@
           }
         },
         "summary": "Get the role of the authenticated user within an organization",
-        "tags": [
-          "memberships"
-        ]
+        "tags": ["memberships"]
       }
     },
     "/memberships": {
@@ -600,9 +564,7 @@
           }
         },
         "summary": "Create a new membership (for ADMIN)",
-        "tags": [
-          "memberships"
-        ]
+        "tags": ["memberships"]
       }
     },
     "/memberships/user/{userId}": {
@@ -650,9 +612,7 @@
           }
         },
         "summary": "Find all memberships for a user (for ADMIN)",
-        "tags": [
-          "memberships"
-        ]
+        "tags": ["memberships"]
       }
     },
     "/memberships/organization/{organizationId}": {
@@ -700,9 +660,7 @@
           }
         },
         "summary": "Find all memberships for an organization (for ADMIN)",
-        "tags": [
-          "memberships"
-        ]
+        "tags": ["memberships"]
       }
     },
     "/memberships/{userId}/{roleId}/{organizationId}": {
@@ -750,9 +708,7 @@
           }
         },
         "summary": "Find a membership by composite key (for ADMIN)",
-        "tags": [
-          "memberships"
-        ]
+        "tags": ["memberships"]
       },
       "delete": {
         "operationId": "MembershipController_remove",
@@ -798,9 +754,7 @@
           }
         },
         "summary": "Remove a membership (soft delete) (for ADMIN)",
-        "tags": [
-          "memberships"
-        ]
+        "tags": ["memberships"]
       }
     },
     "/memberships/{userId}/{roleId}/{organizationId}/restore": {
@@ -848,9 +802,7 @@
           }
         },
         "summary": "Restore a removed membership (for ADMIN)",
-        "tags": [
-          "memberships"
-        ]
+        "tags": ["memberships"]
       }
     },
     "/drivers": {
@@ -880,9 +832,7 @@
           }
         },
         "summary": "Create a new driver profile",
-        "tags": [
-          "drivers"
-        ]
+        "tags": ["drivers"]
       }
     },
     "/drivers/me": {
@@ -902,9 +852,7 @@
           }
         },
         "summary": "Get current driver profile",
-        "tags": [
-          "drivers"
-        ]
+        "tags": ["drivers"]
       }
     },
     "/drivers/lookup": {
@@ -943,9 +891,7 @@
           }
         },
         "summary": "Lookup driver profile by email and CNH (Admin only)",
-        "tags": [
-          "drivers"
-        ]
+        "tags": ["drivers"]
       }
     },
     "/drivers/organization/{organizationId}": {
@@ -993,9 +939,7 @@
           }
         },
         "summary": "Find all drivers in an organization (for ADMIN)",
-        "tags": [
-          "drivers"
-        ]
+        "tags": ["drivers"]
       }
     },
     "/drivers/{id}": {
@@ -1025,9 +969,7 @@
           }
         },
         "summary": "Find a driver by ID (for ADMIN)",
-        "tags": [
-          "drivers"
-        ]
+        "tags": ["drivers"]
       },
       "put": {
         "operationId": "DriverController_update",
@@ -1065,9 +1007,7 @@
           }
         },
         "summary": "Update a driver",
-        "tags": [
-          "drivers"
-        ]
+        "tags": ["drivers"]
       },
       "delete": {
         "operationId": "DriverController_remove",
@@ -1088,9 +1028,7 @@
           }
         },
         "summary": "Delete a driver (for ADMIN)",
-        "tags": [
-          "drivers"
-        ]
+        "tags": ["drivers"]
       }
     },
     "/organizations/{organizationId}/subscriptions": {
@@ -1101,9 +1039,7 @@
             "name": "organizationId",
             "required": true,
             "in": "path",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "requestBody": {
@@ -1129,9 +1065,7 @@
           }
         },
         "summary": "[ADMIN] Subscribe organization to a plan",
-        "tags": [
-          "subscriptions"
-        ]
+        "tags": ["subscriptions"]
       },
       "get": {
         "operationId": "SubscriptionController_findAll",
@@ -1158,9 +1092,7 @@
             "name": "organizationId",
             "required": true,
             "in": "path",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "responses": {
@@ -1176,9 +1108,7 @@
           }
         },
         "summary": "[ADMIN] List all subscriptions for organization",
-        "tags": [
-          "subscriptions"
-        ]
+        "tags": ["subscriptions"]
       }
     },
     "/organizations/{organizationId}/subscriptions/{id}/cancel": {
@@ -1197,9 +1127,7 @@
             "name": "organizationId",
             "required": true,
             "in": "path",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "responses": {
@@ -1215,9 +1143,7 @@
           }
         },
         "summary": "[ADMIN] Cancel a subscription (takes effect at expiresAt)",
-        "tags": [
-          "subscriptions"
-        ]
+        "tags": ["subscriptions"]
       }
     },
     "/organizations/{organizationId}/subscriptions/active": {
@@ -1228,9 +1154,7 @@
             "name": "organizationId",
             "required": true,
             "in": "path",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "responses": {
@@ -1246,9 +1170,7 @@
           }
         },
         "summary": "[ADMIN] Get active subscription for organization",
-        "tags": [
-          "subscriptions"
-        ]
+        "tags": ["subscriptions"]
       }
     },
     "/plans": {
@@ -1278,9 +1200,7 @@
           }
         },
         "summary": "Create a plan (dev only)",
-        "tags": [
-          "plans"
-        ]
+        "tags": ["plans"]
       },
       "get": {
         "operationId": "PlanController_findAll",
@@ -1317,9 +1237,7 @@
           }
         },
         "summary": "List all plans",
-        "tags": [
-          "plans"
-        ]
+        "tags": ["plans"]
       }
     },
     "/plans/{id}": {
@@ -1358,9 +1276,7 @@
           }
         },
         "summary": "Update a plan (dev only)",
-        "tags": [
-          "plans"
-        ]
+        "tags": ["plans"]
       },
       "get": {
         "operationId": "PlanController_findById",
@@ -1387,9 +1303,7 @@
           }
         },
         "summary": "Find a plan by id",
-        "tags": [
-          "plans"
-        ]
+        "tags": ["plans"]
       }
     },
     "/plans/{id}/deactivate": {
@@ -1418,9 +1332,7 @@
           }
         },
         "summary": "Deactivate a plan (dev only)",
-        "tags": [
-          "plans"
-        ]
+        "tags": ["plans"]
       }
     },
     "/auth/login": {
@@ -1453,9 +1365,7 @@
           }
         },
         "summary": "Login user",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/auth/register": {
@@ -1488,9 +1398,7 @@
           }
         },
         "summary": "Register new user",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/auth/register-organization": {
@@ -1523,9 +1431,7 @@
           }
         },
         "summary": "Register new user and organization (Atomic)",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/auth/setup-organization": {
@@ -1558,9 +1464,7 @@
           }
         },
         "summary": "Create an organization for an already-authenticated user",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/auth/refresh": {
@@ -1593,9 +1497,7 @@
           }
         },
         "summary": "Refresh access token",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/vehicles/organization/{organizationId}": {
@@ -1635,9 +1537,7 @@
           }
         },
         "summary": "[ADMIN] Register a new vehicle for an organization",
-        "tags": [
-          "vehicles"
-        ]
+        "tags": ["vehicles"]
       },
       "get": {
         "operationId": "VehicleController_findByOrganization",
@@ -1683,9 +1583,7 @@
           }
         },
         "summary": "[ADMIN] List all vehicles in an organization",
-        "tags": [
-          "vehicles"
-        ]
+        "tags": ["vehicles"]
       }
     },
     "/vehicles/{id}": {
@@ -1715,9 +1613,7 @@
           }
         },
         "summary": "[ADMIN] Find a vehicle by ID",
-        "tags": [
-          "vehicles"
-        ]
+        "tags": ["vehicles"]
       },
       "put": {
         "operationId": "VehicleController_update",
@@ -1755,9 +1651,7 @@
           }
         },
         "summary": "[ADMIN] Update a vehicle",
-        "tags": [
-          "vehicles"
-        ]
+        "tags": ["vehicles"]
       },
       "delete": {
         "operationId": "VehicleController_remove",
@@ -1778,9 +1672,7 @@
           }
         },
         "summary": "[ADMIN] Deactivate a vehicle (soft delete)",
-        "tags": [
-          "vehicles"
-        ]
+        "tags": ["vehicles"]
       }
     },
     "/trip-templates/organization/{organizationId}": {
@@ -1820,9 +1712,7 @@
           }
         },
         "summary": "[ADMIN] Create a new trip template for an organization",
-        "tags": [
-          "trip-templates"
-        ]
+        "tags": ["trip-templates"]
       },
       "get": {
         "operationId": "TripTemplateController_findByOrganization",
@@ -1868,9 +1758,7 @@
           }
         },
         "summary": "[ADMIN] List all trip templates in an organization",
-        "tags": [
-          "trip-templates"
-        ]
+        "tags": ["trip-templates"]
       }
     },
     "/trip-templates/{id}": {
@@ -1900,9 +1788,7 @@
           }
         },
         "summary": "[ADMIN] Find a trip template by ID",
-        "tags": [
-          "trip-templates"
-        ]
+        "tags": ["trip-templates"]
       },
       "put": {
         "operationId": "TripTemplateController_update",
@@ -1940,9 +1826,7 @@
           }
         },
         "summary": "[ADMIN] Update a trip template",
-        "tags": [
-          "trip-templates"
-        ]
+        "tags": ["trip-templates"]
       },
       "delete": {
         "operationId": "TripTemplateController_deactivate",
@@ -1963,9 +1847,7 @@
           }
         },
         "summary": "[ADMIN] Deactivate a trip template (soft delete)",
-        "tags": [
-          "trip-templates"
-        ]
+        "tags": ["trip-templates"]
       }
     },
     "/trip-instances/organization/{organizationId}": {
@@ -2005,9 +1887,7 @@
           }
         },
         "summary": "[ADMIN] Create a new trip instance from a trip template",
-        "tags": [
-          "trip-instances"
-        ]
+        "tags": ["trip-instances"]
       },
       "get": {
         "operationId": "TripInstanceController_findByOrganization",
@@ -2053,9 +1933,7 @@
           }
         },
         "summary": "[ADMIN] List all trip instances in an organization",
-        "tags": [
-          "trip-instances"
-        ]
+        "tags": ["trip-instances"]
       }
     },
     "/trip-instances/template/{templateId}": {
@@ -2103,9 +1981,7 @@
           }
         },
         "summary": "[ADMIN] List all trip instances for a given template",
-        "tags": [
-          "trip-instances"
-        ]
+        "tags": ["trip-instances"]
       }
     },
     "/trip-instances/{id}": {
@@ -2135,9 +2011,7 @@
           }
         },
         "summary": "[ADMIN] Find a trip instance by ID",
-        "tags": [
-          "trip-instances"
-        ]
+        "tags": ["trip-instances"]
       }
     },
     "/trip-instances/{id}/status": {
@@ -2177,9 +2051,7 @@
           }
         },
         "summary": "[ADMIN] Transition trip instance to a new lifecycle status",
-        "tags": [
-          "trip-instances"
-        ]
+        "tags": ["trip-instances"]
       }
     },
     "/trip-instances/{id}/driver": {
@@ -2200,9 +2072,7 @@
             "required": false,
             "in": "query",
             "description": "UUID of the driver to assign, omit to unassign",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "responses": {
@@ -2218,9 +2088,7 @@
           }
         },
         "summary": "[ADMIN] Assign or unassign a driver to a trip instance",
-        "tags": [
-          "trip-instances"
-        ]
+        "tags": ["trip-instances"]
       }
     },
     "/trip-instances/{id}/vehicle": {
@@ -2241,9 +2109,7 @@
             "required": false,
             "in": "query",
             "description": "UUID of the vehicle to assign, omit to unassign",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "responses": {
@@ -2259,9 +2125,7 @@
           }
         },
         "summary": "[ADMIN] Assign or unassign a vehicle to a trip instance",
-        "tags": [
-          "trip-instances"
-        ]
+        "tags": ["trip-instances"]
       }
     },
     "/public/trip-instances": {
@@ -2310,9 +2174,7 @@
           }
         },
         "summary": "List public trips (home page)",
-        "tags": [
-          "Public"
-        ]
+        "tags": ["Public"]
       }
     },
     "/public/trip-instances/{id}": {
@@ -2347,9 +2209,7 @@
           }
         },
         "summary": "Get public trip instance by ID",
-        "tags": [
-          "Public"
-        ]
+        "tags": ["Public"]
       }
     },
     "/public/trip-instances/org/{slug}": {
@@ -2399,9 +2259,7 @@
           }
         },
         "summary": "List org trips by slug (org-specific page)",
-        "tags": [
-          "Public"
-        ]
+        "tags": ["Public"]
       }
     },
     "/bookings": {
@@ -2431,9 +2289,7 @@
           }
         },
         "summary": "Enroll authenticated user in a trip instance",
-        "tags": [
-          "bookings"
-        ]
+        "tags": ["bookings"]
       }
     },
     "/bookings/organization/{organizationId}": {
@@ -2481,9 +2337,7 @@
           }
         },
         "summary": "List all bookings in an organization (paginated)",
-        "tags": [
-          "bookings"
-        ]
+        "tags": ["bookings"]
       }
     },
     "/bookings/user": {
@@ -2514,10 +2368,7 @@
             "in": "query",
             "description": "Filter bookings by status",
             "schema": {
-              "enum": [
-                "ACTIVE",
-                "INACTIVE"
-              ],
+              "enum": ["ACTIVE", "INACTIVE"],
               "type": "string"
             }
           }
@@ -2535,9 +2386,7 @@
           }
         },
         "summary": "List bookings of the authenticated user (paginated)",
-        "tags": [
-          "bookings"
-        ]
+        "tags": ["bookings"]
       }
     },
     "/bookings/trip-instance/{tripInstanceId}": {
@@ -2585,9 +2434,7 @@
           }
         },
         "summary": "List all bookings for a given trip instance (paginated)",
-        "tags": [
-          "bookings"
-        ]
+        "tags": ["bookings"]
       }
     },
     "/bookings/availability/{tripInstanceId}": {
@@ -2617,9 +2464,7 @@
           }
         },
         "summary": "Check available slots for a trip instance before booking",
-        "tags": [
-          "bookings"
-        ]
+        "tags": ["bookings"]
       }
     },
     "/bookings/{id}": {
@@ -2649,9 +2494,7 @@
           }
         },
         "summary": "Find a booking by ID",
-        "tags": [
-          "bookings"
-        ]
+        "tags": ["bookings"]
       }
     },
     "/bookings/{id}/details": {
@@ -2681,9 +2524,7 @@
           }
         },
         "summary": "Find a booking with enriched trip instance data (departure, status, available slots)",
-        "tags": [
-          "bookings"
-        ]
+        "tags": ["bookings"]
       }
     },
     "/bookings/{id}/cancel": {
@@ -2713,9 +2554,7 @@
           }
         },
         "summary": "Cancel a booking (soft delete — status INACTIVE)",
-        "tags": [
-          "bookings"
-        ]
+        "tags": ["bookings"]
       }
     },
     "/bookings/{id}/confirm-presence": {
@@ -2745,9 +2584,7 @@
           }
         },
         "summary": "Confirm passenger presence for a booking",
-        "tags": [
-          "bookings"
-        ]
+        "tags": ["bookings"]
       }
     },
     "/organizations/{organizationId}/payments/{id}": {
@@ -2766,9 +2603,7 @@
             "name": "organizationId",
             "required": true,
             "in": "path",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "responses": {
@@ -2784,9 +2619,7 @@
           }
         },
         "summary": "[ADMIN] Get payment by id",
-        "tags": [
-          "payments"
-        ]
+        "tags": ["payments"]
       }
     },
     "/organizations/{organizationId}/payments/{id}/confirm": {
@@ -2805,9 +2638,7 @@
             "name": "organizationId",
             "required": true,
             "in": "path",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "responses": {
@@ -2823,9 +2654,7 @@
           }
         },
         "summary": "[ADMIN] Confirm a pending payment (simulated)",
-        "tags": [
-          "payments"
-        ]
+        "tags": ["payments"]
       }
     },
     "/organizations/{organizationId}/payments/{id}/fail": {
@@ -2844,9 +2673,7 @@
             "name": "organizationId",
             "required": true,
             "in": "path",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "responses": {
@@ -2862,9 +2689,7 @@
           }
         },
         "summary": "[ADMIN] Fail a pending payment (simulated)",
-        "tags": [
-          "payments"
-        ]
+        "tags": ["payments"]
       }
     },
     "/organizations/{organizationId}/payments": {
@@ -2893,9 +2718,7 @@
             "name": "organizationId",
             "required": true,
             "in": "path",
-            "schema": {
-
-            }
+            "schema": {}
           }
         ],
         "responses": {
@@ -2911,9 +2734,7 @@
           }
         },
         "summary": "[ADMIN] List payments for organization",
-        "tags": [
-          "payments"
-        ]
+        "tags": ["payments"]
       }
     }
   },
@@ -2921,9 +2742,7 @@
     "title": "Movy API",
     "description": "The Movy API documentation",
     "version": "1.0",
-    "contact": {
-
-    }
+    "contact": {}
   },
   "tags": [
     {
@@ -2974,12 +2793,7 @@
             "description": "The telephone number of the user"
           }
         },
-        "required": [
-          "name",
-          "email",
-          "password",
-          "telephone"
-        ]
+        "required": ["name", "email", "password", "telephone"]
       },
       "UserResponseDto": {
         "type": "object",
@@ -3002,10 +2816,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE"
-            ]
+            "enum": ["ACTIVE", "INACTIVE"]
           },
           "createdAt": {
             "format": "date-time",
@@ -3016,15 +2827,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "name",
-          "email",
-          "telephone",
-          "status",
-          "createdAt",
-          "updatedAt"
-        ]
+        "required": ["id", "name", "email", "telephone", "status", "createdAt", "updatedAt"]
       },
       "UpdateUserDto": {
         "type": "object",
@@ -3078,13 +2881,7 @@
             "description": "Total de páginas"
           }
         },
-        "required": [
-          "data",
-          "total",
-          "page",
-          "limit",
-          "totalPages"
-        ]
+        "required": ["data", "total", "page", "limit", "totalPages"]
       },
       "CreateOrganizationDto": {
         "type": "object",
@@ -3114,14 +2911,7 @@
             "example": "Rua Exemplo, 123"
           }
         },
-        "required": [
-          "name",
-          "email",
-          "cnpj",
-          "telephone",
-          "slug",
-          "address"
-        ]
+        "required": ["name", "email", "cnpj", "telephone", "slug", "address"]
       },
       "OrganizationResponseDto": {
         "type": "object",
@@ -3156,10 +2946,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE"
-            ]
+            "enum": ["ACTIVE", "INACTIVE"]
           },
           "createdAt": {
             "format": "date-time",
@@ -3221,17 +3008,11 @@
           },
           "name": {
             "type": "string",
-            "enum": [
-              "ADMIN",
-              "DRIVER"
-            ],
+            "enum": ["ADMIN", "DRIVER"],
             "example": "DRIVER"
           }
         },
-        "required": [
-          "id",
-          "name"
-        ]
+        "required": ["id", "name"]
       },
       "CreateMembershipDto": {
         "type": "object",
@@ -3245,10 +3026,7 @@
             "example": 1
           }
         },
-        "required": [
-          "userEmail",
-          "roleId"
-        ]
+        "required": ["userEmail", "roleId"]
       },
       "MembershipResponseDto": {
         "type": "object",
@@ -3273,13 +3051,7 @@
             "type": "object"
           }
         },
-        "required": [
-          "userId",
-          "roleId",
-          "organizationId",
-          "assignedAt",
-          "removedAt"
-        ]
+        "required": ["userId", "roleId", "organizationId", "assignedAt", "removedAt"]
       },
       "CreateDriverDto": {
         "type": "object",
@@ -3295,13 +3067,7 @@
             "type": "string",
             "example": "B",
             "description": "Driver license category (A, B, C, D, E)",
-            "enum": [
-              "A",
-              "B",
-              "C",
-              "D",
-              "E"
-            ]
+            "enum": ["A", "B", "C", "D", "E"]
           },
           "cnhExpiresAt": {
             "type": "string",
@@ -3309,11 +3075,7 @@
             "description": "CNH expiration date (YYYY-MM-DD)"
           }
         },
-        "required": [
-          "cnh",
-          "cnhCategory",
-          "cnhExpiresAt"
-        ]
+        "required": ["cnh", "cnhCategory", "cnhExpiresAt"]
       },
       "DriverResponseDto": {
         "type": "object",
@@ -3406,11 +3168,7 @@
           "driverStatus": {
             "type": "string",
             "example": "ACTIVE",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE",
-              "SUSPENDED"
-            ]
+            "enum": ["ACTIVE", "INACTIVE", "SUSPENDED"]
           }
         },
         "required": [
@@ -3437,13 +3195,7 @@
             "type": "string",
             "example": "B",
             "description": "Driver license category (A, B, C, D, E)",
-            "enum": [
-              "A",
-              "B",
-              "C",
-              "D",
-              "E"
-            ]
+            "enum": ["A", "B", "C", "D", "E"]
           },
           "cnhExpiresAt": {
             "type": "string",
@@ -3454,11 +3206,7 @@
             "type": "string",
             "example": "ACTIVE",
             "description": "Driver status",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE",
-              "SUSPENDED"
-            ]
+            "enum": ["ACTIVE", "INACTIVE", "SUSPENDED"]
           }
         }
       },
@@ -3471,9 +3219,7 @@
             "description": "ID of the plan to subscribe to"
           }
         },
-        "required": [
-          "planId"
-        ]
+        "required": ["planId"]
       },
       "SubscriptionResponseDto": {
         "type": "object",
@@ -3489,11 +3235,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "ACTIVE",
-              "CANCELED",
-              "PAST_DUE"
-            ]
+            "enum": ["ACTIVE", "CANCELED", "PAST_DUE"]
           },
           "startDate": {
             "format": "date-time",
@@ -3529,12 +3271,7 @@
           "name": {
             "type": "string",
             "example": "BASIC",
-            "enum": [
-              "FREE",
-              "BASIC",
-              "PRO",
-              "PREMIUM"
-            ]
+            "enum": ["FREE", "BASIC", "PRO", "PREMIUM"]
           },
           "price": {
             "type": "number",
@@ -3576,12 +3313,7 @@
           },
           "name": {
             "type": "string",
-            "enum": [
-              "FREE",
-              "BASIC",
-              "PRO",
-              "PREMIUM"
-            ]
+            "enum": ["FREE", "BASIC", "PRO", "PREMIUM"]
           },
           "price": {
             "type": "number"
@@ -3664,10 +3396,7 @@
             "description": "The password of the user"
           }
         },
-        "required": [
-          "email",
-          "password"
-        ]
+        "required": ["email", "password"]
       },
       "TokenResponseDto": {
         "type": "object",
@@ -3692,11 +3421,7 @@
             "description": "User information"
           }
         },
-        "required": [
-          "accessToken",
-          "refreshToken",
-          "user"
-        ]
+        "required": ["accessToken", "refreshToken", "user"]
       },
       "RegisterDto": {
         "type": "object",
@@ -3723,12 +3448,7 @@
             "description": "The telephone number of the user"
           }
         },
-        "required": [
-          "name",
-          "email",
-          "password",
-          "telephone"
-        ]
+        "required": ["name", "email", "password", "telephone"]
       },
       "RegisterOrganizationWithAdminDto": {
         "type": "object",
@@ -3844,9 +3564,7 @@
             "description": "The refresh token issued during login"
           }
         },
-        "required": [
-          "refreshToken"
-        ]
+        "required": ["refreshToken"]
       },
       "CreateVehicleDto": {
         "type": "object",
@@ -3866,12 +3584,7 @@
             "type": "string",
             "example": "VAN",
             "description": "Vehicle type",
-            "enum": [
-              "VAN",
-              "BUS",
-              "MINIBUS",
-              "CAR"
-            ]
+            "enum": ["VAN", "BUS", "MINIBUS", "CAR"]
           },
           "maxCapacity": {
             "type": "number",
@@ -3881,12 +3594,7 @@
             "maximum": 200
           }
         },
-        "required": [
-          "plate",
-          "model",
-          "type",
-          "maxCapacity"
-        ]
+        "required": ["plate", "model", "type", "maxCapacity"]
       },
       "VehicleResponseDto": {
         "type": "object",
@@ -3910,12 +3618,7 @@
             "type": "string",
             "example": "VAN",
             "description": "Vehicle type",
-            "enum": [
-              "VAN",
-              "BUS",
-              "MINIBUS",
-              "CAR"
-            ]
+            "enum": ["VAN", "BUS", "MINIBUS", "CAR"]
           },
           "maxCapacity": {
             "type": "number",
@@ -3926,10 +3629,7 @@
             "type": "string",
             "example": "ACTIVE",
             "description": "Current vehicle status",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE"
-            ]
+            "enum": ["ACTIVE", "INACTIVE"]
           },
           "organizationId": {
             "type": "string",
@@ -3978,12 +3678,7 @@
             "type": "string",
             "example": "VAN",
             "description": "Vehicle type",
-            "enum": [
-              "VAN",
-              "BUS",
-              "MINIBUS",
-              "CAR"
-            ]
+            "enum": ["VAN", "BUS", "MINIBUS", "CAR"]
           },
           "maxCapacity": {
             "type": "number",
@@ -3996,10 +3691,7 @@
             "type": "string",
             "example": "ACTIVE",
             "description": "Vehicle status",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE"
-            ]
+            "enum": ["ACTIVE", "INACTIVE"]
           }
         }
       },
@@ -4019,11 +3711,7 @@
             "maxLength": 255
           },
           "stops": {
-            "example": [
-              "Terminal Rodoviário",
-              "Praça Central",
-              "Universidade Federal"
-            ],
+            "example": ["Terminal Rodoviário", "Praça Central", "Universidade Federal"],
             "description": "Ordered list of stops (min 2)",
             "type": "array",
             "items": {
@@ -4034,31 +3722,15 @@
             "type": "string",
             "example": "MORNING",
             "description": "Shift classification for the trip",
-            "enum": [
-              "MORNING",
-              "AFTERNOON",
-              "EVENING"
-            ]
+            "enum": ["MORNING", "AFTERNOON", "EVENING"]
           },
           "frequency": {
             "type": "array",
-            "example": [
-              "MONDAY",
-              "WEDNESDAY",
-              "FRIDAY"
-            ],
+            "example": ["MONDAY", "WEDNESDAY", "FRIDAY"],
             "description": "Days of the week when the trip recurs",
             "items": {
               "type": "string",
-              "enum": [
-                "SUNDAY",
-                "MONDAY",
-                "TUESDAY",
-                "WEDNESDAY",
-                "THURSDAY",
-                "FRIDAY",
-                "SATURDAY"
-              ]
+              "enum": ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
             }
           },
           "priceOneWay": {
@@ -4102,12 +3774,7 @@
             "description": "Minutes before departure to evaluate auto-cancel. Required when autoCancelEnabled is true."
           }
         },
-        "required": [
-          "departurePoint",
-          "destination",
-          "stops",
-          "shift"
-        ]
+        "required": ["departurePoint", "destination", "stops", "shift"]
       },
       "TripTemplateResponseDto": {
         "type": "object",
@@ -4133,11 +3800,7 @@
             "description": "Final destination of the trip"
           },
           "stops": {
-            "example": [
-              "Terminal Rodoviário",
-              "Praça Central",
-              "Universidade Federal"
-            ],
+            "example": ["Terminal Rodoviário", "Praça Central", "Universidade Federal"],
             "description": "Ordered list of stops",
             "type": "array",
             "items": {
@@ -4148,31 +3811,15 @@
             "type": "string",
             "example": "MORNING",
             "description": "Shift classification",
-            "enum": [
-              "MORNING",
-              "AFTERNOON",
-              "EVENING"
-            ]
+            "enum": ["MORNING", "AFTERNOON", "EVENING"]
           },
           "frequency": {
             "type": "array",
-            "example": [
-              "MONDAY",
-              "WEDNESDAY",
-              "FRIDAY"
-            ],
+            "example": ["MONDAY", "WEDNESDAY", "FRIDAY"],
             "description": "Recurrence days",
             "items": {
               "type": "string",
-              "enum": [
-                "SUNDAY",
-                "MONDAY",
-                "TUESDAY",
-                "WEDNESDAY",
-                "THURSDAY",
-                "FRIDAY",
-                "SATURDAY"
-              ]
+              "enum": ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
             }
           },
           "priceOneWay": {
@@ -4270,11 +3917,7 @@
             "maxLength": 255
           },
           "stops": {
-            "example": [
-              "Terminal Rodoviário",
-              "Praça Central",
-              "Universidade Federal"
-            ],
+            "example": ["Terminal Rodoviário", "Praça Central", "Universidade Federal"],
             "description": "Ordered list of stops (min 2)",
             "type": "array",
             "items": {
@@ -4285,30 +3928,15 @@
             "type": "string",
             "example": "MORNING",
             "description": "Shift classification for the trip",
-            "enum": [
-              "MORNING",
-              "AFTERNOON",
-              "EVENING"
-            ]
+            "enum": ["MORNING", "AFTERNOON", "EVENING"]
           },
           "frequency": {
             "type": "array",
-            "example": [
-              "MONDAY",
-              "WEDNESDAY"
-            ],
+            "example": ["MONDAY", "WEDNESDAY"],
             "description": "Days of the week when the trip recurs",
             "items": {
               "type": "string",
-              "enum": [
-                "SUNDAY",
-                "MONDAY",
-                "TUESDAY",
-                "WEDNESDAY",
-                "THURSDAY",
-                "FRIDAY",
-                "SATURDAY"
-              ]
+              "enum": ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
             }
           },
           "priceOneWay": {
@@ -4398,19 +4026,11 @@
             "type": "string",
             "example": "SCHEDULED",
             "description": "Initial status after creation. Use SCHEDULED to publish the trip immediately (requires driverId and vehicleId). Defaults to DRAFT.",
-            "enum": [
-              "DRAFT",
-              "SCHEDULED"
-            ],
+            "enum": ["DRAFT", "SCHEDULED"],
             "default": "DRAFT"
           }
         },
-        "required": [
-          "tripTemplateId",
-          "departureTime",
-          "arrivalEstimate",
-          "totalCapacity"
-        ]
+        "required": ["tripTemplateId", "departureTime", "arrivalEstimate", "totalCapacity"]
       },
       "TripInstanceResponseDto": {
         "type": "object",
@@ -4446,14 +4066,7 @@
             "type": "string",
             "example": "DRAFT",
             "description": "Current lifecycle status of the trip instance",
-            "enum": [
-              "DRAFT",
-              "SCHEDULED",
-              "CONFIRMED",
-              "IN_PROGRESS",
-              "FINISHED",
-              "CANCELED"
-            ]
+            "enum": ["DRAFT", "SCHEDULED", "CONFIRMED", "IN_PROGRESS", "FINISHED", "CANCELED"]
           },
           "minRevenue": {
             "type": "object",
@@ -4520,19 +4133,10 @@
             "type": "string",
             "example": "SCHEDULED",
             "description": "The new status to transition the trip instance to",
-            "enum": [
-              "DRAFT",
-              "SCHEDULED",
-              "CONFIRMED",
-              "IN_PROGRESS",
-              "FINISHED",
-              "CANCELED"
-            ]
+            "enum": ["DRAFT", "SCHEDULED", "CONFIRMED", "IN_PROGRESS", "FINISHED", "CANCELED"]
           }
         },
-        "required": [
-          "newStatus"
-        ]
+        "required": ["newStatus"]
       },
       "PublicTripInstanceResponseDto": {
         "type": "object",
@@ -4630,11 +4234,7 @@
             "type": "string",
             "example": "ONE_WAY",
             "description": "Type of enrollment",
-            "enum": [
-              "ONE_WAY",
-              "RETURN",
-              "ROUND_TRIP"
-            ]
+            "enum": ["ONE_WAY", "RETURN", "ROUND_TRIP"]
           },
           "boardingStop": {
             "type": "string",
@@ -4650,21 +4250,10 @@
             "type": "string",
             "example": "PIX",
             "description": "Payment method for this booking",
-            "enum": [
-              "MONEY",
-              "PIX",
-              "CREDIT_CARD",
-              "DEBIT_CARD"
-            ]
+            "enum": ["MONEY", "PIX", "CREDIT_CARD", "DEBIT_CARD"]
           }
         },
-        "required": [
-          "tripInstanceId",
-          "enrollmentType",
-          "boardingStop",
-          "alightingStop",
-          "method"
-        ]
+        "required": ["tripInstanceId", "enrollmentType", "boardingStop", "alightingStop", "method"]
       },
       "BookingResponseDto": {
         "type": "object",
@@ -4709,11 +4298,7 @@
             "type": "string",
             "example": "ONE_WAY",
             "description": "Type of enrollment",
-            "enum": [
-              "ONE_WAY",
-              "RETURN",
-              "ROUND_TRIP"
-            ]
+            "enum": ["ONE_WAY", "RETURN", "ROUND_TRIP"]
           },
           "recordedPrice": {
             "type": "number",
@@ -4769,14 +4354,7 @@
             "type": "string",
             "example": "SCHEDULED",
             "description": "Current status of the trip instance",
-            "enum": [
-              "DRAFT",
-              "SCHEDULED",
-              "CONFIRMED",
-              "IN_PROGRESS",
-              "FINISHED",
-              "CANCELED"
-            ]
+            "enum": ["DRAFT", "SCHEDULED", "CONFIRMED", "IN_PROGRESS", "FINISHED", "CANCELED"]
           },
           "totalCapacity": {
             "type": "number",
@@ -4851,11 +4429,7 @@
             "type": "string",
             "example": "ONE_WAY",
             "description": "Type of enrollment",
-            "enum": [
-              "ONE_WAY",
-              "RETURN",
-              "ROUND_TRIP"
-            ]
+            "enum": ["ONE_WAY", "RETURN", "ROUND_TRIP"]
           },
           "recordedPrice": {
             "type": "number",
@@ -4898,14 +4472,7 @@
             "type": "string",
             "example": "SCHEDULED",
             "description": "Current status of the trip instance",
-            "enum": [
-              "DRAFT",
-              "SCHEDULED",
-              "CONFIRMED",
-              "IN_PROGRESS",
-              "FINISHED",
-              "CANCELED"
-            ]
+            "enum": ["DRAFT", "SCHEDULED", "CONFIRMED", "IN_PROGRESS", "FINISHED", "CANCELED"]
           },
           "totalCapacity": {
             "type": "number",
@@ -4953,23 +4520,14 @@
           },
           "method": {
             "type": "string",
-            "enum": [
-              "MONEY",
-              "PIX",
-              "CREDIT_CARD",
-              "DEBIT_CARD"
-            ]
+            "enum": ["MONEY", "PIX", "CREDIT_CARD", "DEBIT_CARD"]
           },
           "amount": {
             "type": "number"
           },
           "status": {
             "type": "string",
-            "enum": [
-              "PENDING",
-              "COMPLETED",
-              "FAILED"
-            ]
+            "enum": ["PENDING", "COMPLETED", "FAILED"]
           },
           "createdAt": {
             "format": "date-time",

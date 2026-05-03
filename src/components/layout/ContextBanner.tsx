@@ -13,7 +13,8 @@ export function ContextBanner({ variant, orgName, slug }: Props) {
       <div className="mb-3 flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
         <Globe className="h-3.5 w-3.5" />
         <span>
-          Você está navegando no <strong className="font-medium text-foreground">modo público</strong>
+          Você está navegando no{" "}
+          <strong className="font-medium text-foreground">modo público</strong>
         </span>
       </div>
     );

@@ -40,10 +40,10 @@ npm run format       # Prettier (auto-fix)
 
 ## Papéis do Sistema
 
-| Role   | Capacidades |
-|--------|-------------|
-| User   | Ver viagens públicas, reservar viagens, gerenciar inscrições |
-| Driver | Extensão de User — confirmar presença, marcar pagamentos |
+| Role   | Capacidades                                                   |
+| ------ | ------------------------------------------------------------- |
+| User   | Ver viagens públicas, reservar viagens, gerenciar inscrições  |
+| Driver | Extensão de User — confirmar presença, marcar pagamentos      |
 | Admin  | Criar e gerenciar organização, templates, viagens, motoristas |
 
 Roles detectados em runtime via `RoleContext` após autenticação.
@@ -179,7 +179,13 @@ function TripsPage() {
   const { trips, loading, error } = useTrips({ orgId, slug });
   return (
     <AppShell title="Viagens" back>
-      {loading ? <LoadingList /> : error ? <ErrorCard message={error} /> : <TripsList trips={trips ?? []} orgId={orgId} />}
+      {loading ? (
+        <LoadingList />
+      ) : error ? (
+        <ErrorCard message={error} />
+      ) : (
+        <TripsList trips={trips ?? []} orgId={orgId} />
+      )}
     </AppShell>
   );
 }
@@ -198,6 +204,7 @@ function TripsPage() {
 **useAuth()** → `{ user, isAuthenticated, loading, login, signup, logout, refreshUser }`
 
 **useRole()** → `{ isAdmin, isDriver, adminOrgId, roleLoading, refetchRole }`
+
 - `isAdmin`: user tem role ADMIN na organização
 - `isDriver`: user está cadastrado como motorista
 - `adminOrgId`: ID da organização onde é admin
@@ -207,11 +214,13 @@ function TripsPage() {
 ## Navegação por Role
 
 `BottomNav.tsx` mostra tabs diferentes por role (precedência: admin > driver > passenger):
+
 - **Passenger:** Explorar · Empresas · Inscrições
 - **Driver:** Explorar · Como motorista · Inscrições
 - **Admin:** Explorar · Viagens · Configurar
 
 `index.tsx` redireciona:
+
 - Não autenticado → `/public/trip-instances`
 - Admin → `/_protected/organizations`
 - Usuário → `/public/trip-instances`
@@ -224,21 +233,21 @@ Usar sempre os services — nunca `api()` direto nas rotas ou componentes:
 
 ```typescript
 // trips.service.ts
-tripsService.listPublic()
-tripsService.listByOrgId(orgId)
-tripsService.listBySlug(slug)          // público, sem auth
-tripsService.getPublicById(id)
+tripsService.listPublic();
+tripsService.listByOrgId(orgId);
+tripsService.listBySlug(slug); // público, sem auth
+tripsService.getPublicById(id);
 
 // bookings.service.ts
-bookingsService.listForUser()
-bookingsService.getDetails(bookingId)
-bookingsService.checkAvailability(tripId)
-bookingsService.create({ tripInstanceId, enrollmentType, boardingStop, alightingStop, method })
-bookingsService.cancel(bookingId)
+bookingsService.listForUser();
+bookingsService.getDetails(bookingId);
+bookingsService.checkAvailability(tripId);
+bookingsService.create({ tripInstanceId, enrollmentType, boardingStop, alightingStop, method });
+bookingsService.cancel(bookingId);
 
 // organizations.service.ts
-organizationsService.listActive()
-organizationsService.listMine()
+organizationsService.listActive();
+organizationsService.listMine();
 ```
 
 ---

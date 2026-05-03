@@ -2,10 +2,10 @@
 
 ## Pré-requisitos
 
-| Ferramenta | Versão mínima recomendada |
-|---|---|
-| [Bun](https://bun.sh) | >= 1.1 |
-| Node.js | >= 20 (usado pelo Wrangler) |
+| Ferramenta            | Versão mínima recomendada   |
+| --------------------- | --------------------------- |
+| [Bun](https://bun.sh) | >= 1.1                      |
+| Node.js               | >= 20 (usado pelo Wrangler) |
 
 > O projeto usa **Bun** como package manager e runtime. Não use `npm` ou `yarn`.
 
@@ -32,9 +32,9 @@ Crie um arquivo `.env` na raiz do projeto:
 VITE_API_URL=https://sua-api.exemplo.com
 ```
 
-| Variável | Obrigatória | Descrição |
-|---|---|---|
-| `VITE_API_URL` | ✅ | URL base da API backend REST |
+| Variável       | Obrigatória | Descrição                    |
+| -------------- | ----------- | ---------------------------- |
+| `VITE_API_URL` | ✅          | URL base da API backend REST |
 
 > Prefixo `VITE_` é necessário para que o Vite exponha a variável ao código client-side via `import.meta.env`.
 
@@ -158,7 +158,13 @@ function TripsPage() {
   const { trips, loading, error } = useTrips({ orgId, slug });
   return (
     <AppShell title="Viagens" back>
-      {loading ? <LoadingList /> : error ? <ErrorCard message={error} /> : <TripsList trips={trips ?? []} orgId={orgId} />}
+      {loading ? (
+        <LoadingList />
+      ) : error ? (
+        <ErrorCard message={error} />
+      ) : (
+        <TripsList trips={trips ?? []} orgId={orgId} />
+      )}
     </AppShell>
   );
 }
@@ -173,10 +179,20 @@ export function useTrips({ orgId, slug }: UseTripsOptions) {
 
   useEffect(() => {
     let cancelled = false;
-    tripsService.listByOrgId(orgId)
-      .then((res) => { if (!cancelled) setTrips(Array.isArray(res) ? res : (res.data ?? [])); })
-      .catch((err) => { if (!cancelled) { setError(err instanceof Error ? err.message : "Erro"); toast.error(err.message); } });
-    return () => { cancelled = true; };
+    tripsService
+      .listByOrgId(orgId)
+      .then((res) => {
+        if (!cancelled) setTrips(Array.isArray(res) ? res : (res.data ?? []));
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Erro");
+          toast.error(err.message);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [orgId, slug]);
 
   return { trips, loading: trips === null && !error, error };

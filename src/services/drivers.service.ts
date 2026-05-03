@@ -21,13 +21,10 @@ export const driversService = {
     ),
 
   addToOrg: (userEmail: string, cnh: string) =>
-    api<{ userId: string; roleId: number; organizationId: string }>(
-      "/memberships/driver",
-      {
-        method: "POST",
-        body: JSON.stringify({ userEmail, cnh }),
-      },
-    ),
+    api<{ userId: string; roleId: number; organizationId: string }>("/memberships/driver", {
+      method: "POST",
+      body: JSON.stringify({ userEmail, cnh }),
+    }),
 
   removeMembership: (userId: string, roleId: number, orgId: string) =>
     api<boolean>(`/memberships/${userId}/${roleId}/${orgId}`, {

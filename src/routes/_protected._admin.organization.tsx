@@ -1,8 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  Pencil, Building2, Mail, Phone, MapPin, Hash,
-  Plus, Trash2, Car, Users, ChevronRight, UserX,
+  Pencil,
+  Building2,
+  Mail,
+  Phone,
+  MapPin,
+  Hash,
+  Plus,
+  Trash2,
+  Car,
+  Users,
+  ChevronRight,
+  UserX,
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -19,18 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,9 +62,12 @@ const orgSchema = z.object({
   telephone: z.string().trim().optional(),
   address: z.string().trim().optional(),
   slug: z
-    .string().trim().min(2, "Slug deve ter ao menos 2 caracteres")
+    .string()
+    .trim()
+    .min(2, "Slug deve ter ao menos 2 caracteres")
     .regex(/^[a-z0-9-]+$/, "Use apenas letras minúsculas, números e hífens")
-    .optional().or(z.literal("")),
+    .optional()
+    .or(z.literal("")),
 });
 
 const vehicleSchema = z.object({
@@ -84,7 +87,10 @@ const driverSchema = z.object({
 const DRIVER_ROLE_ID = 2;
 
 const VEHICLE_TYPE_LABEL: Record<string, string> = {
-  VAN: "Van", BUS: "Ônibus", MINIBUS: "Micro-ônibus", CAR: "Carro",
+  VAN: "Van",
+  BUS: "Ônibus",
+  MINIBUS: "Micro-ônibus",
+  CAR: "Carro",
 };
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -95,7 +101,12 @@ function OrganizationPage() {
   const [orgError, setOrgError] = useState<string | null>(null);
   const [orgDialogOpen, setOrgDialogOpen] = useState(false);
   const [orgForm, setOrgForm] = useState({
-    name: "", cnpj: "", email: "", telephone: "", address: "", slug: "",
+    name: "",
+    cnpj: "",
+    email: "",
+    telephone: "",
+    address: "",
+    slug: "",
   });
   const [orgFieldErrors, setOrgFieldErrors] = useState<Record<string, string>>({});
   const [orgSubmitting, setOrgSubmitting] = useState(false);
@@ -108,24 +119,31 @@ function OrganizationPage() {
 
   useEffect(() => {
     let cancelled = false;
-    organizationsService.listMine().then((res) => {
-      if (!cancelled) setOrg(res.data?.[0] ?? null);
-    }).catch((err) => {
-      if (!cancelled) {
-        const msg = err instanceof Error ? err.message : "Erro ao carregar empresa";
-        setOrgError(msg);
-        toast.error(msg);
-      }
-    });
-    return () => { cancelled = true; };
+    organizationsService
+      .listMine()
+      .then((res) => {
+        if (!cancelled) setOrg(res.data?.[0] ?? null);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : "Erro ao carregar empresa";
+          setOrgError(msg);
+          toast.error(msg);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (!adminOrgId) return;
-    vehiclesService.listByOrgId(adminOrgId)
+    vehiclesService
+      .listByOrgId(adminOrgId)
       .then((res) => setVehicles(Array.isArray(res) ? res : (res.data ?? [])))
       .catch(() => setVehicles([]));
-    driversService.listByOrgId(adminOrgId)
+    driversService
+      .listByOrgId(adminOrgId)
       .then((res) => setDrivers(Array.isArray(res) ? res : ((res as Paginated<Driver>).data ?? [])))
       .catch(() => setDrivers([]));
   }, [adminOrgId]);
@@ -133,8 +151,12 @@ function OrganizationPage() {
   function openOrgEdit() {
     if (!org) return;
     setOrgForm({
-      name: org.name ?? "", cnpj: org.cnpj ?? "", email: org.email ?? "",
-      telephone: org.telephone ?? "", address: org.address ?? "", slug: org.slug ?? "",
+      name: org.name ?? "",
+      cnpj: org.cnpj ?? "",
+      email: org.email ?? "",
+      telephone: org.telephone ?? "",
+      address: org.address ?? "",
+      slug: org.slug ?? "",
     });
     setOrgFieldErrors({});
     setOrgDialogOpen(true);
@@ -146,7 +168,9 @@ function OrganizationPage() {
     const parsed = orgSchema.safeParse(orgForm);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => { errs[e.path.join(".")] = e.message; });
+      parsed.error.errors.forEach((e) => {
+        errs[e.path.join(".")] = e.message;
+      });
       setOrgFieldErrors(errs);
       return;
     }
@@ -165,10 +189,18 @@ function OrganizationPage() {
   }
 
   if (orgError) {
-    return <AppShell title="Empresa"><ErrorCard message={orgError} /></AppShell>;
+    return (
+      <AppShell title="Empresa">
+        <ErrorCard message={orgError} />
+      </AppShell>
+    );
   }
   if (org === null) {
-    return <AppShell title="Empresa"><LoadingList count={3} height="h-24" /></AppShell>;
+    return (
+      <AppShell title="Empresa">
+        <LoadingList count={3} height="h-24" />
+      </AppShell>
+    );
   }
 
   const activeVehicles = (vehicles ?? []).filter((v) => v.status !== "INACTIVE");
@@ -207,7 +239,9 @@ function OrganizationPage() {
             <Car className="h-5 w-5 text-primary" />
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-2xl font-bold">{vehicles === null ? "—" : activeVehicles.length}</div>
+          <div className="text-2xl font-bold">
+            {vehicles === null ? "—" : activeVehicles.length}
+          </div>
           <div className="text-xs text-muted-foreground mt-0.5">Veículos</div>
         </button>
 
@@ -227,31 +261,47 @@ function OrganizationPage() {
       {/* Org edit dialog */}
       <Dialog open={orgDialogOpen} onOpenChange={setOrgDialogOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Editar empresa</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Editar empresa</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleOrgSubmit} className="space-y-3 mt-2">
             <Field2 label="Nome" error={orgFieldErrors.name}>
-              <Input value={orgForm.name}
-                onChange={(e) => setOrgForm((f) => ({ ...f, name: e.target.value }))} />
+              <Input
+                value={orgForm.name}
+                onChange={(e) => setOrgForm((f) => ({ ...f, name: e.target.value }))}
+              />
             </Field2>
             <Field2 label="Slug" error={orgFieldErrors.slug}>
-              <Input value={orgForm.slug} placeholder="minha-empresa"
-                onChange={(e) => setOrgForm((f) => ({ ...f, slug: e.target.value }))} />
+              <Input
+                value={orgForm.slug}
+                placeholder="minha-empresa"
+                onChange={(e) => setOrgForm((f) => ({ ...f, slug: e.target.value }))}
+              />
             </Field2>
             <Field2 label="CNPJ">
-              <Input value={orgForm.cnpj}
-                onChange={(e) => setOrgForm((f) => ({ ...f, cnpj: e.target.value }))} />
+              <Input
+                value={orgForm.cnpj}
+                onChange={(e) => setOrgForm((f) => ({ ...f, cnpj: e.target.value }))}
+              />
             </Field2>
             <Field2 label="E-mail" error={orgFieldErrors.email}>
-              <Input type="email" value={orgForm.email}
-                onChange={(e) => setOrgForm((f) => ({ ...f, email: e.target.value }))} />
+              <Input
+                type="email"
+                value={orgForm.email}
+                onChange={(e) => setOrgForm((f) => ({ ...f, email: e.target.value }))}
+              />
             </Field2>
             <Field2 label="Telefone">
-              <Input value={orgForm.telephone}
-                onChange={(e) => setOrgForm((f) => ({ ...f, telephone: e.target.value }))} />
+              <Input
+                value={orgForm.telephone}
+                onChange={(e) => setOrgForm((f) => ({ ...f, telephone: e.target.value }))}
+              />
             </Field2>
             <Field2 label="Endereço">
-              <Input value={orgForm.address}
-                onChange={(e) => setOrgForm((f) => ({ ...f, address: e.target.value }))} />
+              <Input
+                value={orgForm.address}
+                onChange={(e) => setOrgForm((f) => ({ ...f, address: e.target.value }))}
+              />
             </Field2>
             <Button type="submit" className="w-full" disabled={orgSubmitting}>
               {orgSubmitting ? "Salvando..." : "Salvar"}
@@ -284,7 +334,11 @@ function OrganizationPage() {
 // ── Vehicles Sheet ────────────────────────────────────────────────────────────
 
 function VehiclesSheet({
-  open, onOpenChange, orgId, vehicles, onVehiclesChange,
+  open,
+  onOpenChange,
+  orgId,
+  vehicles,
+  onVehiclesChange,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -296,7 +350,10 @@ function VehiclesSheet({
   const [editTarget, setEditTarget] = useState<Vehicle | null>(null);
   const [deactivateTarget, setDeactivateTarget] = useState<Vehicle | null>(null);
   const [form, setForm] = useState<{
-    plate: string; model: string; type: "VAN" | "BUS" | "MINIBUS" | "CAR"; maxCapacity: string;
+    plate: string;
+    model: string;
+    type: "VAN" | "BUS" | "MINIBUS" | "CAR";
+    maxCapacity: string;
   }>({ plate: "", model: "", type: "VAN", maxCapacity: "" });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -321,7 +378,9 @@ function VehiclesSheet({
     const parsed = vehicleSchema.safeParse(form);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => { errs[e.path.join(".")] = e.message; });
+      parsed.error.errors.forEach((e) => {
+        errs[e.path.join(".")] = e.message;
+      });
       setFieldErrors(errs);
       return;
     }
@@ -330,11 +389,13 @@ function VehiclesSheet({
     try {
       if (editTarget) {
         const updated = await vehiclesService.update(editTarget.id, parsed.data);
-        onVehiclesChange((prev) => prev ? prev.map((v) => v.id === updated.id ? updated : v) : prev);
+        onVehiclesChange((prev) =>
+          prev ? prev.map((v) => (v.id === updated.id ? updated : v)) : prev,
+        );
         toast.success("Veículo atualizado");
       } else {
         const created = await vehiclesService.create(orgId, parsed.data);
-        onVehiclesChange((prev) => prev ? [created, ...prev] : [created]);
+        onVehiclesChange((prev) => (prev ? [created, ...prev] : [created]));
         toast.success("Veículo adicionado");
       }
       setAddOpen(false);
@@ -350,7 +411,7 @@ function VehiclesSheet({
     setDeactivating(true);
     try {
       await vehiclesService.deactivate(deactivateTarget.id);
-      onVehiclesChange((prev) => prev ? prev.filter((v) => v.id !== deactivateTarget.id) : prev);
+      onVehiclesChange((prev) => (prev ? prev.filter((v) => v.id !== deactivateTarget.id) : prev));
       toast.success("Veículo removido");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao remover");
@@ -395,13 +456,20 @@ function VehiclesSheet({
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0"
-                        onClick={() => openEdit(v)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => openEdit(v)}
+                      >
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="sm"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        onClick={() => setDeactivateTarget(v)}>
+                        onClick={() => setDeactivateTarget(v)}
+                      >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -421,17 +489,28 @@ function VehiclesSheet({
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-3 mt-2">
             <Field2 label="Placa" error={fieldErrors.plate}>
-              <Input value={form.plate} maxLength={8} placeholder="ABC1D23"
-                onChange={(e) => setForm((f) => ({ ...f, plate: e.target.value.toUpperCase() }))} />
+              <Input
+                value={form.plate}
+                maxLength={8}
+                placeholder="ABC1D23"
+                onChange={(e) => setForm((f) => ({ ...f, plate: e.target.value.toUpperCase() }))}
+              />
             </Field2>
             <Field2 label="Modelo" error={fieldErrors.model}>
-              <Input value={form.model} placeholder="Ex: Mercedes-Benz Sprinter"
-                onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))} />
+              <Input
+                value={form.model}
+                placeholder="Ex: Mercedes-Benz Sprinter"
+                onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))}
+              />
             </Field2>
             <Field2 label="Tipo">
-              <Select value={form.type}
-                onValueChange={(v) => setForm((f) => ({ ...f, type: v as typeof f.type }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={form.type}
+                onValueChange={(v) => setForm((f) => ({ ...f, type: v as typeof f.type }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="VAN">Van</SelectItem>
                   <SelectItem value="BUS">Ônibus</SelectItem>
@@ -441,8 +520,14 @@ function VehiclesSheet({
               </Select>
             </Field2>
             <Field2 label="Capacidade máxima" error={fieldErrors.maxCapacity}>
-              <Input type="number" min="1" max="200" value={form.maxCapacity} placeholder="Ex: 15"
-                onChange={(e) => setForm((f) => ({ ...f, maxCapacity: e.target.value }))} />
+              <Input
+                type="number"
+                min="1"
+                max="200"
+                value={form.maxCapacity}
+                placeholder="Ex: 15"
+                onChange={(e) => setForm((f) => ({ ...f, maxCapacity: e.target.value }))}
+              />
             </Field2>
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? "Salvando..." : editTarget ? "Salvar alterações" : "Adicionar veículo"}
@@ -462,8 +547,11 @@ function VehiclesSheet({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeactivate} disabled={deactivating}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleDeactivate}
+              disabled={deactivating}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               {deactivating ? "Removendo..." : "Remover"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -476,7 +564,11 @@ function VehiclesSheet({
 // ── Drivers Sheet ─────────────────────────────────────────────────────────────
 
 function DriversSheet({
-  open, onOpenChange, orgId, drivers, onDriversChange,
+  open,
+  onOpenChange,
+  orgId,
+  drivers,
+  onDriversChange,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -502,7 +594,9 @@ function DriversSheet({
     const parsed = driverSchema.safeParse(form);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => { errs[e.path.join(".")] = e.message; });
+      parsed.error.errors.forEach((e) => {
+        errs[e.path.join(".")] = e.message;
+      });
       setFieldErrors(errs);
       return;
     }
@@ -513,7 +607,8 @@ function DriversSheet({
       toast.success("Motorista adicionado");
       setAddOpen(false);
       // Reload drivers list
-      driversService.listByOrgId(orgId)
+      driversService
+        .listByOrgId(orgId)
         .then((res) => {
           const list = Array.isArray(res) ? res : ((res as Paginated<Driver>).data ?? []);
           onDriversChange(() => list);
@@ -531,7 +626,7 @@ function DriversSheet({
     setRemoving(true);
     try {
       await driversService.removeMembership(removeTarget.userId, DRIVER_ROLE_ID, orgId);
-      onDriversChange((prev) => prev ? prev.filter((d) => d.id !== removeTarget.id) : prev);
+      onDriversChange((prev) => (prev ? prev.filter((d) => d.id !== removeTarget.id) : prev));
       toast.success("Motorista removido");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao remover motorista");
@@ -589,11 +684,18 @@ function DriversSheet({
                         variant={d.driverStatus === "ACTIVE" ? "default" : "outline"}
                         className="text-xs"
                       >
-                        {d.driverStatus === "ACTIVE" ? "Ativo" : d.driverStatus === "SUSPENDED" ? "Suspenso" : "Inativo"}
+                        {d.driverStatus === "ACTIVE"
+                          ? "Ativo"
+                          : d.driverStatus === "SUSPENDED"
+                            ? "Suspenso"
+                            : "Inativo"}
                       </Badge>
-                      <Button variant="ghost" size="sm"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        onClick={() => setRemoveTarget(d)}>
+                        onClick={() => setRemoveTarget(d)}
+                      >
                         <UserX className="h-4 w-4" />
                       </Button>
                     </div>
@@ -608,19 +710,28 @@ function DriversSheet({
       {/* Add driver dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Associar motorista</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Associar motorista</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleAdd} className="space-y-3 mt-2">
             <p className="text-xs text-muted-foreground">
-              O usuário precisa ter um perfil de motorista cadastrado no sistema. Informe o
-              e-mail e a CNH para confirmar a identidade.
+              O usuário precisa ter um perfil de motorista cadastrado no sistema. Informe o e-mail e
+              a CNH para confirmar a identidade.
             </p>
             <Field2 label="E-mail do motorista" error={fieldErrors.userEmail}>
-              <Input type="email" value={form.userEmail} placeholder="motorista@email.com"
-                onChange={(e) => setForm((f) => ({ ...f, userEmail: e.target.value }))} />
+              <Input
+                type="email"
+                value={form.userEmail}
+                placeholder="motorista@email.com"
+                onChange={(e) => setForm((f) => ({ ...f, userEmail: e.target.value }))}
+              />
             </Field2>
             <Field2 label="CNH" error={fieldErrors.cnh}>
-              <Input value={form.cnh} placeholder="123456789"
-                onChange={(e) => setForm((f) => ({ ...f, cnh: e.target.value }))} />
+              <Input
+                value={form.cnh}
+                placeholder="123456789"
+                onChange={(e) => setForm((f) => ({ ...f, cnh: e.target.value }))}
+              />
             </Field2>
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? "Associando..." : "Associar motorista"}
@@ -635,13 +746,17 @@ function DriversSheet({
           <AlertDialogHeader>
             <AlertDialogTitle>Remover motorista?</AlertDialogTitle>
             <AlertDialogDescription>
-              {removeTarget?.userName ?? removeTarget?.userEmail ?? "Este motorista"} será desvinculado da organização.
+              {removeTarget?.userName ?? removeTarget?.userEmail ?? "Este motorista"} será
+              desvinculado da organização.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemove} disabled={removing}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleRemove}
+              disabled={removing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               {removing ? "Removendo..." : "Remover"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -665,7 +780,11 @@ function Field({ icon, label, value }: { icon: React.ReactNode; label: string; v
   );
 }
 
-function Field2({ label, error, children }: {
+function Field2({
+  label,
+  error,
+  children,
+}: {
   label: string;
   error?: string;
   children: React.ReactNode;

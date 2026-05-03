@@ -11,9 +11,15 @@ export function useTripPassengers(tripId: string) {
     let cancelled = false;
     tripsService
       .listPassengers(tripId)
-      .then((res) => { if (!cancelled) setPassengers(res ?? []); })
-      .catch(() => { if (!cancelled) setForbidden(true); });
-    return () => { cancelled = true; };
+      .then((res) => {
+        if (!cancelled) setPassengers(res ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setForbidden(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [tripId]);
 
   return { passengers, forbidden, loading: passengers === null && !forbidden };

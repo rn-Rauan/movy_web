@@ -1,14 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  User,
-  Bus,
-  Users,
-  Clock,
-  MapPin,
-  ChevronRight,
-} from "lucide-react";
+import { User, Bus, Users, Clock, MapPin, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,7 +79,10 @@ function TripDetailPage() {
 
   useEffect(() => {
     if (!tripId || !trip) return;
-    tripsService.listPassengers(tripId).then(setPassengers).catch(() => {});
+    tripsService
+      .listPassengers(tripId)
+      .then(setPassengers)
+      .catch(() => {});
   }, [tripId, trip]);
 
   useEffect(() => {
@@ -177,9 +173,7 @@ function TripDetailPage() {
       <Card className="p-4 mb-3">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
-            <div className="text-sm font-semibold mb-0.5">
-              {formatDateTime(trip.departureTime)}
-            </div>
+            <div className="text-sm font-semibold mb-0.5">{formatDateTime(trip.departureTime)}</div>
             {trip.arrivalEstimate && (
               <div className="text-xs text-muted-foreground flex items-center gap-1">
                 <Clock className="h-3 w-3" />
@@ -187,9 +181,7 @@ function TripDetailPage() {
               </div>
             )}
           </div>
-          <Badge variant={statusVariant(trip.tripStatus)}>
-            {statusLabel(trip.tripStatus)}
-          </Badge>
+          <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
         </div>
 
         {(trip.departurePoint || trip.destination) && (

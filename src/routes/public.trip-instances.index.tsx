@@ -54,7 +54,9 @@ function PublicTripsPage() {
       {!isAuthenticated ? (
         <div className="mb-4 flex justify-end">
           <Link to="/login">
-            <Button variant="outline" size="sm">Entrar</Button>
+            <Button variant="outline" size="sm">
+              Entrar
+            </Button>
           </Link>
         </div>
       ) : null}
@@ -97,9 +99,7 @@ function PublicTripsPage() {
         </Card>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground mb-3">
-            {visible.length} viagens encontradas
-          </p>
+          <p className="text-sm text-muted-foreground mb-3">{visible.length} viagens encontradas</p>
           <ul className="space-y-3">
             {visible.map((trip) => (
               <li key={trip.id}>

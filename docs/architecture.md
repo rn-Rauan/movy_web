@@ -8,22 +8,22 @@
 
 ## Stack Tecnológica
 
-| Camada | Tecnologia |
-|---|---|
-| Framework UI | React 19 |
-| Framework Full-Stack | TanStack Start (TanStack Router) |
-| Linguagem | TypeScript (strict mode) |
-| Estilização | Tailwind CSS v4 |
-| Componentes UI | shadcn/ui (Radix UI) |
-| Roteamento | TanStack Router (file-based) |
-| Gerenciamento de Estado | React Context + `useState` local |
-| HTTP Client | `fetch` nativo com wrapper + auto-refresh |
-| Validação de Formulários | Zod |
-| Notificações | Sonner (toasts) |
-| Ícones | Lucide React |
-| Build | Vite + `@lovable.dev/vite-tanstack-config` |
-| Deploy | Cloudflare Workers (via Wrangler) |
-| Package Manager | Bun |
+| Camada                   | Tecnologia                                 |
+| ------------------------ | ------------------------------------------ |
+| Framework UI             | React 19                                   |
+| Framework Full-Stack     | TanStack Start (TanStack Router)           |
+| Linguagem                | TypeScript (strict mode)                   |
+| Estilização              | Tailwind CSS v4                            |
+| Componentes UI           | shadcn/ui (Radix UI)                       |
+| Roteamento               | TanStack Router (file-based)               |
+| Gerenciamento de Estado  | React Context + `useState` local           |
+| HTTP Client              | `fetch` nativo com wrapper + auto-refresh  |
+| Validação de Formulários | Zod                                        |
+| Notificações             | Sonner (toasts)                            |
+| Ícones                   | Lucide React                               |
+| Build                    | Vite + `@lovable.dev/vite-tanstack-config` |
+| Deploy                   | Cloudflare Workers (via Wrangler)          |
+| Package Manager          | Bun                                        |
 
 ---
 
@@ -160,9 +160,18 @@ export function useTrips({ orgId, slug }: UseTripsOptions) {
   useEffect(() => {
     let cancelled = false;
     (slug ? tripsService.listBySlug(slug) : tripsService.listByOrgId(orgId))
-      .then((res) => { if (!cancelled) setTrips(Array.isArray(res) ? res : res.data ?? []); })
-      .catch((err) => { if (!cancelled) { setError(err.message); toast.error(err.message); } });
-    return () => { cancelled = true; };
+      .then((res) => {
+        if (!cancelled) setTrips(Array.isArray(res) ? res : (res.data ?? []));
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err.message);
+          toast.error(err.message);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [orgId, slug]);
 
   return { trips, loading: trips === null && !error, error };
@@ -175,7 +184,13 @@ function TripsPage() {
   const { trips, loading, error } = useTrips({ orgId, slug });
   return (
     <AppShell title="Viagens" back>
-      {loading ? <LoadingList /> : error ? <ErrorCard message={error} /> : <TripsList trips={trips ?? []} orgId={orgId} />}
+      {loading ? (
+        <LoadingList />
+      ) : error ? (
+        <ErrorCard message={error} />
+      ) : (
+        <TripsList trips={trips ?? []} orgId={orgId} />
+      )}
     </AppShell>
   );
 }
@@ -233,7 +248,7 @@ O `api.ts` intercepta respostas `401` e renova o access token automaticamente vi
   "name": "tanstack-start-app",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry"
+  "main": "@tanstack/react-start/server-entry",
 }
 ```
 
@@ -241,6 +256,6 @@ O `api.ts` intercepta respostas `401` e renova o access token automaticamente vi
 
 ## Variáveis de Ambiente
 
-| Variável | Descrição |
-|---|---|
+| Variável       | Descrição                                            |
+| -------------- | ---------------------------------------------------- |
 | `VITE_API_URL` | URL base da API backend (ex: `https://api.movy.app`) |

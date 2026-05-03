@@ -43,9 +43,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         if (orgs.length > 0) {
           const orgId = orgs[0].id;
           try {
-            const role = await api<{ id: number; name: string }>(
-              `/memberships/me/role/${orgId}`,
-            );
+            const role = await api<{ id: number; name: string }>(`/memberships/me/role/${orgId}`);
             if (role.name === "ADMIN") {
               setIsAdmin(true);
               setAdminOrgId(orgId);

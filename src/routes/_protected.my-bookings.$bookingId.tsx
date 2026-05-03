@@ -16,9 +16,14 @@ function BookingDetailPage() {
   function renderContent() {
     if (loading) return <LoadingList count={2} height="h-32" />;
     if (error) return <ErrorCard message={error} />;
-    if (booking) return <BookingDetailView booking={booking} onCancel={cancel} cancelling={cancelling} />;
+    if (booking)
+      return <BookingDetailView booking={booking} onCancel={cancel} cancelling={cancelling} />;
     return null;
   }
 
-  return <AppShell title="Inscrição" back>{renderContent()}</AppShell>;
+  return (
+    <AppShell title="Inscrição" back>
+      {renderContent()}
+    </AppShell>
+  );
 }

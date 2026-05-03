@@ -22,7 +22,12 @@ function TripDetailPage() {
       ) : error ? (
         <ErrorCard message={error} />
       ) : trip ? (
-        <TripDetailView trip={trip} availability={availability} orgId={orgId} passengers={passengers} />
+        <TripDetailView
+          trip={trip}
+          availability={availability}
+          orgId={orgId}
+          passengers={passengers}
+        />
       ) : null}
     </AppShell>
   );

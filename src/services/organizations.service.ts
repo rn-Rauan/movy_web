@@ -11,14 +11,11 @@ type OrgUpdatePayload = {
 };
 
 export const organizationsService = {
-  listActive: () =>
-    api<Organization[] | Paginated<Organization>>("/organizations/active"),
+  listActive: () => api<Organization[] | Paginated<Organization>>("/organizations/active"),
 
-  listMine: () =>
-    api<Paginated<Organization>>("/organizations/me"),
+  listMine: () => api<Paginated<Organization>>("/organizations/me"),
 
-  getBySlug: (slug: string) =>
-    api<Organization>(`/public/organizations/${slug}`, { auth: false }),
+  getBySlug: (slug: string) => api<Organization>(`/public/organizations/${slug}`, { auth: false }),
 
   update: (id: string, data: OrgUpdatePayload) =>
     api<Organization>(`/organizations/${id}`, {

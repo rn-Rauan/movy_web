@@ -69,6 +69,7 @@ function ProtectedLayout() {
 **Auth:** Não requerida
 
 Redireciona por estado:
+
 - Não autenticado → `/public/trip-instances`
 - Admin (`isAdmin`) → `/_protected/organizations`
 - Usuário → `/public/trip-instances`
@@ -92,12 +93,12 @@ Redireciona por estado:
 **Arquivo:** `src/routes/signup.tsx`  
 **Auth:** Não requerida
 
-| Campo | Validação |
-|---|---|
-| `name` | mín. 2 chars |
-| `email` | formato válido |
-| `telephone` | mín. 8 chars |
-| `password` | mín. 6 chars |
+| Campo       | Validação      |
+| ----------- | -------------- |
+| `name`      | mín. 2 chars   |
+| `email`     | formato válido |
+| `telephone` | mín. 8 chars   |
+| `password`  | mín. 6 chars   |
 
 Em sucesso: navega para `/public/trip-instances`.
 
@@ -178,12 +179,12 @@ Em sucesso: navega para `/public/trip-instances`.
 **Arquivo:** `src/routes/_protected.trips.$orgId.$tripId.book.tsx`  
 **Parâmetros:** `orgId`, `tripId`
 
-| Campo | Opções |
-|---|---|
-| `enrollmentType` | `ONE_WAY` · `RETURN` · `ROUND_TRIP` |
-| `boardingStop` | texto livre |
-| `alightingStop` | texto livre |
-| `method` | `MONEY` · `PIX` · `CREDIT_CARD` · `DEBIT_CARD` |
+| Campo            | Opções                                         |
+| ---------------- | ---------------------------------------------- |
+| `enrollmentType` | `ONE_WAY` · `RETURN` · `ROUND_TRIP`            |
+| `boardingStop`   | texto livre                                    |
+| `alightingStop`  | texto livre                                    |
+| `method`         | `MONEY` · `PIX` · `CREDIT_CARD` · `DEBIT_CARD` |
 
 - Hook: `useBookingForm()`
 - Service: `bookingsService.create()`
@@ -218,12 +219,12 @@ Em sucesso: navega para `/public/trip-instances`.
 
 Wizard de 4 passos para configuração inicial de organização:
 
-| Passo | Ação | Endpoint |
-|---|---|---|
-| 1 | Criar organização | `POST /auth/setup-organization` |
-| 2 | Criar template de viagem | `POST /trip-templates/organization/:orgId` |
-| 3 | Criar instância de viagem | `POST /trip-instances/organization/:orgId` |
-| 4 | Associar motorista (opcional) | `POST /memberships/driver` |
+| Passo | Ação                          | Endpoint                                   |
+| ----- | ----------------------------- | ------------------------------------------ |
+| 1     | Criar organização             | `POST /auth/setup-organization`            |
+| 2     | Criar template de viagem      | `POST /trip-templates/organization/:orgId` |
+| 3     | Criar instância de viagem     | `POST /trip-instances/organization/:orgId` |
+| 4     | Associar motorista (opcional) | `POST /memberships/driver`                 |
 
 Usa `api()` diretamente (não via service) por ser fluxo de setup único. Após conclusão → `/_protected/organizations`.
 
@@ -231,16 +232,17 @@ Usa `api()` diretamente (não via service) por ser fluxo de setup único. Após 
 
 ## Convenções de Nomenclatura
 
-| Arquivo | URL no browser |
-|---|---|
-| `_protected.tsx` | (pathless — sem URL) |
-| `_protected.organizations.tsx` | `/organizations` |
-| `_protected.trips.$orgId.tsx` | `/trips/:orgId` |
+| Arquivo                                    | URL no browser               |
+| ------------------------------------------ | ---------------------------- |
+| `_protected.tsx`                           | (pathless — sem URL)         |
+| `_protected.organizations.tsx`             | `/organizations`             |
+| `_protected.trips.$orgId.tsx`              | `/trips/:orgId`              |
 | `_protected.trips.$orgId.$tripId.book.tsx` | `/trips/:orgId/:tripId/book` |
-| `public.trip-instances.index.tsx` | `/public/trip-instances/` |
-| `public.trip-instances.$id.tsx` | `/public/trip-instances/:id` |
+| `public.trip-instances.index.tsx`          | `/public/trip-instances/`    |
+| `public.trip-instances.$id.tsx`            | `/public/trip-instances/:id` |
 
 **Regras:**
+
 - Pontos (`.`) = segmentos de path
 - `$` prefix = parâmetro dinâmico
 - `_` prefix = pathless layout (não adiciona segmento)

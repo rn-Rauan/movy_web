@@ -31,7 +31,11 @@ function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 mb-6">
         <SummaryCard icon={<Bus className="h-4 w-4" />} label="Viagens" value={total} />
         <SummaryCard icon={<Calendar className="h-4 w-4" />} label="Agendadas" value={scheduled} />
-        <SummaryCard icon={<CheckCircle2 className="h-4 w-4" />} label="Confirmadas" value={confirmed} />
+        <SummaryCard
+          icon={<CheckCircle2 className="h-4 w-4" />}
+          label="Confirmadas"
+          value={confirmed}
+        />
         <SummaryCard icon={<FileText className="h-4 w-4" />} label="Finalizadas" value={finished} />
       </div>
 
@@ -56,9 +60,7 @@ function DashboardPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <div className="font-medium">{formatDateTime(t.departureTime)}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {t.totalCapacity} lugares
-                  </div>
+                  <div className="text-xs text-muted-foreground">{t.totalCapacity} lugares</div>
                 </div>
               </div>
               <Badge variant={statusVariant(t.tripStatus)}>{statusLabel(t.tripStatus)}</Badge>

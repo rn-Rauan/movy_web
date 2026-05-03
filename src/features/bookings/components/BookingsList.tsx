@@ -22,11 +22,7 @@ export function BookingsList({ bookings }: BookingsListProps) {
     <ul className="space-y-3">
       {bookings.map((b) => (
         <li key={b.id}>
-          <Link
-            to="/my-bookings/$bookingId"
-            params={{ bookingId: b.id }}
-            className="block"
-          >
+          <Link to="/my-bookings/$bookingId" params={{ bookingId: b.id }} className="block">
             <BookingCard booking={b} />
           </Link>
         </li>

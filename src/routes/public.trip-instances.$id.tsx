@@ -125,7 +125,11 @@ function PublicTripDetailPage() {
     );
   }
 
-  return <AppShell title="Detalhes" back>{renderContent()}</AppShell>;
+  return (
+    <AppShell title="Detalhes" back>
+      {renderContent()}
+    </AppShell>
+  );
 }
 
 function Info({

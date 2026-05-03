@@ -3,11 +3,9 @@ import type { Booking, BookingDetails, BookingAvailability } from "@/lib/types";
 import type { EnrollmentType, PaymentMethod } from "@/lib/types";
 
 export const bookingsService = {
-  listForUser: () =>
-    api<Booking[] | { data: Booking[] }>("/bookings/user"),
+  listForUser: () => api<Booking[] | { data: Booking[] }>("/bookings/user"),
 
-  getDetails: (bookingId: string) =>
-    api<BookingDetails>(`/bookings/${bookingId}/details`),
+  getDetails: (bookingId: string) => api<BookingDetails>(`/bookings/${bookingId}/details`),
 
   checkAvailability: (tripId: string) =>
     api<BookingAvailability>(`/bookings/availability/${tripId}`),
@@ -18,9 +16,7 @@ export const bookingsService = {
     boardingStop: string;
     alightingStop: string;
     method: PaymentMethod;
-  }) =>
-    api("/bookings", { method: "POST", body: JSON.stringify(data) }),
+  }) => api("/bookings", { method: "POST", body: JSON.stringify(data) }),
 
-  cancel: (bookingId: string) =>
-    api(`/bookings/${bookingId}/cancel`, { method: "PATCH" }),
+  cancel: (bookingId: string) => api(`/bookings/${bookingId}/cancel`, { method: "PATCH" }),
 };

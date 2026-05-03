@@ -39,12 +39,12 @@ type Organization = {
 
 ```ts
 type TripStatus =
-  | "DRAFT"        // rascunho
-  | "SCHEDULED"    // agendada — inscrições abertas
-  | "CONFIRMED"    // confirmada — inscrições abertas
-  | "IN_PROGRESS"  // em andamento
-  | "FINISHED"     // concluída
-  | "CANCELED";    // cancelada
+  | "DRAFT" // rascunho
+  | "SCHEDULED" // agendada — inscrições abertas
+  | "CONFIRMED" // confirmada — inscrições abertas
+  | "IN_PROGRESS" // em andamento
+  | "FINISHED" // concluída
+  | "CANCELED"; // cancelada
 ```
 
 > Apenas `SCHEDULED` e `CONFIRMED` permitem novas inscrições — verificado por `canEnroll()`.
@@ -67,8 +67,8 @@ type TripInstance = {
   totalCapacity: number;
   bookedCount?: number;
   availableSeats?: number;
-  departureTime: string;           // ISO date
-  arrivalEstimate?: string;        // ISO date
+  departureTime: string; // ISO date
+  arrivalEstimate?: string; // ISO date
   /** Campos do endpoint público (PublicTripInstanceResponse) */
   departurePoint?: string;
   destination?: string;
@@ -119,7 +119,7 @@ type Booking = {
   organizationId: string;
   userId: string;
   tripInstanceId: string;
-  enrollmentDate: string;          // ISO date
+  enrollmentDate: string; // ISO date
   status: BookingStatus;
   presenceConfirmed: boolean;
   enrollmentType: EnrollmentType;
@@ -128,7 +128,7 @@ type Booking = {
   alightingStop: string;
   createdAt?: string;
   updatedAt?: string;
-  tripInstance?: TripInstance;     // populado no detalhe
+  tripInstance?: TripInstance; // populado no detalhe
 };
 ```
 
@@ -210,23 +210,27 @@ type Paginated<T> = {
 ## Utilitários de Formatação (`src/lib/format.ts`)
 
 ### `formatDateTime(iso, timeOnly?)`
+
 - `timeOnly = false` (padrão): `"DD/MM HH:mm"`
 - `timeOnly = true`: `"HH:mm"`
 
 ### `formatFullDate(iso)`
+
 Dia da semana por extenso: `"sexta-feira, 02 de maio de 2025"`
 
 ### `statusLabel(status)`
-| Status | Label |
-|---|---|
-| `DRAFT` | Rascunho |
-| `SCHEDULED` | Agendada |
-| `CONFIRMED` | Confirmada |
-| `IN_PROGRESS` | Em curso |
-| `FINISHED` | Concluída |
-| `CANCELED` | Cancelada |
+
+| Status        | Label      |
+| ------------- | ---------- |
+| `DRAFT`       | Rascunho   |
+| `SCHEDULED`   | Agendada   |
+| `CONFIRMED`   | Confirmada |
+| `IN_PROGRESS` | Em curso   |
+| `FINISHED`    | Concluída  |
+| `CANCELED`    | Cancelada  |
 
 ### `statusVariant(status)`
+
 Retorna a variante de `Badge`:
 | Status | Variante |
 |---|---|
@@ -236,38 +240,43 @@ Retorna a variante de `Badge`:
 | demais | `outline` |
 
 ### `canEnroll(status)`
+
 `true` se `SCHEDULED` ou `CONFIRMED`.
 
 ### `bookingStatusLabel(status)`
-| Status | Label |
-|---|---|
-| `ACTIVE` | Ativa |
+
+| Status     | Label     |
+| ---------- | --------- |
+| `ACTIVE`   | Ativa     |
 | `INACTIVE` | Cancelada |
 
 ### `enrollmentTypeLabel(type)`
-| Tipo | Label |
-|---|---|
-| `ONE_WAY` | Somente ida |
-| `RETURN` | Somente volta |
-| `ROUND_TRIP` | Ida e volta |
+
+| Tipo         | Label         |
+| ------------ | ------------- |
+| `ONE_WAY`    | Somente ida   |
+| `RETURN`     | Somente volta |
+| `ROUND_TRIP` | Ida e volta   |
 
 ### `paymentMethodLabel(method)`
-| Método | Label |
-|---|---|
-| `MONEY` | Dinheiro |
-| `PIX` | PIX |
+
+| Método        | Label             |
+| ------------- | ----------------- |
+| `MONEY`       | Dinheiro          |
+| `PIX`         | PIX               |
 | `CREDIT_CARD` | Cartão de crédito |
-| `DEBIT_CARD` | Cartão de débito |
+| `DEBIT_CARD`  | Cartão de débito  |
 
 ---
 
 ## Utilitários Gerais (`src/lib/utils.ts`)
 
 ### `cn(...inputs)`
+
 Combina classes Tailwind usando `clsx` + `tailwind-merge`:
 
 ```ts
 import { cn } from "@/lib/utils";
-cn("px-4 py-2", isActive && "bg-primary", "px-6")
+cn("px-4 py-2", isActive && "bg-primary", "px-6");
 // → "py-2 bg-primary px-6"
 ```

@@ -13,17 +13,17 @@ type TripCreatePayload = {
 };
 
 export const tripsService = {
-  listPublic: () =>
-    api<Paginated<TripInstance>>("/public/trip-instances", { auth: false }),
+  listPublic: () => api<Paginated<TripInstance>>("/public/trip-instances", { auth: false }),
 
   listByOrgId: (orgId: string) =>
     api<TripInstance[] | Paginated<TripInstance>>(`/trip-instances/organization/${orgId}`),
 
   listBySlug: (slug: string) =>
-    api<TripInstance[] | Paginated<TripInstance>>(`/public/trip-instances/org/${slug}`, { auth: false }),
+    api<TripInstance[] | Paginated<TripInstance>>(`/public/trip-instances/org/${slug}`, {
+      auth: false,
+    }),
 
-  getPublicById: (id: string) =>
-    api<TripInstance>(`/public/trip-instances/${id}`, { auth: false }),
+  getPublicById: (id: string) => api<TripInstance>(`/public/trip-instances/${id}`, { auth: false }),
 
   getById: (id: string) => api<TripInstance>(`/trip-instances/${id}`),
 

@@ -67,15 +67,15 @@ Deve envolver toda a aplicação. Posicionado no `__root.tsx` como ancestral do 
 
 ### Estado exposto
 
-| Propriedade | Tipo | Descrição |
-|---|---|---|
-| `user` | `AuthUser \| null` | Dados do usuário autenticado |
-| `isAuthenticated` | `boolean` | `true` se `user !== null` |
-| `loading` | `boolean` | `true` durante a inicialização (leitura do localStorage) |
-| `login` | `Function` | Autentica via API e atualiza o estado |
-| `signup` | `Function` | Cadastra e autentica via API |
-| `logout` | `Function` | Revoga token server-side, limpa localStorage e reseta estado |
-| `refreshUser` | `Function` | Relê `tokenStorage.user` e atualiza o estado (usado após setup) |
+| Propriedade       | Tipo               | Descrição                                                       |
+| ----------------- | ------------------ | --------------------------------------------------------------- |
+| `user`            | `AuthUser \| null` | Dados do usuário autenticado                                    |
+| `isAuthenticated` | `boolean`          | `true` se `user !== null`                                       |
+| `loading`         | `boolean`          | `true` durante a inicialização (leitura do localStorage)        |
+| `login`           | `Function`         | Autentica via API e atualiza o estado                           |
+| `signup`          | `Function`         | Cadastra e autentica via API                                    |
+| `logout`          | `Function`         | Revoga token server-side, limpa localStorage e reseta estado    |
+| `refreshUser`     | `Function`         | Relê `tokenStorage.user` e atualiza o estado (usado após setup) |
 
 ### Inicialização
 
@@ -110,20 +110,20 @@ Detecta automaticamente o role do usuário após o login, chamando a API em para
 
 ### Estado exposto
 
-| Propriedade | Tipo | Descrição |
-|---|---|---|
-| `isAdmin` | `boolean` | User tem role ADMIN na organização |
-| `isDriver` | `boolean` | User está cadastrado como motorista |
-| `adminOrgId` | `string \| null` | ID da organização onde é admin |
-| `roleLoading` | `boolean` | `true` enquanto detecta roles |
-| `refetchRole` | `Function` | Re-detecta roles (usar após setup) |
+| Propriedade   | Tipo             | Descrição                           |
+| ------------- | ---------------- | ----------------------------------- |
+| `isAdmin`     | `boolean`        | User tem role ADMIN na organização  |
+| `isDriver`    | `boolean`        | User está cadastrado como motorista |
+| `adminOrgId`  | `string \| null` | ID da organização onde é admin      |
+| `roleLoading` | `boolean`        | `true` enquanto detecta roles       |
+| `refetchRole` | `Function`       | Re-detecta roles (usar após setup)  |
 
 ### Detecção de roles
 
 ```ts
 const [driverResult, orgsResult] = await Promise.allSettled([
-  api("/drivers/me"),           // resolve → isDriver = true
-  api("/organizations/me"),     // resolve → tem org, verifica role
+  api("/drivers/me"), // resolve → isDriver = true
+  api("/organizations/me"), // resolve → tem org, verifica role
 ]);
 // GET /memberships/me/role/:orgId → { name: "ADMIN" } → isAdmin = true
 ```
@@ -145,11 +145,11 @@ const { isAdmin, isDriver, adminOrgId, roleLoading, refetchRole } = useRole();
 **Arquivo:** `src/lib/api.ts`
 
 ```ts
-tokenStorage.access    // lê tt_access
-tokenStorage.refresh   // lê tt_refresh
-tokenStorage.user      // lê tt_user (parseado como JSON)
-tokenStorage.set({ accessToken, refreshToken, user }) // salva os 3
-tokenStorage.clear()   // remove os 3
+tokenStorage.access; // lê tt_access
+tokenStorage.refresh; // lê tt_refresh
+tokenStorage.user; // lê tt_user (parseado como JSON)
+tokenStorage.set({ accessToken, refreshToken, user }); // salva os 3
+tokenStorage.clear(); // remove os 3
 ```
 
 > Safe server-side: todas as operações verificam `typeof window !== "undefined"`.
@@ -161,7 +161,11 @@ tokenStorage.clear()   // remove os 3
 ```ts
 const logout = () => {
   // Revoga refresh token server-side (fire-and-forget)
-  api("/auth/logout", { method: "POST", auth: false, body: JSON.stringify({ refreshToken }) }).catch(() => {});
+  api("/auth/logout", {
+    method: "POST",
+    auth: false,
+    body: JSON.stringify({ refreshToken }),
+  }).catch(() => {});
   tokenStorage.clear();
   setUser(null);
 };

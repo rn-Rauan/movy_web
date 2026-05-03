@@ -19,11 +19,7 @@ export function TripsList({ trips, orgId }: TripsListProps) {
     <ul className="space-y-3">
       {trips.map((trip) => (
         <li key={trip.id}>
-          <Link
-            to="/trips/$orgId/$tripId"
-            params={{ orgId, tripId: trip.id }}
-            className="block"
-          >
+          <Link to="/trips/$orgId/$tripId" params={{ orgId, tripId: trip.id }} className="block">
             <TripCard trip={trip} />
           </Link>
         </li>
