@@ -97,6 +97,15 @@ export type BookingAvailability = {
   isBookable: boolean;
 };
 
+export type Weekday =
+  | "SUNDAY"
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY";
+
 export type TripTemplate = {
   id: string;
   organizationId: string;
@@ -109,7 +118,10 @@ export type TripTemplate = {
   priceRoundTrip?: number;
   isPublic: boolean;
   isRecurring?: boolean;
+  frequency?: Weekday[];
+  minRevenue?: number;
   autoCancelEnabled?: boolean;
+  autoCancelOffset?: number;
   status?: string;
   createdAt?: string;
   updatedAt?: string;

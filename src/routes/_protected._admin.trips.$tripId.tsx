@@ -29,8 +29,16 @@ import { useRole } from "@/lib/role-context";
 import { tripsService } from "@/services/trips.service";
 import { driversService } from "@/services/drivers.service";
 import { vehiclesService } from "@/services/vehicles.service";
+import { templatesService } from "@/services/templates.service";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
-import type { TripInstance, TripStatus, TripPassenger, Driver, Vehicle } from "@/lib/types";
+import type {
+  TripInstance,
+  TripStatus,
+  TripPassenger,
+  Driver,
+  Vehicle,
+  TripTemplate,
+} from "@/lib/types";
 
 export const Route = createFileRoute("/_protected/_admin/trips/$tripId")({
   component: TripDetailPage,
@@ -60,6 +68,7 @@ function TripDetailPage() {
   const navigate = useNavigate();
 
   const [trip, setTrip] = useState<TripInstance | null>(null);
+  const [template, setTemplate] = useState<TripTemplate | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [passengers, setPassengers] = useState<TripPassenger[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -76,6 +85,14 @@ function TripDetailPage() {
       .then(setTrip)
       .catch((err) => setError(err instanceof Error ? err.message : "Erro ao carregar viagem"));
   }, [tripId]);
+
+  useEffect(() => {
+    if (!trip?.tripTemplateId) return;
+    templatesService
+      .getById(trip.tripTemplateId)
+      .then(setTemplate)
+      .catch(() => {});
+  }, [trip?.tripTemplateId]);
 
   useEffect(() => {
     if (!tripId || !trip) return;
@@ -184,10 +201,10 @@ function TripDetailPage() {
           <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
         </div>
 
-        {(trip.departurePoint || trip.destination) && (
+        {(template?.departurePoint || template?.destination) && (
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
             <MapPin className="h-4 w-4 shrink-0" />
-            {trip.departurePoint ?? "—"} → {trip.destination ?? "—"}
+            {template?.departurePoint ?? "—"} → {template?.destination ?? "—"}
           </div>
         )}
 
@@ -195,6 +212,17 @@ function TripDetailPage() {
           <Users className="h-4 w-4" />
           {trip.bookedCount ?? 0} / {trip.totalCapacity} lugares
         </div>
+
+        {template?.stops && template.stops.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <div className="text-xs text-muted-foreground mb-1.5">Paradas</div>
+            <ol className="text-sm space-y-1 list-decimal list-inside">
+              {template.stops.map((stop, i) => (
+                <li key={i}>{stop}</li>
+              ))}
+            </ol>
+          </div>
+        )}
       </Card>
 
       {/* Driver assignment */}

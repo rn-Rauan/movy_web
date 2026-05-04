@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import type { TripTemplate, Paginated } from "@/lib/types";
+import type { TripTemplate, Paginated, Weekday } from "@/lib/types";
 
 type TemplatePayload = {
   departurePoint: string;
@@ -11,7 +11,10 @@ type TemplatePayload = {
   priceRoundTrip?: number;
   isPublic: boolean;
   isRecurring?: boolean;
+  frequency?: Weekday[];
+  minRevenue?: number;
   autoCancelEnabled?: boolean;
+  autoCancelOffset?: number;
 };
 
 export const templatesService = {

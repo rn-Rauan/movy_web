@@ -22,8 +22,10 @@ import { useRole } from "@/lib/role-context";
 import { useTrips } from "@/features/trips/hooks/useTrips";
 import { tripsService } from "@/services/trips.service";
 import { templatesService } from "@/services/templates.service";
+import { driversService } from "@/services/drivers.service";
+import { vehiclesService } from "@/services/vehicles.service";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
-import type { TripStatus, TripTemplate } from "@/lib/types";
+import type { TripStatus, TripTemplate, Driver, Vehicle } from "@/lib/types";
 
 export const Route = createFileRoute("/_protected/_admin/trips")({
   component: AdminTripsPage,
@@ -38,15 +40,36 @@ const FILTERS: { label: string; value: TripStatus | "ALL" }[] = [
   { label: "Finalizada", value: "FINISHED" },
 ];
 
-const tripSchema = z.object({
-  tripTemplateId: z.string().min(1, "Selecione um template"),
-  departureDate: z.string().min(1, "Informe a data de partida"),
-  departureTime: z.string().min(1, "Informe a hora de partida"),
-  arrivalDate: z.string().min(1, "Informe a data de chegada"),
-  arrivalTime: z.string().min(1, "Informe a hora estimada de chegada"),
-  totalCapacity: z.coerce.number().int().min(1, "Capacidade deve ser ao menos 1"),
-  initialStatus: z.enum(["DRAFT", "SCHEDULED"]),
-});
+const tripSchema = z
+  .object({
+    tripTemplateId: z.string().min(1, "Selecione um template"),
+    departureDate: z.string().min(1, "Informe a data de partida"),
+    departureTime: z.string().min(1, "Informe a hora de partida"),
+    arrivalDate: z.string().min(1, "Informe a data de chegada"),
+    arrivalTime: z.string().min(1, "Informe a hora estimada de chegada"),
+    totalCapacity: z.coerce.number().int().min(1, "Capacidade deve ser ao menos 1"),
+    initialStatus: z.enum(["DRAFT", "SCHEDULED"]),
+    driverId: z.string().optional(),
+    vehicleId: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.initialStatus === "SCHEDULED") {
+      if (!data.driverId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["driverId"],
+          message: "Motorista é obrigatório para status Agendada",
+        });
+      }
+      if (!data.vehicleId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["vehicleId"],
+          message: "Veículo é obrigatório para status Agendada",
+        });
+      }
+    }
+  });
 
 type TripFormState = {
   tripTemplateId: string;
@@ -56,6 +79,8 @@ type TripFormState = {
   arrivalTime: string;
   totalCapacity: string;
   initialStatus: "DRAFT" | "SCHEDULED";
+  driverId: string;
+  vehicleId: string;
 };
 
 const EMPTY_TRIP_FORM: TripFormState = {
@@ -66,6 +91,8 @@ const EMPTY_TRIP_FORM: TripFormState = {
   arrivalTime: "",
   totalCapacity: "",
   initialStatus: "DRAFT",
+  driverId: "",
+  vehicleId: "",
 };
 
 function AdminTripsPage() {
@@ -89,21 +116,34 @@ function TripsList() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [templates, setTemplates] = useState<TripTemplate[]>([]);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   useEffect(() => {
     if (!adminOrgId) return;
     templatesService.listByOrgId(adminOrgId).then((res) => {
       setTemplates(Array.isArray(res) ? res : (res.data ?? []));
     });
+    driversService
+      .listByOrgId(adminOrgId)
+      .then((res) => setDrivers(Array.isArray(res) ? res : (res.data ?? [])))
+      .catch(() => {});
+    vehiclesService
+      .listByOrgId(adminOrgId)
+      .then((res) => setVehicles(Array.isArray(res) ? res : (res.data ?? [])))
+      .catch(() => {});
   }, [adminOrgId]);
+
+  const templatesById = new Map(templates.map((t) => [t.id, t]));
 
   const list = (trips ?? []).filter((t) => {
     if (filter !== "ALL" && t.tripStatus !== filter) return false;
     if (query) {
       const q = query.toLowerCase();
+      const tpl = t.tripTemplateId ? templatesById.get(t.tripTemplateId) : undefined;
       return (
-        (t.departurePoint ?? "").toLowerCase().includes(q) ||
-        (t.destination ?? "").toLowerCase().includes(q)
+        (tpl?.departurePoint ?? "").toLowerCase().includes(q) ||
+        (tpl?.destination ?? "").toLowerCase().includes(q)
       );
     }
     return true;
@@ -129,9 +169,19 @@ function TripsList() {
     setFieldErrors({});
     setSubmitting(true);
     try {
-      const { departureDate, departureTime, arrivalDate, arrivalTime, ...rest } = parsed.data;
+      const {
+        departureDate,
+        departureTime,
+        arrivalDate,
+        arrivalTime,
+        driverId,
+        vehicleId,
+        ...rest
+      } = parsed.data;
       await tripsService.create(adminOrgId!, {
         ...rest,
+        driverId: driverId || undefined,
+        vehicleId: vehicleId || undefined,
         departureTime: new Date(`${departureDate}T${departureTime}`).toISOString(),
         arrivalEstimate: new Date(`${arrivalDate}T${arrivalTime}`).toISOString(),
       });
@@ -189,27 +239,30 @@ function TripsList() {
         </Card>
       ) : (
         <div className="space-y-2">
-          {list.map((t) => (
-            <Link key={t.id} to="/trips/$tripId" params={{ tripId: t.id }} className="block">
-              <Card className="p-4 hover:bg-accent/50 transition-colors">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="text-sm font-semibold">{formatDateTime(t.departureTime)}</div>
-                  <Badge variant={statusVariant(t.tripStatus)}>{statusLabel(t.tripStatus)}</Badge>
-                </div>
-                {(t.departurePoint || t.destination) && (
-                  <div className="text-sm text-muted-foreground mb-2">
-                    {t.departurePoint ?? "—"} → {t.destination ?? "—"}
+          {list.map((t) => {
+            const tpl = t.tripTemplateId ? templatesById.get(t.tripTemplateId) : undefined;
+            return (
+              <Link key={t.id} to="/trips/$tripId" params={{ tripId: t.id }} className="block">
+                <Card className="p-4 hover:bg-accent/50 transition-colors">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="text-sm font-semibold">{formatDateTime(t.departureTime)}</div>
+                    <Badge variant={statusVariant(t.tripStatus)}>{statusLabel(t.tripStatus)}</Badge>
                   </div>
-                )}
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>
-                    {t.totalCapacity} lugares · {t.bookedCount ?? 0} inscritos
-                  </span>
-                  <ChevronRight className="h-4 w-4" />
-                </div>
-              </Card>
-            </Link>
-          ))}
+                  {(tpl?.departurePoint || tpl?.destination) && (
+                    <div className="text-sm text-muted-foreground mb-2">
+                      {tpl?.departurePoint ?? "—"} → {tpl?.destination ?? "—"}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {t.totalCapacity} lugares · {t.bookedCount ?? 0} inscritos
+                    </span>
+                    <ChevronRight className="h-4 w-4" />
+                  </div>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
 
@@ -324,6 +377,64 @@ function TripsList() {
                   <SelectItem value="SCHEDULED">Agendada (requer motorista e veículo)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-1">
+              <Label>
+                Motorista
+                {form.initialStatus === "SCHEDULED" && (
+                  <span className="text-destructive ml-0.5">*</span>
+                )}
+              </Label>
+              <Select
+                value={form.driverId || "none"}
+                onValueChange={(v) => setForm((f) => ({ ...f, driverId: v === "none" ? "" : v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sem motorista" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem motorista</SelectItem>
+                  {drivers.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.userName ? `${d.userName} — CNH ${d.cnh}` : `CNH ${d.cnh}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fieldErrors.driverId && (
+                <p className="text-xs text-destructive">{fieldErrors.driverId}</p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <Label>
+                Veículo
+                {form.initialStatus === "SCHEDULED" && (
+                  <span className="text-destructive ml-0.5">*</span>
+                )}
+              </Label>
+              <Select
+                value={form.vehicleId || "none"}
+                onValueChange={(v) => setForm((f) => ({ ...f, vehicleId: v === "none" ? "" : v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sem veículo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem veículo</SelectItem>
+                  {vehicles
+                    .filter((v) => v.status !== "INACTIVE")
+                    .map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.model} — {v.plate}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              {fieldErrors.vehicleId && (
+                <p className="text-xs text-destructive">{fieldErrors.vehicleId}</p>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>

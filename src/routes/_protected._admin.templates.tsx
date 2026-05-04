@@ -30,7 +30,7 @@ import {
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { useRole } from "@/lib/role-context";
 import { templatesService } from "@/services/templates.service";
-import type { TripTemplate } from "@/lib/types";
+import type { TripTemplate, Weekday } from "@/lib/types";
 
 export const Route = createFileRoute("/_protected/_admin/templates")({
   component: TemplatesPage,
@@ -42,19 +42,61 @@ const SHIFT_LABEL: Record<string, string> = {
   EVENING: "Noite",
 };
 
-const templateSchema = z.object({
-  departurePoint: z.string().trim().min(2, "Informe o ponto de partida"),
-  destination: z.string().trim().min(2, "Informe o destino"),
-  stops: z
-    .array(z.string().trim().min(1, "Parada não pode ser vazia"))
-    .min(2, "Informe ao menos 2 paradas"),
-  shift: z.enum(["MORNING", "AFTERNOON", "EVENING"]),
-  priceOneWay: z.coerce.number().positive("Preço inválido").optional(),
-  priceReturn: z.coerce.number().positive("Preço inválido").optional(),
-  priceRoundTrip: z.coerce.number().positive("Preço inválido").optional(),
-  isPublic: z.boolean(),
-  isRecurring: z.boolean().optional(),
-});
+const WEEKDAYS: { value: Weekday; label: string }[] = [
+  { value: "SUNDAY", label: "Dom" },
+  { value: "MONDAY", label: "Seg" },
+  { value: "TUESDAY", label: "Ter" },
+  { value: "WEDNESDAY", label: "Qua" },
+  { value: "THURSDAY", label: "Qui" },
+  { value: "FRIDAY", label: "Sex" },
+  { value: "SATURDAY", label: "Sáb" },
+];
+
+const templateSchema = z
+  .object({
+    departurePoint: z.string().trim().min(2, "Informe o ponto de partida"),
+    destination: z.string().trim().min(2, "Informe o destino"),
+    stops: z
+      .array(z.string().trim().min(1, "Parada não pode ser vazia"))
+      .min(2, "Informe ao menos 2 paradas"),
+    shift: z.enum(["MORNING", "AFTERNOON", "EVENING"]),
+    priceOneWay: z.coerce.number().positive("Preço inválido").optional(),
+    priceReturn: z.coerce.number().positive("Preço inválido").optional(),
+    priceRoundTrip: z.coerce.number().positive("Preço inválido").optional(),
+    isPublic: z.boolean(),
+    isRecurring: z.boolean().optional(),
+    frequency: z
+      .array(z.enum(["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]))
+      .optional(),
+    minRevenue: z.coerce.number().positive("Receita mínima inválida").optional(),
+    autoCancelEnabled: z.boolean().optional(),
+    autoCancelOffset: z.coerce.number().int().positive("Tempo inválido").optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.isRecurring && (!data.frequency || data.frequency.length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["frequency"],
+        message: "Selecione ao menos um dia da semana",
+      });
+    }
+    if (data.autoCancelEnabled) {
+      if (data.minRevenue == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["minRevenue"],
+          message: "Informe a receita mínima",
+        });
+      }
+      if (data.autoCancelOffset == null) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["autoCancelOffset"],
+          message: "Informe quantos minutos antes",
+        });
+      }
+    }
+  });
 
 type FormState = {
   departurePoint: string;
@@ -66,6 +108,10 @@ type FormState = {
   priceRoundTrip: string;
   isPublic: boolean;
   isRecurring: boolean;
+  frequency: Weekday[];
+  minRevenue: string;
+  autoCancelEnabled: boolean;
+  autoCancelOffset: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -78,6 +124,10 @@ const EMPTY_FORM: FormState = {
   priceRoundTrip: "",
   isPublic: false,
   isRecurring: false,
+  frequency: [],
+  minRevenue: "",
+  autoCancelEnabled: false,
+  autoCancelOffset: "",
 };
 
 function templateToForm(tpl: TripTemplate): FormState {
@@ -91,6 +141,10 @@ function templateToForm(tpl: TripTemplate): FormState {
     priceRoundTrip: tpl.priceRoundTrip != null ? String(tpl.priceRoundTrip) : "",
     isPublic: tpl.isPublic,
     isRecurring: tpl.isRecurring ?? false,
+    frequency: tpl.frequency ?? [],
+    minRevenue: tpl.minRevenue != null ? String(tpl.minRevenue) : "",
+    autoCancelEnabled: tpl.autoCancelEnabled ?? false,
+    autoCancelOffset: tpl.autoCancelOffset != null ? String(tpl.autoCancelOffset) : "",
   };
 }
 
@@ -148,6 +202,10 @@ function TemplatesPage() {
       priceOneWay: form.priceOneWay ? Number(form.priceOneWay) : undefined,
       priceReturn: form.priceReturn ? Number(form.priceReturn) : undefined,
       priceRoundTrip: form.priceRoundTrip ? Number(form.priceRoundTrip) : undefined,
+      frequency: form.isRecurring && form.frequency.length > 0 ? form.frequency : undefined,
+      minRevenue: form.autoCancelEnabled && form.minRevenue ? Number(form.minRevenue) : undefined,
+      autoCancelOffset:
+        form.autoCancelEnabled && form.autoCancelOffset ? Number(form.autoCancelOffset) : undefined,
     };
     const parsed = templateSchema.safeParse(payload);
     if (!parsed.success) {
@@ -410,6 +468,84 @@ function TemplatesPage() {
                 />
                 Recorrente
               </label>
+            </div>
+
+            {form.isRecurring && (
+              <div className="space-y-2">
+                <Label>Dias da semana</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {WEEKDAYS.map((d) => {
+                    const active = form.frequency.includes(d.value);
+                    return (
+                      <Button
+                        key={d.value}
+                        type="button"
+                        variant={active ? "default" : "outline"}
+                        size="sm"
+                        className="h-8 px-3"
+                        onClick={() =>
+                          setForm((f) => ({
+                            ...f,
+                            frequency: active
+                              ? f.frequency.filter((v) => v !== d.value)
+                              : [...f.frequency, d.value],
+                          }))
+                        }
+                      >
+                        {d.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+                {fieldErrors.frequency && (
+                  <p className="text-xs text-destructive">{fieldErrors.frequency}</p>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.autoCancelEnabled}
+                  onChange={(e) => setForm((f) => ({ ...f, autoCancelEnabled: e.target.checked }))}
+                  className="rounded"
+                />
+                Auto-cancelar se receita mínima não atingida
+              </label>
+
+              {form.autoCancelEnabled && (
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="space-y-1">
+                    <Label>Receita mínima (R$)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.minRevenue}
+                      onChange={(e) => setForm((f) => ({ ...f, minRevenue: e.target.value }))}
+                      placeholder="0,00"
+                    />
+                    {fieldErrors.minRevenue && (
+                      <p className="text-xs text-destructive">{fieldErrors.minRevenue}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Cancelar quantos minutos antes?</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={form.autoCancelOffset}
+                      onChange={(e) => setForm((f) => ({ ...f, autoCancelOffset: e.target.value }))}
+                      placeholder="60"
+                    />
+                    {fieldErrors.autoCancelOffset && (
+                      <p className="text-xs text-destructive">{fieldErrors.autoCancelOffset}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>

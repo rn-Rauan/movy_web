@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Pencil,
@@ -12,7 +12,6 @@ import {
   Car,
   Users,
   ChevronRight,
-  UserX,
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -71,20 +70,17 @@ const orgSchema = z.object({
 });
 
 const vehicleSchema = z.object({
-  plate: z.string().trim().min(7, "Placa inválida").max(8, "Placa inválida"),
+  plate: z
+    .string()
+    .trim()
+    .min(7, "Placa deve ter 7 caracteres")
+    .max(7, "Placa deve ter 7 caracteres"),
   model: z.string().trim().min(2, "Informe o modelo"),
   type: z.enum(["VAN", "BUS", "MINIBUS", "CAR"]),
   maxCapacity: z.coerce.number().int().min(1).max(200, "Máximo 200"),
 });
 
-const driverSchema = z.object({
-  userEmail: z.string().email("E-mail inválido"),
-  cnh: z.string().trim().min(9, "CNH deve ter ao menos 9 caracteres"),
-});
-
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const DRIVER_ROLE_ID = 2;
 
 const VEHICLE_TYPE_LABEL: Record<string, string> = {
   VAN: "Van",
@@ -112,7 +108,6 @@ function OrganizationPage() {
   const [orgSubmitting, setOrgSubmitting] = useState(false);
 
   const [vehiclesOpen, setVehiclesOpen] = useState(false);
-  const [driversOpen, setDriversOpen] = useState(false);
 
   const [vehicles, setVehicles] = useState<Vehicle[] | null>(null);
   const [drivers, setDrivers] = useState<Driver[] | null>(null);
@@ -245,8 +240,8 @@ function OrganizationPage() {
           <div className="text-xs text-muted-foreground mt-0.5">Veículos</div>
         </button>
 
-        <button
-          onClick={() => setDriversOpen(true)}
+        <Link
+          to="/drivers"
           className="rounded-xl border border-border bg-card p-4 text-left hover:bg-accent/50 transition-colors"
         >
           <div className="flex items-center justify-between mb-2">
@@ -255,7 +250,7 @@ function OrganizationPage() {
           </div>
           <div className="text-2xl font-bold">{drivers === null ? "—" : activeDrivers.length}</div>
           <div className="text-xs text-muted-foreground mt-0.5">Motoristas</div>
-        </button>
+        </Link>
       </div>
 
       {/* Org edit dialog */}
@@ -317,15 +312,6 @@ function OrganizationPage() {
         orgId={adminOrgId ?? ""}
         vehicles={vehicles}
         onVehiclesChange={setVehicles}
-      />
-
-      {/* Drivers sheet */}
-      <DriversSheet
-        open={driversOpen}
-        onOpenChange={setDriversOpen}
-        orgId={adminOrgId ?? ""}
-        drivers={drivers}
-        onDriversChange={setDrivers}
       />
     </AppShell>
   );
@@ -491,7 +477,7 @@ function VehiclesSheet({
             <Field2 label="Placa" error={fieldErrors.plate}>
               <Input
                 value={form.plate}
-                maxLength={8}
+                maxLength={7}
                 placeholder="ABC1D23"
                 onChange={(e) => setForm((f) => ({ ...f, plate: e.target.value.toUpperCase() }))}
               />
@@ -553,211 +539,6 @@ function VehiclesSheet({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deactivating ? "Removendo..." : "Remover"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
-
-// ── Drivers Sheet ─────────────────────────────────────────────────────────────
-
-function DriversSheet({
-  open,
-  onOpenChange,
-  orgId,
-  drivers,
-  onDriversChange,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  orgId: string;
-  drivers: Driver[] | null;
-  onDriversChange: (fn: (prev: Driver[] | null) => Driver[] | null) => void;
-}) {
-  const [addOpen, setAddOpen] = useState(false);
-  const [removeTarget, setRemoveTarget] = useState<Driver | null>(null);
-  const [form, setForm] = useState({ userEmail: "", cnh: "" });
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [removing, setRemoving] = useState(false);
-
-  function openAdd() {
-    setForm({ userEmail: "", cnh: "" });
-    setFieldErrors({});
-    setAddOpen(true);
-  }
-
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    const parsed = driverSchema.safeParse(form);
-    if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => {
-        errs[e.path.join(".")] = e.message;
-      });
-      setFieldErrors(errs);
-      return;
-    }
-    setFieldErrors({});
-    setSubmitting(true);
-    try {
-      await driversService.addToOrg(parsed.data.userEmail, parsed.data.cnh);
-      toast.success("Motorista adicionado");
-      setAddOpen(false);
-      // Reload drivers list
-      driversService
-        .listByOrgId(orgId)
-        .then((res) => {
-          const list = Array.isArray(res) ? res : ((res as Paginated<Driver>).data ?? []);
-          onDriversChange(() => list);
-        })
-        .catch(() => {});
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao adicionar motorista");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleRemove() {
-    if (!removeTarget) return;
-    setRemoving(true);
-    try {
-      await driversService.removeMembership(removeTarget.userId, DRIVER_ROLE_ID, orgId);
-      onDriversChange((prev) => (prev ? prev.filter((d) => d.id !== removeTarget.id) : prev));
-      toast.success("Motorista removido");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao remover motorista");
-    } finally {
-      setRemoving(false);
-      setRemoveTarget(null);
-    }
-  }
-
-  const activeDrivers = (drivers ?? []).filter((d) => d.driverStatus === "ACTIVE");
-
-  return (
-    <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[85dvh] overflow-y-auto">
-          <SheetHeader className="mb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" /> Motoristas
-              </SheetTitle>
-              <Button size="sm" onClick={openAdd}>
-                <Plus className="h-4 w-4 mr-1" /> Adicionar
-              </Button>
-            </div>
-          </SheetHeader>
-
-          {drivers === null ? (
-            <LoadingList count={3} height="h-16" />
-          ) : activeDrivers.length === 0 ? (
-            <Card className="p-4 text-center text-sm text-muted-foreground">
-              Nenhum motorista associado.
-            </Card>
-          ) : (
-            <div className="space-y-2 pb-8">
-              {activeDrivers.map((d) => (
-                <Card key={d.id} className="p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">
-                        {d.userName ?? d.userEmail ?? "Motorista"}
-                      </div>
-                      {d.userEmail && d.userName && (
-                        <div className="text-xs text-muted-foreground truncate">{d.userEmail}</div>
-                      )}
-                      <div className="flex flex-wrap gap-x-2 mt-1 text-xs text-muted-foreground">
-                        <span>CNH {d.cnh}</span>
-                        <span>·</span>
-                        <span>Cat. {d.cnhCategory}</span>
-                        <span>·</span>
-                        <span>Val. {new Date(d.cnhExpiresAt).toLocaleDateString("pt-BR")}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge
-                        variant={d.driverStatus === "ACTIVE" ? "default" : "outline"}
-                        className="text-xs"
-                      >
-                        {d.driverStatus === "ACTIVE"
-                          ? "Ativo"
-                          : d.driverStatus === "SUSPENDED"
-                            ? "Suspenso"
-                            : "Inativo"}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        onClick={() => setRemoveTarget(d)}
-                      >
-                        <UserX className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
-
-      {/* Add driver dialog */}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Associar motorista</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleAdd} className="space-y-3 mt-2">
-            <p className="text-xs text-muted-foreground">
-              O usuário precisa ter um perfil de motorista cadastrado no sistema. Informe o e-mail e
-              a CNH para confirmar a identidade.
-            </p>
-            <Field2 label="E-mail do motorista" error={fieldErrors.userEmail}>
-              <Input
-                type="email"
-                value={form.userEmail}
-                placeholder="motorista@email.com"
-                onChange={(e) => setForm((f) => ({ ...f, userEmail: e.target.value }))}
-              />
-            </Field2>
-            <Field2 label="CNH" error={fieldErrors.cnh}>
-              <Input
-                value={form.cnh}
-                placeholder="123456789"
-                onChange={(e) => setForm((f) => ({ ...f, cnh: e.target.value }))}
-              />
-            </Field2>
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Associando..." : "Associar motorista"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Remove confirmation */}
-      <AlertDialog open={!!removeTarget} onOpenChange={(o) => !o && setRemoveTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover motorista?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {removeTarget?.userName ?? removeTarget?.userEmail ?? "Este motorista"} será
-              desvinculado da organização.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleRemove}
-              disabled={removing}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {removing ? "Removendo..." : "Remover"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
