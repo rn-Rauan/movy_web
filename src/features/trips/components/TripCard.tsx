@@ -10,7 +10,7 @@ interface TripCardProps {
 
 export function TripCard({ trip }: TripCardProps) {
   const seats =
-    trip.availableSeats ??
+    trip.availableSlots ??
     (trip.totalCapacity != null && trip.bookedCount != null
       ? trip.totalCapacity - trip.bookedCount
       : null);

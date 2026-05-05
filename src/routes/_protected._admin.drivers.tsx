@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, UserX } from "lucide-react";
+import { Plus, UserX, Pencil } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +43,24 @@ const addDriverSchema = z.object({
   cnh: z.string().trim().min(9, "CNH deve ter ao menos 9 caracteres"),
 });
 
+const editDriverSchema = z.object({
+  cnh: z
+    .string()
+    .trim()
+    .min(9, "CNH deve ter ao menos 9 caracteres")
+    .max(11, "CNH deve ter no máximo 11 caracteres"),
+  cnhCategory: z.enum(["A", "B", "C", "D", "E"]),
+  cnhExpiresAt: z.string().min(1, "Informe a validade"),
+  status: z.enum(["ACTIVE", "INACTIVE", "SUSPENDED"]),
+});
+
+type EditFormState = {
+  cnh: string;
+  cnhCategory: "A" | "B" | "C" | "D" | "E";
+  cnhExpiresAt: string;
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+};
+
 function DriversPage() {
   const { adminOrgId } = useRole();
   const [drivers, setDrivers] = useState<Driver[] | null>(null);
@@ -48,6 +73,16 @@ function DriversPage() {
 
   const [removeTarget, setRemoveTarget] = useState<Driver | null>(null);
   const [removing, setRemoving] = useState(false);
+
+  const [editTarget, setEditTarget] = useState<Driver | null>(null);
+  const [editForm, setEditForm] = useState<EditFormState>({
+    cnh: "",
+    cnhCategory: "B",
+    cnhExpiresAt: "",
+    status: "ACTIVE",
+  });
+  const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string>>({});
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   function loadDrivers() {
     if (!adminOrgId) return;
@@ -102,16 +137,70 @@ function DriversPage() {
 
   async function handleRemove() {
     if (!removeTarget || !adminOrgId) return;
+    const removed = removeTarget;
+    const orgId = adminOrgId;
     setRemoving(true);
     try {
-      await driversService.removeMembership(removeTarget.userId, DRIVER_ROLE_ID, adminOrgId);
-      setDrivers((prev) => (prev ? prev.filter((d) => d.id !== removeTarget.id) : prev));
-      toast.success("Motorista removido");
+      await driversService.removeMembership(removed.userId, DRIVER_ROLE_ID, orgId);
+      setDrivers((prev) => (prev ? prev.filter((d) => d.id !== removed.id) : prev));
+      toast.success("Motorista removido", {
+        action: {
+          label: "Desfazer",
+          onClick: async () => {
+            try {
+              await driversService.restoreMembership(removed.userId, DRIVER_ROLE_ID, orgId);
+              toast.success("Motorista restaurado");
+              loadDrivers();
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Erro ao restaurar motorista");
+            }
+          },
+        },
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao remover motorista");
     } finally {
       setRemoving(false);
       setRemoveTarget(null);
+    }
+  }
+
+  function openEdit(d: Driver) {
+    setEditForm({
+      cnh: d.cnh,
+      cnhCategory: d.cnhCategory,
+      cnhExpiresAt: d.cnhExpiresAt ? d.cnhExpiresAt.slice(0, 10) : "",
+      status: d.driverStatus,
+    });
+    setEditFieldErrors({});
+    setEditTarget(d);
+  }
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editTarget) return;
+    const parsed = editDriverSchema.safeParse(editForm);
+    if (!parsed.success) {
+      const errs: Record<string, string> = {};
+      parsed.error.errors.forEach((er) => {
+        errs[er.path.join(".")] = er.message;
+      });
+      setEditFieldErrors(errs);
+      return;
+    }
+    setEditFieldErrors({});
+    setEditSubmitting(true);
+    try {
+      const updated = await driversService.update(editTarget.id, parsed.data);
+      setDrivers((prev) =>
+        prev ? prev.map((d) => (d.id === editTarget.id ? { ...d, ...updated } : d)) : prev,
+      );
+      toast.success("Motorista atualizado");
+      setEditTarget(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar motorista");
+    } finally {
+      setEditSubmitting(false);
     }
   }
 
@@ -172,6 +261,14 @@ function DriversPage() {
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => openEdit(d)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                     onClick={() => setRemoveTarget(d)}
                   >
@@ -217,6 +314,87 @@ function DriversPage() {
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? "Adicionando..." : "Adicionar motorista"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit driver dialog */}
+      <Dialog open={!!editTarget} onOpenChange={(o) => !o && setEditTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Editar motorista</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-3 mt-2">
+            <div className="space-y-1">
+              <Label>CNH</Label>
+              <Input
+                value={editForm.cnh}
+                onChange={(e) => setEditForm((f) => ({ ...f, cnh: e.target.value }))}
+                placeholder="123456789"
+                maxLength={11}
+              />
+              {editFieldErrors.cnh && (
+                <p className="text-xs text-destructive">{editFieldErrors.cnh}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label>Categoria</Label>
+              <Select
+                value={editForm.cnhCategory}
+                onValueChange={(v) =>
+                  setEditForm((f) => ({ ...f, cnhCategory: v as EditFormState["cnhCategory"] }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A">A</SelectItem>
+                  <SelectItem value="B">B</SelectItem>
+                  <SelectItem value="C">C</SelectItem>
+                  <SelectItem value="D">D</SelectItem>
+                  <SelectItem value="E">E</SelectItem>
+                </SelectContent>
+              </Select>
+              {editFieldErrors.cnhCategory && (
+                <p className="text-xs text-destructive">{editFieldErrors.cnhCategory}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label>Validade da CNH</Label>
+              <Input
+                type="date"
+                value={editForm.cnhExpiresAt}
+                onChange={(e) => setEditForm((f) => ({ ...f, cnhExpiresAt: e.target.value }))}
+              />
+              {editFieldErrors.cnhExpiresAt && (
+                <p className="text-xs text-destructive">{editFieldErrors.cnhExpiresAt}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label>Status</Label>
+              <Select
+                value={editForm.status}
+                onValueChange={(v) =>
+                  setEditForm((f) => ({ ...f, status: v as EditFormState["status"] }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">Ativo</SelectItem>
+                  <SelectItem value="INACTIVE">Inativo</SelectItem>
+                  <SelectItem value="SUSPENDED">Suspenso</SelectItem>
+                </SelectContent>
+              </Select>
+              {editFieldErrors.status && (
+                <p className="text-xs text-destructive">{editFieldErrors.status}</p>
+              )}
+            </div>
+            <Button type="submit" className="w-full" disabled={editSubmitting}>
+              {editSubmitting ? "Salvando..." : "Salvar alterações"}
             </Button>
           </form>
         </DialogContent>

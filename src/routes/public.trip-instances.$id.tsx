@@ -30,7 +30,7 @@ function PublicTripDetailPage() {
     if (error) return <ErrorCard message={error} />;
     if (!trip) return null;
 
-    const seats = trip.availableSeats ?? trip.totalCapacity;
+    const seats = trip.availableSlots ?? trip.totalCapacity;
     const lotada = seats <= 0;
 
     return (

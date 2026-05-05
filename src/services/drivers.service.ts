@@ -30,4 +30,23 @@ export const driversService = {
     api<boolean>(`/memberships/${userId}/${roleId}/${orgId}`, {
       method: "DELETE",
     }),
+
+  restoreMembership: (userId: string, roleId: number, orgId: string) =>
+    api<boolean>(`/memberships/${userId}/${roleId}/${orgId}/restore`, {
+      method: "PATCH",
+    }),
+
+  update: (
+    id: string,
+    data: Partial<{
+      cnh: string;
+      cnhCategory: "A" | "B" | "C" | "D" | "E";
+      cnhExpiresAt: string;
+      status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+    }>,
+  ) =>
+    api<Driver>(`/drivers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
 };

@@ -11,7 +11,7 @@ interface PublicTripCardProps {
 }
 
 export function PublicTripCard({ trip }: PublicTripCardProps) {
-  const seats = trip.availableSeats ?? trip.totalCapacity;
+  const seats = trip.availableSlots ?? trip.totalCapacity;
 
   return (
     <Card className="p-4">

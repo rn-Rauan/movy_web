@@ -60,7 +60,9 @@ function DashboardPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <div className="font-medium">{formatDateTime(t.departureTime)}</div>
-                  <div className="text-xs text-muted-foreground">{t.totalCapacity} lugares</div>
+                  <div className="text-xs text-muted-foreground">
+                    {t.bookedCount ?? 0} / {t.totalCapacity} inscritos
+                  </div>
                 </div>
               </div>
               <Badge variant={statusVariant(t.tripStatus)}>{statusLabel(t.tripStatus)}</Badge>

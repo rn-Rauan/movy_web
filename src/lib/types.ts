@@ -37,7 +37,7 @@ export type TripInstance = {
   forceConfirm?: boolean;
   totalCapacity: number;
   bookedCount?: number;
-  availableSeats?: number;
+  availableSlots?: number;
   departureTime: string;
   arrivalEstimate?: string;
   /** Public trip fields (PublicTripInstanceResponse) */
@@ -73,6 +73,7 @@ export type Booking = {
   recordedPrice?: number;
   boardingStop: string;
   alightingStop: string;
+  paymentMethod?: PaymentMethod | null;
   createdAt?: string;
   updatedAt?: string;
   tripInstance?: TripInstance;
@@ -161,6 +162,7 @@ export type Vehicle = {
 };
 
 export type TripPassenger = {
+  userId: string;
   name: string;
   boardingStop: string;
 };

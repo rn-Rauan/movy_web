@@ -95,7 +95,19 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
   trips/$orgId/               → viagens de uma organização
   trips/$orgId/$tripId/       → detalhe da viagem
   trips/$orgId/$tripId/book/  → formulário de inscrição
+  profile/                    → perfil e senha do usuário autenticado
   setup/                      → wizard de criação de organização (admin)
+
+  _admin/ (guard: isAdmin)
+    dashboard/                → resumo e próximas viagens
+    trips/                    → CRUD de instâncias de viagem
+    trips/$tripId/            → detalhe + passageiros + ações de status
+    templates/                → CRUD de templates de rota
+    drivers/                  → gestão de motoristas da organização
+    organization/             → configurações da organização
+
+  _driver/ (guard: isDriver)
+    my-trips/                 → viagens do motorista logado
 ```
 
 ### Guard Centralizado
@@ -120,7 +132,8 @@ src/
 │   │   ├── hooks/
 │   │   │   ├── usePublicTrips.ts    Busca + filtro do marketplace público
 │   │   │   ├── useTrips.ts          Lista por orgId ou slug
-│   │   │   └── useTripDetail.ts     Detalhe + disponibilidade de inscrição
+│   │   │   ├── useTripDetail.ts     Detalhe + disponibilidade de inscrição
+│   │   │   └── useTripPassengers.ts Lista passageiros (silencia 403 se não-membro)
 │   │   └── components/
 │   │       ├── TripCard.tsx         Card compacto (lista protegida)
 │   │       ├── TripsList.tsx        Lista com links para detalhe
@@ -147,7 +160,10 @@ src/
 ├── services/                Abstração de chamadas de API (repository pattern)
 │   ├── trips.service.ts
 │   ├── bookings.service.ts
-│   └── organizations.service.ts
+│   ├── organizations.service.ts
+│   ├── drivers.service.ts
+│   ├── templates.service.ts
+│   └── vehicles.service.ts
 │
 ├── components/
 │   ├── ui/                  shadcn/ui — não modificar diretamente
@@ -229,7 +245,7 @@ function TripsPage() {
 
 ## Serviços de API
 
-Usar sempre os services — nunca `api()` direto nas rotas ou componentes:
+Usar sempre os services — nunca `api()` direto nas rotas ou componentes. A única exceção é `profile.tsx`, que chama `api("/users/me")` diretamente por não ter service de usuário.
 
 ```typescript
 // trips.service.ts
@@ -237,6 +253,7 @@ tripsService.listPublic();
 tripsService.listByOrgId(orgId);
 tripsService.listBySlug(slug); // público, sem auth
 tripsService.getPublicById(id);
+tripsService.listPassengers(tripId);
 
 // bookings.service.ts
 bookingsService.listForUser();
@@ -248,6 +265,25 @@ bookingsService.cancel(bookingId);
 // organizations.service.ts
 organizationsService.listActive();
 organizationsService.listMine();
+
+// drivers.service.ts
+driversService.listByOrgId(orgId);
+driversService.lookup(email, cnh);
+driversService.addToOrg(userEmail, cnh);
+driversService.removeMembership(userId, roleId, orgId);
+
+// templates.service.ts
+templatesService.listByOrgId(orgId);
+templatesService.getById(id);
+templatesService.create(orgId, data);
+templatesService.update(id, data);
+templatesService.remove(id);
+
+// vehicles.service.ts
+vehiclesService.listByOrgId(orgId);
+vehiclesService.create(orgId, data);
+vehiclesService.update(id, data);
+vehiclesService.deactivate(id);
 ```
 
 ---

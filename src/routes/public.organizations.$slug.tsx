@@ -154,7 +154,7 @@ function PublicOrgPage() {
       ) : (
         <ul className="space-y-3">
           {visible.map((trip) => {
-            const seats = trip.availableSeats ?? 0;
+            const seats = trip.availableSlots ?? 0;
             const lotada = seats <= 0;
             return (
               <li key={trip.id}>

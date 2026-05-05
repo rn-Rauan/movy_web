@@ -358,7 +358,7 @@ Get a driver by ID.
 
 ---
 
-### `PUT /drivers/{id}` �️ ADMIN
+### `PUT /drivers/{id}` 🛡️ ADMIN
 
 Update a driver profile. All fields optional.
 
