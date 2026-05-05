@@ -114,6 +114,12 @@ function SignupPage() {
             Entrar
           </Link>
         </p>
+        <p className="text-center text-xs text-muted-foreground mt-2">
+          Tem empresa de transporte?{" "}
+          <Link to="/signup/empresa" className="underline">
+            Cadastre sua empresa
+          </Link>
+        </p>
       </main>
     </div>
   );
