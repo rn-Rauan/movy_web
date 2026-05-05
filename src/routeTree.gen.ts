@@ -13,6 +13,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SignupEmpresaRouteImport } from './routes/signup.empresa'
 import { Route as PublicTripInstancesRouteImport } from './routes/public.trip-instances'
 import { Route as ProtectedSetupRouteImport } from './routes/_protected.setup'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected.profile'
@@ -53,6 +54,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SignupEmpresaRoute = SignupEmpresaRouteImport.update({
+  id: '/empresa',
+  path: '/empresa',
+  getParentRoute: () => SignupRoute,
 } as any)
 const PublicTripInstancesRoute = PublicTripInstancesRouteImport.update({
   id: '/public/trip-instances',
@@ -167,12 +173,13 @@ const ProtectedTripsOrgIdTripIdBookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/signup': typeof SignupRoute
+  '/signup': typeof SignupRouteWithChildren
   '/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
   '/organizations': typeof ProtectedOrganizationsRoute
   '/profile': typeof ProtectedProfileRoute
   '/setup': typeof ProtectedSetupRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
+  '/signup/empresa': typeof SignupEmpresaRoute
   '/dashboard': typeof ProtectedAdminDashboardRoute
   '/drivers': typeof ProtectedAdminDriversRoute
   '/organization': typeof ProtectedAdminOrganizationRoute
@@ -191,11 +198,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/signup': typeof SignupRoute
+  '/signup': typeof SignupRouteWithChildren
   '/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
   '/organizations': typeof ProtectedOrganizationsRoute
   '/profile': typeof ProtectedProfileRoute
   '/setup': typeof ProtectedSetupRoute
+  '/signup/empresa': typeof SignupEmpresaRoute
   '/dashboard': typeof ProtectedAdminDashboardRoute
   '/drivers': typeof ProtectedAdminDriversRoute
   '/organization': typeof ProtectedAdminOrganizationRoute
@@ -216,7 +224,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_protected': typeof ProtectedRouteWithChildren
   '/login': typeof LoginRoute
-  '/signup': typeof SignupRoute
+  '/signup': typeof SignupRouteWithChildren
   '/_protected/_admin': typeof ProtectedAdminRouteWithChildren
   '/_protected/_driver': typeof ProtectedDriverRouteWithChildren
   '/_protected/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/setup': typeof ProtectedSetupRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
+  '/signup/empresa': typeof SignupEmpresaRoute
   '/_protected/_admin/dashboard': typeof ProtectedAdminDashboardRoute
   '/_protected/_admin/drivers': typeof ProtectedAdminDriversRoute
   '/_protected/_admin/organization': typeof ProtectedAdminOrganizationRoute
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/setup'
     | '/public/trip-instances'
+    | '/signup/empresa'
     | '/dashboard'
     | '/drivers'
     | '/organization'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/profile'
     | '/setup'
+    | '/signup/empresa'
     | '/dashboard'
     | '/drivers'
     | '/organization'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/_protected/profile'
     | '/_protected/setup'
     | '/public/trip-instances'
+    | '/signup/empresa'
     | '/_protected/_admin/dashboard'
     | '/_protected/_admin/drivers'
     | '/_protected/_admin/organization'
@@ -320,7 +332,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ProtectedRoute: typeof ProtectedRouteWithChildren
   LoginRoute: typeof LoginRoute
-  SignupRoute: typeof SignupRoute
+  SignupRoute: typeof SignupRouteWithChildren
   PublicTripInstancesRoute: typeof PublicTripInstancesRouteWithChildren
   PublicOrganizationsSlugRoute: typeof PublicOrganizationsSlugRoute
 }
@@ -354,6 +366,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/signup/empresa': {
+      id: '/signup/empresa'
+      path: '/empresa'
+      fullPath: '/signup/empresa'
+      preLoaderRoute: typeof SignupEmpresaRouteImport
+      parentRoute: typeof SignupRoute
     }
     '/public/trip-instances': {
       id: '/public/trip-instances'
@@ -608,6 +627,17 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
   ProtectedRouteChildren,
 )
 
+interface SignupRouteChildren {
+  SignupEmpresaRoute: typeof SignupEmpresaRoute
+}
+
+const SignupRouteChildren: SignupRouteChildren = {
+  SignupEmpresaRoute: SignupEmpresaRoute,
+}
+
+const SignupRouteWithChildren =
+  SignupRoute._addFileChildren(SignupRouteChildren)
+
 interface PublicTripInstancesRouteChildren {
   PublicTripInstancesIdRoute: typeof PublicTripInstancesIdRoute
   PublicTripInstancesIndexRoute: typeof PublicTripInstancesIndexRoute
@@ -625,7 +655,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProtectedRoute: ProtectedRouteWithChildren,
   LoginRoute: LoginRoute,
-  SignupRoute: SignupRoute,
+  SignupRoute: SignupRouteWithChildren,
   PublicTripInstancesRoute: PublicTripInstancesRouteWithChildren,
   PublicOrganizationsSlugRoute: PublicOrganizationsSlugRoute,
 }
