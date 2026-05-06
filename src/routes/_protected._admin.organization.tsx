@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { handleApiError } from "@/lib/handle-error";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -417,7 +418,7 @@ function VehiclesSheet({
       }
       setAddOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao salvar veículo");
+      handleApiError(err, "Erro ao salvar veículo");
     } finally {
       setSubmitting(false);
     }

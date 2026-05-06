@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, UserX, Pencil } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { handleApiError } from "@/lib/handle-error";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -129,7 +130,7 @@ function DriversPage() {
       setDrivers(null);
       loadDrivers();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao adicionar motorista");
+      handleApiError(err, "Erro ao adicionar motorista");
     } finally {
       setSubmitting(false);
     }

@@ -14,7 +14,7 @@ export const Route = createFileRoute("/signup")({
 const schema = z.object({
   name: z.string().trim().min(2, "Informe seu nome"),
   email: z.string().email("E-mail inválido"),
-  password: z.string().min(6, "Mínimo 6 caracteres"),
+  password: z.string().min(8, "Mínimo 8 caracteres"),
   telephone: z.string().min(8, "Telefone inválido"),
 });
 

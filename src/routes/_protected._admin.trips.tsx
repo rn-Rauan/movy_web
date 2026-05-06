@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, Search, ChevronRight } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { handleApiError } from "@/lib/handle-error";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -189,7 +190,7 @@ function TripsList() {
       setSheetOpen(false);
       refetch();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao criar viagem");
+      handleApiError(err, "Erro ao criar viagem");
     } finally {
       setSubmitting(false);
     }
