@@ -659,9 +659,7 @@ function PlanCard({
           </p>
         </div>
         <div className="text-right">
-          <div className="text-lg font-semibold">
-            {plan ? `R$ ${plan.price.toFixed(2)}` : "—"}
-          </div>
+          <div className="text-lg font-semibold">{plan ? `R$ ${plan.price.toFixed(2)}` : "—"}</div>
           <div className="text-xs text-muted-foreground">por mês</div>
         </div>
       </div>

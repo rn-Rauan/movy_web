@@ -13,6 +13,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SignupIndexRouteImport } from './routes/signup.index'
 import { Route as SignupEmpresaRouteImport } from './routes/signup.empresa'
 import { Route as PublicTripInstancesRouteImport } from './routes/public.trip-instances'
 import { Route as ProtectedSetupRouteImport } from './routes/_protected.setup'
@@ -54,6 +55,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SignupIndexRoute = SignupIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SignupRoute,
 } as any)
 const SignupEmpresaRoute = SignupEmpresaRouteImport.update({
   id: '/empresa',
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/setup': typeof ProtectedSetupRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
   '/signup/empresa': typeof SignupEmpresaRoute
+  '/signup/': typeof SignupIndexRoute
   '/dashboard': typeof ProtectedAdminDashboardRoute
   '/drivers': typeof ProtectedAdminDriversRoute
   '/organization': typeof ProtectedAdminOrganizationRoute
@@ -198,12 +205,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/signup': typeof SignupRouteWithChildren
   '/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
   '/organizations': typeof ProtectedOrganizationsRoute
   '/profile': typeof ProtectedProfileRoute
   '/setup': typeof ProtectedSetupRoute
   '/signup/empresa': typeof SignupEmpresaRoute
+  '/signup': typeof SignupIndexRoute
   '/dashboard': typeof ProtectedAdminDashboardRoute
   '/drivers': typeof ProtectedAdminDriversRoute
   '/organization': typeof ProtectedAdminOrganizationRoute
@@ -233,6 +240,7 @@ export interface FileRoutesById {
   '/_protected/setup': typeof ProtectedSetupRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
   '/signup/empresa': typeof SignupEmpresaRoute
+  '/signup/': typeof SignupIndexRoute
   '/_protected/_admin/dashboard': typeof ProtectedAdminDashboardRoute
   '/_protected/_admin/drivers': typeof ProtectedAdminDriversRoute
   '/_protected/_admin/organization': typeof ProtectedAdminOrganizationRoute
@@ -260,6 +268,7 @@ export interface FileRouteTypes {
     | '/setup'
     | '/public/trip-instances'
     | '/signup/empresa'
+    | '/signup/'
     | '/dashboard'
     | '/drivers'
     | '/organization'
@@ -278,12 +287,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
-    | '/signup'
     | '/my-bookings'
     | '/organizations'
     | '/profile'
     | '/setup'
     | '/signup/empresa'
+    | '/signup'
     | '/dashboard'
     | '/drivers'
     | '/organization'
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/_protected/setup'
     | '/public/trip-instances'
     | '/signup/empresa'
+    | '/signup/'
     | '/_protected/_admin/dashboard'
     | '/_protected/_admin/drivers'
     | '/_protected/_admin/organization'
@@ -366,6 +376,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/signup/': {
+      id: '/signup/'
+      path: '/'
+      fullPath: '/signup/'
+      preLoaderRoute: typeof SignupIndexRouteImport
+      parentRoute: typeof SignupRoute
     }
     '/signup/empresa': {
       id: '/signup/empresa'
@@ -629,10 +646,12 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
 
 interface SignupRouteChildren {
   SignupEmpresaRoute: typeof SignupEmpresaRoute
+  SignupIndexRoute: typeof SignupIndexRoute
 }
 
 const SignupRouteChildren: SignupRouteChildren = {
   SignupEmpresaRoute: SignupEmpresaRoute,
+  SignupIndexRoute: SignupIndexRoute,
 }
 
 const SignupRouteWithChildren =
@@ -662,3 +681,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
