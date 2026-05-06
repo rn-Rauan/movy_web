@@ -609,3 +609,84 @@ function Field2({
     </div>
   );
 }
+
+// ── Plan Card ─────────────────────────────────────────────────────────────────
+
+function PlanCard({
+  subscription,
+  plan,
+  vehiclesCount,
+  driversCount,
+}: {
+  subscription: Subscription | null | undefined;
+  plan: Plan | null;
+  vehiclesCount: number;
+  driversCount: number;
+}) {
+  if (subscription === undefined) {
+    return (
+      <Card className="p-5 mb-4">
+        <LoadingList count={1} height="h-16" />
+      </Card>
+    );
+  }
+
+  if (subscription === null) {
+    return (
+      <Card className="p-5 mb-4 text-center">
+        <Sparkles className="h-6 w-6 mx-auto text-primary mb-2" />
+        <h3 className="text-base font-semibold">Sem plano ativo</h3>
+        <p className="text-sm text-muted-foreground mt-1 mb-3">
+          Escolha um plano para liberar mais veículos, motoristas e viagens.
+        </p>
+        <Button size="sm" disabled>
+          Escolher um plano
+        </Button>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-5 mb-4">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Badge>{plan?.name ?? "Plano"}</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Válido até {formatDateTime(subscription.expiresAt)}
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-semibold">
+            {plan ? `R$ ${plan.price.toFixed(2)}` : "—"}
+          </div>
+          <div className="text-xs text-muted-foreground">por mês</div>
+        </div>
+      </div>
+
+      {plan && (
+        <div className="space-y-3 mt-2">
+          <UsageRow label="Veículos" used={vehiclesCount} max={plan.maxVehicles} />
+          <UsageRow label="Motoristas" used={driversCount} max={plan.maxDrivers} />
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function UsageRow({ label, used, max }: { label: string; used: number; max: number }) {
+  const pct = max > 0 ? Math.min(100, (used / max) * 100) : 0;
+  const over = used >= max;
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={over ? "text-destructive font-medium" : "font-medium"}>
+          {used} / {max}
+        </span>
+      </div>
+      <Progress value={pct} />
+    </div>
+  );
+}
