@@ -166,3 +166,27 @@ export type TripPassenger = {
   name: string;
   boardingStop: string;
 };
+
+export type SubscriptionStatus = "ACTIVE" | "CANCELED" | "EXPIRED";
+
+export type Subscription = {
+  id: string;
+  organizationId: string;
+  planId: string;
+  status: SubscriptionStatus;
+  startDate: string;
+  expiresAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type Plan = {
+  id: string;
+  name: string;
+  price: number;
+  maxVehicles: number;
+  maxDrivers: number;
+  maxMonthlyTrips: number;
+  durationDays: number;
+  isActive: boolean;
+};

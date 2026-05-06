@@ -12,6 +12,7 @@ import {
   Car,
   Users,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -45,8 +47,12 @@ import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { organizationsService } from "@/services/organizations.service";
 import { vehiclesService } from "@/services/vehicles.service";
 import { driversService } from "@/services/drivers.service";
+import { subscriptionsService } from "@/services/subscriptions.service";
+import { plansService } from "@/services/plans.service";
+import { ApiError } from "@/lib/api";
 import { useRole } from "@/lib/role-context";
-import type { Organization, Vehicle, Driver, Paginated } from "@/lib/types";
+import type { Organization, Vehicle, Driver, Paginated, Plan, Subscription } from "@/lib/types";
+import { formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_protected/_admin/organization")({
   component: OrganizationPage,
@@ -111,6 +117,8 @@ function OrganizationPage() {
 
   const [vehicles, setVehicles] = useState<Vehicle[] | null>(null);
   const [drivers, setDrivers] = useState<Driver[] | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null | undefined>(undefined);
+  const [plan, setPlan] = useState<Plan | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,6 +149,21 @@ function OrganizationPage() {
       .listByOrgId(adminOrgId)
       .then((res) => setDrivers(Array.isArray(res) ? res : ((res as Paginated<Driver>).data ?? [])))
       .catch(() => setDrivers([]));
+    subscriptionsService
+      .getActive(adminOrgId)
+      .then((sub) => {
+        setSubscription(sub);
+        if (sub?.planId) {
+          plansService
+            .getById(sub.planId)
+            .then(setPlan)
+            .catch(() => setPlan(null));
+        }
+      })
+      .catch((err) => {
+        if (err instanceof ApiError && err.status === 404) setSubscription(null);
+        else setSubscription(null);
+      });
   }, [adminOrgId]);
 
   function openOrgEdit() {
@@ -203,6 +226,14 @@ function OrganizationPage() {
 
   return (
     <AppShell title="Empresa">
+      {/* Plan card */}
+      <PlanCard
+        subscription={subscription}
+        plan={plan}
+        vehiclesCount={(vehicles ?? []).filter((v) => v.status !== "INACTIVE").length}
+        driversCount={(drivers ?? []).filter((d) => d.driverStatus === "ACTIVE").length}
+      />
+
       {/* Org info card */}
       <Card className="p-5 mb-4">
         <div className="flex items-start justify-between gap-3 mb-4">
@@ -575,6 +606,87 @@ function Field2({
       <Label>{label}</Label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+// ── Plan Card ─────────────────────────────────────────────────────────────────
+
+function PlanCard({
+  subscription,
+  plan,
+  vehiclesCount,
+  driversCount,
+}: {
+  subscription: Subscription | null | undefined;
+  plan: Plan | null;
+  vehiclesCount: number;
+  driversCount: number;
+}) {
+  if (subscription === undefined) {
+    return (
+      <Card className="p-5 mb-4">
+        <LoadingList count={1} height="h-16" />
+      </Card>
+    );
+  }
+
+  if (subscription === null) {
+    return (
+      <Card className="p-5 mb-4 text-center">
+        <Sparkles className="h-6 w-6 mx-auto text-primary mb-2" />
+        <h3 className="text-base font-semibold">Sem plano ativo</h3>
+        <p className="text-sm text-muted-foreground mt-1 mb-3">
+          Escolha um plano para liberar mais veículos, motoristas e viagens.
+        </p>
+        <Button size="sm" disabled>
+          Escolher um plano
+        </Button>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-5 mb-4">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Badge>{plan?.name ?? "Plano"}</Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Válido até {formatDateTime(subscription.expiresAt)}
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-semibold">
+            {plan ? `R$ ${plan.price.toFixed(2)}` : "—"}
+          </div>
+          <div className="text-xs text-muted-foreground">por mês</div>
+        </div>
+      </div>
+
+      {plan && (
+        <div className="space-y-3 mt-2">
+          <UsageRow label="Veículos" used={vehiclesCount} max={plan.maxVehicles} />
+          <UsageRow label="Motoristas" used={driversCount} max={plan.maxDrivers} />
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function UsageRow({ label, used, max }: { label: string; used: number; max: number }) {
+  const pct = max > 0 ? Math.min(100, (used / max) * 100) : 0;
+  const over = used >= max;
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={over ? "text-destructive font-medium" : "font-medium"}>
+          {used} / {max}
+        </span>
+      </div>
+      <Progress value={pct} />
     </div>
   );
 }
