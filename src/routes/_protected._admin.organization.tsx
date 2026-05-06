@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -45,8 +46,12 @@ import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { organizationsService } from "@/services/organizations.service";
 import { vehiclesService } from "@/services/vehicles.service";
 import { driversService } from "@/services/drivers.service";
+import { subscriptionsService } from "@/services/subscriptions.service";
+import { plansService } from "@/services/plans.service";
+import { ApiError } from "@/lib/api";
 import { useRole } from "@/lib/role-context";
-import type { Organization, Vehicle, Driver, Paginated } from "@/lib/types";
+import type { Organization, Vehicle, Driver, Paginated, Plan, Subscription } from "@/lib/types";
+import { formatDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_protected/_admin/organization")({
   component: OrganizationPage,
@@ -111,6 +116,8 @@ function OrganizationPage() {
 
   const [vehicles, setVehicles] = useState<Vehicle[] | null>(null);
   const [drivers, setDrivers] = useState<Driver[] | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null | undefined>(undefined);
+  const [plan, setPlan] = useState<Plan | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,6 +148,21 @@ function OrganizationPage() {
       .listByOrgId(adminOrgId)
       .then((res) => setDrivers(Array.isArray(res) ? res : ((res as Paginated<Driver>).data ?? [])))
       .catch(() => setDrivers([]));
+    subscriptionsService
+      .getActive(adminOrgId)
+      .then((sub) => {
+        setSubscription(sub);
+        if (sub?.planId) {
+          plansService
+            .getById(sub.planId)
+            .then(setPlan)
+            .catch(() => setPlan(null));
+        }
+      })
+      .catch((err) => {
+        if (err instanceof ApiError && err.status === 404) setSubscription(null);
+        else setSubscription(null);
+      });
   }, [adminOrgId]);
 
   function openOrgEdit() {
@@ -203,6 +225,14 @@ function OrganizationPage() {
 
   return (
     <AppShell title="Empresa">
+      {/* Plan card */}
+      <PlanCard
+        subscription={subscription}
+        plan={plan}
+        vehiclesCount={(vehicles ?? []).filter((v) => v.status !== "INACTIVE").length}
+        driversCount={(drivers ?? []).filter((d) => d.driverStatus === "ACTIVE").length}
+      />
+
       {/* Org info card */}
       <Card className="p-5 mb-4">
         <div className="flex items-start justify-between gap-3 mb-4">
