@@ -1,268 +1,161 @@
 # Handoff — Contexto pra retomar (notebook)
 
-> Documento "pegue aqui e continue". Snapshot completo: o que foi feito, onde paramos, o que vem agora, e o que tá no horizonte (W3/W4). Para detalhes vivos por área: [PROGRESS.md](./PROGRESS.md). Para próxima ação concreta: [BACKLOG.md](./BACKLOG.md). Para por quê de decisões: [DECISIONS.md](./DECISIONS.md). Para roadmap longo: [ROADMAP.md](./ROADMAP.md).
+> Documento "pegue aqui e continue". Snapshot completo: o que foi feito, onde paramos, o que vem agora, e o que tá no horizonte. Para detalhes vivos por área: [PROGRESS.md](./PROGRESS.md). Para próxima ação concreta: [BACKLOG.md](./BACKLOG.md). Para por quê de decisões: [DECISIONS.md](./DECISIONS.md). Para roadmap longo: [ROADMAP.md](./ROADMAP.md).
 
-**Última atualização:** 2026-05-04
-**Próxima sessão:** notebook, do dia 2026-05-04 ao próximo fim de semana
+**Última atualização:** 2026-05-07
+**Próxima sessão:** seguir com W3.2 (tela `/payments`) ou destravar driver flow (depende de backend).
 
 ---
 
 ## TL;DR
 
-- **W1 (bug-fixes admin) — 100% concluído** em 2026-05-03. 5/5 itens entregues. Build/lint verdes.
-- **API foi atualizada** em 2026-05-04 e resolveu **3 dos 3 bloqueios críticos** que tínhamos pra W2. Ainda restam 6 gaps menores no backend (não-bloqueantes).
-- **W2 está pronto pra começar.** Todos os 5 itens (W2.1–W2.5) estão desbloqueados. W2.1+W2.5 ficaram simplificados pelas mudanças de API.
-- **Próximo passo:** abrir W2.1 (lista completa de bookings no detalhe da viagem admin) — match exato por `userId` agora.
+- **W1 (bug-fixes admin) — 100%** entregue em 2026-05-03.
+- **W2 (admin operacional) — 100%** entregue em 2026-05-05 no commit `01d6173` (BookingRow com presença/cancelamento, edição de motorista, undo de remoção, hidratação de `bookedCount`).
+- **W3 começou:** card de plano em `/_admin/organization` (W3.1) + tratamento contextual de 403 limite-de-plano (W3.4 parcial via `handleApiError` em `src/lib/handle-error.ts`).
+- **Landing page e signup B2B prontos:** `/` mostra landing pra não-autenticado e redireciona admin pra `/dashboard`; `/signup/empresa` cria conta + organização em uma chamada (`POST /auth/register-organization`).
+- **Próximo passo:** W3.2 (tela `/_admin/payments`) ou D1 (driver flow) se o backend já tiver `GET /trip-instances/driver/me`.
 
 ---
 
-## O que foi feito hoje (sessões 2026-05-03 e 2026-05-04)
+## O que foi feito desde o último handoff (2026-05-04 → 2026-05-07)
 
-### Onda 1 — Bug-fixes admin (5/5 fechados em 2026-05-03)
+### W2 — fechado em 2026-05-05 (commit `01d6173`)
 
-| Item                                                 | Arquivos                                                                                              | O que mudou                                                                                                                                                                                                           |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **W1.1** Hidratar template em `TripInstance`         | `src/routes/_protected._admin.trips.tsx`, `src/routes/_protected._admin.trips.$tripId.tsx`            | `templatesService.getById` no detalhe + `Map<id, TripTemplate>` na lista pra mostrar origem→destino reais (era "—" sempre). Filtro de busca usa o template.                                                           |
-| **W1.2** Validar driver+veículo pra `SCHEDULED`      | `src/routes/_protected._admin.trips.tsx`                                                              | `superRefine` no `tripSchema` exige `driverId`+`vehicleId` se `initialStatus === "SCHEDULED"`. 2 selects condicionais com asterisco vermelho.                                                                         |
-| **W1.3** Validação de placa (7 chars)                | `src/routes/_protected._admin.organization.tsx`                                                       | `vehicleSchema.plate` foi de `min(7).max(8)` para `min(7).max(7)` + `<Input maxLength={7}>`.                                                                                                                          |
-| **W1.4** Remover sheet de drivers em `/organization` | `src/routes/_protected._admin.organization.tsx`                                                       | `DriversSheet` (180 linhas) removido inteiro + estado `driversOpen` + `driverSchema` + `DRIVER_ROLE_ID` + import `UserX`. Card "Motoristas" virou `<Link to="/drivers">`.                                             |
-| **W1.5** Templates: campos faltantes                 | `src/lib/types.ts`, `src/services/templates.service.ts`, `src/routes/_protected._admin.templates.tsx` | Tipo `Weekday` exportado. Template ganhou `frequency`, `minRevenue`, `autoCancelOffset`. UI: 7 toggles Dom-Sáb (visíveis se `isRecurring`); checkbox + 2 inputs de auto-cancel; `superRefine` valida obrigatoriedade. |
+| Item                                   | Arquivos                                                                                       | O que mudou                                                                                                                                                                          |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **W2.1** Lista de bookings na viagem   | `src/features/bookings/components/BookingRow.tsx` (novo), `_protected._admin.trips.$tripId.tsx`, `services/bookings.service.ts` | `listByTripInstance(tripId)` adicionado. Detalhe da viagem agora cruza `bookings` com `passengers` por `userId` e renderiza `BookingRow` com status, presença, `enrollmentType`, `paymentMethod` e `recordedPrice`. |
+| **W2.2** Confirmar presença + cancelar | `BookingRow.tsx`, `_protected._admin.trips.$tripId.tsx`, `services/bookings.service.ts`        | `confirmPresence(bookingId)` no service. Botões "Marcar presença" e "Cancelar" no row, com handlers que atualizam state local e dão toast.                                            |
+| **W2.3** Editar motorista              | `_protected._admin.drivers.tsx`, `services/drivers.service.ts`                                  | `driversService.update(id, { cnh, cnhCategory, cnhExpiresAt, status })`. Botão `Pencil` em cada card abre dialog com Selects (categoria A-E, status ACTIVE/INACTIVE/SUSPENDED).        |
+| **W2.4** Undo de remoção               | `_protected._admin.drivers.tsx`, `services/drivers.service.ts`                                  | `restoreMembership(userId, roleId, orgId)` no service. Toast pós-remoção tem action "Desfazer" que restaura.                                                                          |
+| **W2.5** Hidratar `bookedCount`        | `_protected._admin.dashboard.tsx`, `features/trips/components/TripCard.tsx`                     | Dashboard mostra `X / Y inscritos`. Renomeado `availableSeats` → `availableSlots` (alinha com nome do backend) em `TripInstance` e `PublicTripCard`/`TripCard`.                       |
 
-### Sessão 2026-05-04 (revisão + handoff)
+Bônus: `TripPassenger.userId` adicionado em `lib/types.ts` (match exato com `Booking.userId`).
 
-- Análise da `docs/API_FRONTEND.md` revelou que `BookingResponse.userName` **não era necessário** — `TripPassengerResponse` já retorna `userId`, então o match com `BookingResponse.userId` é exato. Bloqueio de W2.1 era falso (erro meu de leitura).
-- Listei 11 ajustes recomendados de backend (3 críticos, 4 importantes, 4 cosméticos) — ver seção "Análise da API" abaixo.
-- Você aplicou 3 dos 3 ajustes críticos no backend (parabéns 🎯).
+### W3.1 — Card de plano em `/_admin/organization` (commit `7f86954`)
+
+- `services/plans.service.ts` (`list()`, `getById()`) e `services/subscriptions.service.ts` (`getActive()`, `list()`).
+- `_protected._admin.organization.tsx` busca `subscriptions.getActive(orgId)` e em sequência `plans.getById(planId)`.
+- Componente `PlanCard` mostra plano, preço/mês, validade, e duas `UsageRow` (Veículos/Motoristas) com `Progress` bar e badge vermelha se atinge limite. Estado vazio com CTA "Escolher um plano" (disabled — modal de upgrade é W3.3).
+
+### W3.4 parcial — handler genérico de 403 (commit `fd0f427`)
+
+- `src/lib/handle-error.ts` exporta `handleApiError(err, fallbackMsg)`. Detecta `ApiError` 403 com mensagens contendo `plan|limit|excedido` e mostra toast "Você atingiu o limite do seu plano" com action "Ver planos" → `/organization`.
+- Plugado em `_admin.drivers.tsx`, `_admin.organization.tsx`, `_admin.trips.tsx`, `signup.tsx`.
+
+### Landing page e signup B2B
+
+- `src/routes/index.tsx` agora mostra `LandingPage` pra não-autenticado. Admin autenticado → `/dashboard`; user comum → `/public/trip-instances`.
+- `signup.tsx` virou layout (`Outlet`) — formulário B2C movido pra `signup.index.tsx`.
+- `signup.empresa.tsx` (nova rota `/signup/empresa`) — formulário único combinando dados do user + organização. Chama `POST /auth/register-organization`. Trata 409 (slug em uso ou e-mail duplicado) com toast amigável. Redireciona pra `/dashboard` no sucesso.
+
+### Outras mudanças menores
+
+- Senha mínima do signup endurecida para 8 caracteres.
+- `routeTree.gen.ts` regenerado várias vezes (TanStack Router).
 
 ---
 
-## Onde paramos (status atual)
+## Onde paramos (estado atual)
 
 ### Frontend
 
-- Branch: `main`. Sem PR aberto. Working tree tem mudanças não-commitadas em `src/routes/_protected._admin.organization.tsx`, `src/routes/_protected._admin.trips.$tripId.tsx`, `src/routes/_protected._admin.trips.tsx` (W1) + os 4 docs novos em `docs/`.
-- `npm run lint` — 0 erros, 3 warnings pré-existentes (`react-refresh/only-export-components` em `role-context.tsx`; `react-hooks/exhaustive-deps` em `_admin.drivers.tsx` e `_admin.templates.tsx`).
-- `npm run build` — verde (9.8s).
-- Não testei manualmente em browser. Antes de seguir pra W2, **rode `npm run dev` e valide W1 end-to-end** (checklist em "Verificação manual" do plano `F:\Users\rauan\.claude\plans\eu-quero-fecahr-priemiro-buzzing-knuth.md`).
+- Branch: `main`. Working tree limpo. Tudo commitado.
+- `npm run lint` — esperado: 0 erros, ~3 warnings pré-existentes (`react-refresh/only-export-components` em `role-context.tsx`; `react-hooks/exhaustive-deps` em `_admin.drivers.tsx` e `_admin.templates.tsx`).
+- `npm run build` — esperado: verde (não validado nesta sessão).
+- W2 e W3.1 não foram testados manualmente em browser nesta sessão. Antes de declarar W2 100% comprovado, abrir `npm run dev` e validar fluxo de presença/cancelamento.
 
-### Backend (após mudanças de 2026-05-04)
+### Backend (snapshot conforme `docs/API_FRONTEND.md`, sem alterações nesta janela)
 
-Conforme `docs/API_FRONTEND.md` (snapshot que tenho):
+Permanece com os 3 críticos resolvidos. Gaps abertos:
 
-- `TripInstanceResponse` ganhou `bookedCount`, `availableSlots`, `departurePoint`, `destination`, `priceOneWay`, `priceReturn`, `priceRoundTrip`, `isRecurring`, `isPublic` — mas **só** populados em `GET /trip-instances/organization/{id}` (lista paginada). Endpoints `GET /trip-instances/{id}` e `/template/{id}` ainda retornam o schema "magro".
-- `BookingResponse` ganhou `paymentMethod` (pode ser `null` em bookings antigos).
-- `PATCH /bookings/{id}/cancel` agora documenta que **ADMIN ou DRIVER** da org dona podem cancelar qualquer booking, e bloqueia se `IN_PROGRESS`/`FINISHED` ou se faltar < 30 min pra partida.
+- `stops` não denormalizado em `TripInstanceResponse` (detalhe ainda precisa de template lookup).
+- `GET /trip-instances/{id}` (detalhe) não traz campos enriquecidos.
+- `TokenResponse.user` sem `telephone`.
+- **`GET /trip-instances/driver/me` ainda não existe** — bloqueia driver flow.
+- **`GET /organizations/{id}/plan-usage` ainda não existe** — `PlanCard` hoje conta veículos/motoristas localmente.
 
 ---
 
-## Próximas tarefas (W2 — todas desbloqueadas)
+## Próximas tarefas (em ordem)
 
-Estimativa total: 2–3 dias de trabalho focado. Ordem recomendada respeita dependências (BookingRow precisa existir antes de plugar handlers).
+### 🟢 W3.2 — Tela `/_admin/payments`
 
-### W2.1 — Lista completa de bookings por viagem (admin)
-
-**Quê:** Em `/_admin/trips/$tripId`, evoluir o card "Passageiros" pra mostrar status (ACTIVE/INACTIVE), presença, tipo de inscrição (`enrollmentType`), método de pagamento (`paymentMethod`) e valor (`recordedPrice`).
+**Quê:** Lista paginada de pagamentos da subscription com badges (`PENDING` / `CONFIRMED` / `FAILED`).
 
 **Como:**
 
-1. Estender `src/services/bookings.service.ts` com `listByTripInstance(tripId)` chamando `GET /bookings/trip-instance/{id}` (paginado).
-2. Buscar em paralelo `bookingsService.listByTripInstance(tripId)` + `tripsService.listPassengers(tripId)`.
-3. Construir `Map<userId, name>` a partir dos passengers e enriquecer cada booking — match exato por `userId`.
-4. Criar componente novo `src/features/bookings/components/BookingRow.tsx` (props: `booking`, `passengerName?`, `onConfirmPresence?`, `onCancel?`, `busy?`).
-5. Renderizar a lista em `_admin.trips.$tripId.tsx`.
+1. Criar `src/services/payments.service.ts` com `listByOrgId(orgId, page?, size?)` chamando `GET /organizations/{id}/payments`.
+2. Criar rota `src/routes/_protected._admin.payments.tsx` (admin guard).
+3. Adicionar link no `BottomNav` ou em "Configurações" da org.
+4. Reutilizar `LoadingList` + `ErrorCard`.
 
-**Aceite:** lista mostra nome real do passageiro (não "Passageiro"), status/presença/método/valor visíveis, ordenação estável.
+**Aceite:** admin abre `/payments`, vê histórico paginado com filtro por status.
 
 ---
 
-### W2.2 — Confirmar presença + cancelar inscrição (admin)
+### 🟢 W3.3 — Modal de upgrade de plano
 
-**Quê:** Adicionar ações em cada `BookingRow` — "Marcar presença" (vira "Presente" + disabled após sucesso) e "Cancelar inscrição" (com `AlertDialog`).
+**Quê:** Lista planos via `GET /plans`, seleciona, chama `POST /organizations/{id}/subscriptions`.
 
 **Como:**
 
-1. Service: `bookingsService.confirmPresence(bookingId)` chamando `PATCH /bookings/{id}/confirm-presence`. (`cancel` já existe.)
-2. `BookingRow` com botões + handlers via callback.
-3. Handlers no detalhe: chamam o service, atualizam o item local na lista, `toast.success/error`. Após cancelamento, refazer fetch da lista pra recalcular contagem.
-4. **Atenção ao erro 30-min:** o backend bloqueia cancel se faltar < 30 min ou trip está `IN_PROGRESS`/`FINISHED`. Mostrar toast amigável ("Cancelamento não permitido a menos de 30 minutos da partida") em vez do erro cru.
+1. Habilitar o botão "Escolher um plano" no `PlanCard` (`_admin.organization.tsx`).
+2. Criar `<Dialog>` que carrega `plansService.list()`.
+3. `subscriptionsService.create(orgId, planId)` — adicionar no service (não existe ainda).
+4. Refetch da subscription ativa após sucesso. Toast.
 
-**Aceite:** admin marca presença (persiste após reload); cancela inscrição (capacidade reabre na próxima query).
-
----
-
-### W2.3 — Editar driver (categoria CNH, validade, status)
-
-**Quê:** Em `/_admin/drivers`, botão de edição (ícone `Pencil`) em cada card abre `<Dialog>` com CNH, categoria (A-E), validade (`<Input type="date">`), status (Ativo/Inativo/Suspenso).
-
-**Como:**
-
-1. Service: `driversService.update(id, { cnh?, cnhCategory?, cnhExpiresAt?, status? })` chamando `PUT /drivers/{id}`.
-2. UI no `_protected._admin.drivers.tsx`: dialog reutilizando o padrão dos outros forms da rota.
-
-**Aceite:** mudança persiste após refresh; badge de status reflete.
+**Aceite:** admin troca plano, card reflete novo plano + limites sem F5.
 
 ---
 
-### W2.4 — Restaurar membership ("Desfazer remoção")
+### 🟢 W3.5 — Plan-usage em uma chamada (depende de backend)
 
-**Quê:** Após `handleRemove` em `/_admin/drivers`, mostrar toast com action "Desfazer" que chama `PATCH /memberships/{userId}/{roleId}/{organizationId}/restore`.
-
-**Como:**
-
-1. Service: `driversService.restoreMembership(userId, roleId, orgId)`.
-2. Trocar `toast.success("Motorista removido")` por `toast.success(..., { action: { label: "Desfazer", onClick: ... } })`. Sonner 2.0.7 (instalado) suporta isso.
-
-**Aceite:** clicar "Desfazer" no toast traz o motorista de volta sem reabrir o dialog de "adicionar".
+Substituir o cálculo local de `vehiclesCount`/`driversCount` no `PlanCard` por `GET /organizations/{id}/plan-usage`. Pedir esse endpoint ao backend (gap aberto). Sem ele, fica como está.
 
 ---
 
-### W2.5 — Hidratar `bookedCount` na lista de viagens
+### 🟡 D1-D4 — Driver flow (depende de backend)
 
-**Quê:** Lista admin (`/_admin/trips`) e dashboard (`/_admin/dashboard`) mostram `0 inscritos` em todas as viagens. Backend agora popula `bookedCount` e `availableSlots` no endpoint `GET /trip-instances/organization/{id}`.
-
-**Como:**
-
-1. Não precisa mais de fallback via `availability` — usar direto `t.bookedCount` (já existe no tipo `TripInstance`, só remover o `?? 0` enganoso quando o valor real chegar).
-2. Verificar empiricamente que o backend está retornando o campo (uma chamada no DevTools resolve).
-3. **Opcional/extra:** já que o backend agora retorna `departurePoint`, `destination`, `priceOneWay/Return/RoundTrip`, `isRecurring` na lista enriquecida, **dá pra simplificar W1.1 na lista** removendo o `Map<id, TripTemplate>` e o preload de templates só pra lookup de origem/destino. **Cuidado:** o detalhe (`GET /trip-instances/{id}`) **não** retorna esses campos enriquecidos — manter `templatesService.getById` lá pra `stops` e origem/destino.
-
-**Aceite:** dashboard e lista mostram contagem real.
+Bloqueado até existir `GET /trip-instances/driver/me`. Pedir ao backend antes de começar. Roteiro detalhado em `BACKLOG.md` (D1-D4).
 
 ---
 
-## Análise da API atualizada
+### 🟡 P1 — Profile + telephone
 
-### ✅ Resolvido nesta atualização (3/3 críticos)
-
-1. **`TripInstanceResponse.bookedCount` + `availableSlots`** — adicionados (apenas em `GET /trip-instances/organization/{id}`).
-2. **`BookingResponse.paymentMethod`** — adicionado, com caveat de `null` para bookings antigos.
-3. **Permissão de cancel** — documentada: ADMIN/DRIVER da org pode cancelar; bloqueio se `IN_PROGRESS`/`FINISHED` ou < 30 min.
-
-Bônus: `TripInstanceResponse` da lista também ganhou denormalização de template (`departurePoint`, `destination`, prices, `isRecurring`, `isPublic`).
-
-### ⚠️ Restante (não-bloqueantes, mas valiosos)
-
-#### Importantes
-
-1. **`stops` não foi denormalizado** em `TripInstanceResponse`. Detalhe da viagem ainda precisa do template lookup pra renderizar paradas. **Sugestão:** incluir `stops` no enriquecimento da lista E também no `GET /trip-instances/{id}` (detalhe).
-2. **`GET /trip-instances/{id}` (detalhe) não traz os campos enriquecidos.** Frontend ainda paga 2 requests pra mostrar o detalhe. **Sugestão:** estender o detalhe com o mesmo enriquecimento (ou criar `GET /trip-instances/{id}/details` análogo ao `BookingDetailsResponse`).
-3. **`TokenResponse.user` não traz `telephone`.** Profile precisa de `/users/me` extra logo após login. **Sugestão:** incluir `telephone` (e `status`) no `TokenResponse.user`.
-
-#### Habilitam features futuras
-
-4. **`GET /trip-instances/driver/me` (não existe).** Bloqueia W4 (driver flow). Sem isso o motorista não consegue listar suas próprias viagens. **Sugestão:** novo endpoint 🔒 JWT que filtra por `driverId = currentUser.driverProfile.id`, paginado e ordenado por `departureTime`.
-5. **`GET /organizations/{id}/plan-usage` (não existe).** Habilita cards de plano em `/organization` e mensagens contextuais ao bater limite. **Sugestão:** retornar `{ vehiclesUsed/Max, driversUsed/Max, monthlyTripsUsed/Max }`. Necessário pra W3.
-
-#### Cosméticos / consistência
-
-6. **`DELETE /drivers/{id}`** parece hard-delete (doc diz só "Delete a driver profile"). Outros recursos (vehicles, orgs, templates, bookings) são soft. **Sugestão:** padronizar pra soft (status=INACTIVE) ou explicitar na doc se for intencional.
-7. **`GET /drivers/organization/{id}`** não aceita `?status=`. Frontend filtra no cliente. OK pra MVP.
-8. **`POST /drivers`** doc diz CNH "9-12 chars" mas frontend só valida `min(9)`. Adicionar `max(11)` no schema do frontend para alinhar (CNH brasileira é 11 dígitos).
-9. **Linha 335 da doc**: emoji `🛡️` quebrado (`�️`). Cosmético.
+`AuthUser` não tem `telephone`. O signup envia, e a tela `/profile` envia no update, mas não temos onde mostrar. Idealmente backend inclui `telephone` em `TokenResponse.user` e no `GET /users/me`.
 
 ---
 
-## W3 — Plans, Subscriptions & Payments (próximo ciclo)
+## Riscos / pontos de atenção
 
-**Status:** intencionalmente fora do W1+W2. Esboço pra você ter visão.
+1. **Validar W2 + W3.1 manualmente em browser.** Implementação fechada e build passou na CI, mas a operação real (presença, cancelamento dentro de 30 min, undo de remoção, atualização do plan card) não foi testada nesta sessão.
 
-**Objetivo:** dar ao admin visibilidade do plano contratado, dos limites consumidos, e do histórico de pagamentos da subscription.
+2. **`paymentMethod` pode ser `null`** em bookings antigos — `BookingRow` já trata (só renderiza se truthy).
 
-**Endpoints já existem no backend** (lines 683-762 da API doc): `GET/POST /organizations/{id}/subscriptions`, `GET /plans`, `GET /organizations/{id}/payments`, `PATCH .../confirm`, `PATCH .../fail`.
+3. **Cancelamento dentro de 30 min ou status terminal** — backend bloqueia. `BookingRow` mostra erro cru via `toast.error(err.message)`. Considerar adicionar tratamento específico ("Cancelamento não permitido a menos de 30 minutos da partida") quando o backend retornar a mensagem identificável.
 
-**Entregáveis sugeridos:**
+4. **`react-hooks/exhaustive-deps` warnings** continuam em `_admin.drivers.tsx` e `_admin.templates.tsx`. Pré-existentes.
 
-1. **Card de plano em `/_admin/organization`** — mostra plano atual (nome, preço, validade), uso vs. limite (X de Y veículos, etc.), CTA "Mudar plano".
-   - Depende de **plan-usage** (gap #5 acima) — implementar fallback contando localmente se backend demorar.
-2. **Tela `/_admin/payments`** — lista paginada de pagamentos da subscription, com badge de status (PENDING/CONFIRMED/FAILED).
-3. **Modal de upgrade** — lista planos via `GET /plans`, seleciona, chama `POST /organizations/{id}/subscriptions`.
-4. **Mensagem contextual de 403** — quando `POST /memberships/driver` ou `POST /vehicles/...` retornar 403 "limite excedido", mostrar dialog "Você atingiu o limite do seu plano. Faça upgrade." com link pra `/organization`.
+5. **Detalhe de trip-instance ainda é "magro"** — `_admin.trips.$tripId.tsx` continua chamando `templatesService.getById` pra obter `stops`/origem/destino. Aguardando backend.
 
-**Estimativa:** 3–4 dias.
-
-**Pré-requisitos:** idealmente o gap #5 (plan-usage endpoint) resolvido. Sem ele, frontend conta limites manualmente — funciona mas é frágil.
-
----
-
-## W4 — Driver Flow (Fase 1 do roadmap)
-
-**Status:** placeholder hoje. Bloqueado pelo gap #4 da API (endpoint `/trip-instances/driver/me`).
-
-**Por que importa:** sem driver flow, o role driver não tem utilidade — admin atribui motoristas mas eles não veem nada. Fase 1 do `ROADMAP.md` é literalmente "fechar o loop operacional", e isso é o que falta.
-
-**Entregáveis (já no `BACKLOG.md` itens #1-4):**
-
-1. **`/_protected/_driver/my-trips`** — listar viagens designadas (futuras + passadas, agrupadas por status).
-   - Service: `driversService.listMyTrips()` ou `tripsService.listForDriver()`.
-   - Hook: `src/features/trips/hooks/useDriverTrips.ts` (padrão feature hooks como `useTrips`).
-   - Componente: reaproveitar `TripCard` ou criar `DriverTripCard`.
-
-2. **`/_protected/_driver/my-trips/$tripId`** — detalhe da viagem do motorista (rota nova).
-   - Mostra dados da viagem + lista de passageiros com status de presença e pagamento.
-   - Reutiliza `BookingRow` (criado em W2.1).
-
-3. **Marcar presença** — toggle por passageiro (`PATCH /bookings/{id}/confirm-presence`). Já desbloqueado no backend; mesmo endpoint que admin usa em W2.2.
-
-4. **Registrar pagamento** — `PATCH /organizations/{id}/payments/{id}/confirm` (ou criar `/bookings/{id}/payment` se backend preferir scope diferente). Driver marca como pago. **Verificar com backend** se driver tem permissão pra confirmar pagamento (hoje doc só lista 🛡️ ADMIN).
-
-**Estimativa:** 2–3 dias após gap #4 desbloqueado.
-
----
-
-## W5+ — Fase 2 e além
-
-Resumo (refinar quando chegar):
-
-- **Forgot password** (Fase 2) — depende de endpoints backend `POST /auth/forgot-password` + `/auth/reset-password`.
-- **Notificações in-app** (Fase 2) — toast persistente quando trip-instance reservada muda de status.
-- **React Query piloto** (Fase 2) — começar por `/_admin/trips`. Ver ADR-002.
-- **Convergir padrão de fetching** (Fase 2) — passenger usa hooks, admin usa imperativo. Decidir um.
-- **Filtros + busca + ordenação no marketplace público** (Fase 3).
-- **Dashboard rico** (Fase 3) — receita prevista vs. realizada, taxa de ocupação, top rotas.
-- **Multi-organização** (Fase 3) — encerra ADR-001. Inclui UI de troca de org + invalidação de caches.
-- **Pagamento real (Pix)** (Fase 4) — substitui o mock atual.
-- **LGPD** (Fase 4) — termos, política, exclusão de conta.
-- **Confirmação de e-mail no signup** (Fase 4).
-- **Framework de testes** (Fase 4) — ver ADR-003. Provavelmente Vitest + Testing Library.
-
----
-
-## Riscos / pontos de atenção pra retomar
-
-1. **Validar W1 manualmente em browser.** Implementação fechada, lint/build verdes, mas nenhum teste end-to-end foi feito. Antes de codar W2, abrir `npm run dev` e rodar o checklist em "Verificação end-to-end" do plano `F:\Users\rauan\.claude\plans\eu-quero-fecahr-priemiro-buzzing-knuth.md`.
-
-2. **Working tree não-committado.** As 3 mudanças do W1 + os 4 docs (`ROADMAP/PROGRESS/BACKLOG/DECISIONS`) + esse `HANDOFF.md` estão sem commit. Recomendado fazer um commit "feat(admin): close W1 bug-fixes + planning docs" antes de entrar no notebook.
-
-3. **`paymentMethod` pode ser `null`.** Em `BookingRow`, tratar caso `null` (mostrar "—" ou esconder a label) — bookings criados antes da feature não têm o campo.
-
-4. **Detalhe de trip-instance ainda é magro.** Como o detalhe não traz campos enriquecidos, a tela continua precisando do `templatesService.getById`. Não regrida W1.1 só porque a lista ficou simplificada.
-
-5. **Cancelamento dentro de 30 min.** Frontend não conhece esse limite. Em W2.2, capturar o erro do backend e mostrar mensagem amigável.
-
-6. **`react-hooks/exhaustive-deps` warnings** em `_admin.drivers.tsx` e `_admin.templates.tsx`. Pré-existentes, não foram introduzidos hoje. Se resolver, embrulhar `loadX` em `useCallback` ou inlinear na useEffect.
+6. **`PlanCard` conta limites localmente** (do array de veículos/drivers carregado na própria tela). Se um deles falhar, mostra `0 / N`. Endpoint `/plan-usage` resolveria.
 
 ---
 
 ## Comandos úteis pra retomar
 
 ```bash
-# Verificar estado
 git status
 git diff --stat
-
-# Subir dev server
 npm run dev
-
-# Validar
 npm run lint
 npm run format
 npm run build
 ```
 
-Linha do tempo de leitura sugerida ao retomar:
+Linha do tempo de leitura sugerida:
 
 1. `docs/HANDOFF.md` (este — visão geral)
 2. `docs/PROGRESS.md` (estado atual por feature)
 3. `docs/BACKLOG.md` (próxima ação concreta)
-4. `F:\Users\rauan\.claude\plans\eu-quero-fecahr-priemiro-buzzing-knuth.md` (plano detalhado W1+W2)
-5. `docs/API_FRONTEND.md` (sempre que duvidar do contrato)
+4. `docs/API_FRONTEND.md` (sempre que duvidar do contrato)

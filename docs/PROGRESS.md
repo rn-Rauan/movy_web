@@ -2,7 +2,7 @@
 
 > Snapshot vivo do que existe vs. o que falta. Atualizar a cada feature concluída. Pra **próxima ação**, ver [BACKLOG.md](./BACKLOG.md). Pra **roadmap de longo prazo**, ver [ROADMAP.md](./ROADMAP.md).
 
-**Última atualização:** 2026-05-04 (W1 admin completo · API recebeu os ajustes críticos · W2 desbloqueado)
+**Última atualização:** 2026-05-07 (W2 admin 100% · W3.1 plan card e W3.4 handler 403 entregues · landing + signup B2B prontos)
 
 > Para contexto de retomada (notebook), ver [HANDOFF.md](./HANDOFF.md).
 
@@ -20,15 +20,17 @@
 - [x] Toaster global (sonner) montado no `__root`
 - [-] React Query — instalado mas não usado (ver ADR-002)
 - [ ] Framework de testes (ver ADR-003)
-- [ ] Error handling padronizado (retry/fallback)
+- [~] Error handling padronizado — `handleApiError` em `src/lib/handle-error.ts` cobre 403 limite-de-plano. Falta plugar nas rotas restantes e generalizar pra outros status
 
 ## Autenticação
 
 - [x] Login (`/login`)
-- [x] Signup (`/signup`)
+- [x] Signup B2C (`/signup` — usuário comum)
+- [x] Signup B2B (`/signup/empresa` — cria conta + organização em uma chamada via `POST /auth/register-organization`)
 - [x] Logout
 - [x] Refresh automático em 401
 - [x] Alterar senha (em `/profile`)
+- [x] Senha mínima 8 caracteres no signup
 - [ ] Forgot password / recuperação por e-mail
 - [ ] Confirmação de e-mail no signup
 - [-] 2FA (Fase 4+)
@@ -88,9 +90,10 @@
 - [x] Atribuir motorista
 - [x] Atribuir veículo
 - [x] Listar passageiros (nome + parada de embarque)
-- [ ] Ver presença/pagamento de cada inscrição (W2.1 — desbloqueado: match por `userId` de `TripPassengerResponse`, e `BookingResponse` agora traz `paymentMethod`)
-- [ ] Cancelar inscrição individual (W2.2 — desbloqueado: doc agora explicita permissão admin/driver, com bloqueio de 30 min antes da partida)
-- [ ] Hidratar `bookedCount` na lista (W2.5 — desbloqueado: backend agora popula em `GET /trip-instances/organization/{id}`)
+- [x] Ver presença/pagamento de cada inscrição (W2.1 — `BookingRow` mostra status, `enrollmentType`, `paymentMethod`, `recordedPrice`)
+- [x] Marcar presença (W2.2 — `PATCH /bookings/{id}/confirm-presence`)
+- [x] Cancelar inscrição individual (W2.2 — admin pode cancelar; bloqueio de 30 min/status terminal vem do backend)
+- [x] Hidratar `bookedCount` na lista e dashboard (W2.5)
 
 ### Templates (`/_protected/_admin/templates`)
 
@@ -105,8 +108,8 @@
 - [x] Adicionar (associar por email+CNH)
 - [x] Remover (desvincular membership)
 - [x] Tela única (sheet duplicado em `/organization` removido)
-- [ ] Editar motorista (categoria CNH, validade, status) — W2.3
-- [ ] Restaurar membership após remoção (toast "Desfazer") — W2.4
+- [x] Editar motorista (categoria CNH, validade, status) — W2.3
+- [x] Restaurar membership após remoção (toast "Desfazer") — W2.4
 
 ## Driver flow
 
@@ -122,6 +125,21 @@
 - [ ] Atualizar status de pagamento pós-booking (driver marca como pago)
 - [-] Integração com gateway real (Fase 4)
 - [-] Recibo / comprovante (Fase 4)
+
+## Plans, Subscriptions & Payments (W3)
+
+- [x] Card de plano em `/_admin/organization` — plano atual, preço, validade, uso vs. limite (Veículos, Motoristas) — W3.1
+- [x] Handler genérico de 403 limite-de-plano (`src/lib/handle-error.ts`) — toast com action "Ver planos" — W3.4 parcial
+- [ ] Tela `/_admin/payments` — lista de pagamentos da subscription com badges — W3.2
+- [ ] Modal de upgrade — listar planos via `GET /plans`, criar nova subscription — W3.3
+- [ ] Plan-usage em uma chamada — depende de backend criar `GET /organizations/{id}/plan-usage` — W3.5
+- [ ] Plugar `handleApiError` em todas as rotas (hoje só em `_admin.drivers`, `_admin.organization`, `_admin.trips`, `signup`)
+
+## Landing & Onboarding
+
+- [x] Landing page em `/` (redireciona admin → `/dashboard`, user → `/public/trip-instances`)
+- [x] Signup B2C separado (`/signup`)
+- [x] Signup B2B (`/signup/empresa`) — formulário único, cria conta + organização via `POST /auth/register-organization`
 
 ## Notificações
 

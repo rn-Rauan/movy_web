@@ -81,8 +81,10 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
 ## Estrutura de Rotas
 
 ```
-/ → redirect inteligente por role
-/login, /signup → autenticação pública
+/ → landing page (não-autenticado) ou redirect inteligente por role
+/login → autenticação
+/signup/ → cadastro de usuário comum (B2C)
+/signup/empresa → cadastro empresa + admin em uma chamada (B2B)
 
 /public/trip-instances/       → marketplace de viagens
 /public/trip-instances/$id/   → detalhe público
@@ -237,8 +239,8 @@ function TripsPage() {
 
 `index.tsx` redireciona:
 
-- Não autenticado → `/public/trip-instances`
-- Admin → `/_protected/organizations`
+- Não autenticado → mostra `LandingPage` (CTAs pra `/login`, `/signup`, `/signup/empresa`)
+- Admin → `/_protected/dashboard`
 - Usuário → `/public/trip-instances`
 
 ---
@@ -284,7 +286,25 @@ vehiclesService.listByOrgId(orgId);
 vehiclesService.create(orgId, data);
 vehiclesService.update(id, data);
 vehiclesService.deactivate(id);
+
+// drivers.service.ts (continuação — adicionados em W2)
+driversService.update(id, { cnh?, cnhCategory?, cnhExpiresAt?, status? });
+driversService.restoreMembership(userId, roleId, orgId);
+
+// bookings.service.ts (continuação — adicionados em W2)
+bookingsService.listByTripInstance(tripId);
+bookingsService.confirmPresence(bookingId);
+
+// plans.service.ts
+plansService.list();
+plansService.getById(id);
+
+// subscriptions.service.ts
+subscriptionsService.getActive(orgId);
+subscriptionsService.list(orgId);
 ```
+
+**Tratamento de erros:** `src/lib/handle-error.ts` exporta `handleApiError(err, fallbackMsg)` — detecta 403 com mensagens de "limite/plano" e mostra toast contextual com link pra `/organization`. Plugar nas rotas que fazem mutações sujeitas a limite (criação de driver, vehicle, trip, etc.).
 
 ---
 
