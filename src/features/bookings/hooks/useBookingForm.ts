@@ -43,9 +43,17 @@ export function useBookingForm(tripId: string) {
     }
     setSubmitting(true);
     try {
-      await bookingsService.create({ tripInstanceId: tripId, ...parsed.data });
+      const created = (await bookingsService.create({
+        tripInstanceId: tripId,
+        ...parsed.data,
+      })) as { id?: string } | undefined;
       toast.success("Inscrição realizada!");
-      navigate({ to: "/my-bookings" });
+      const newId = created?.id;
+      if (newId) {
+        navigate({ to: "/bookings-success/$bookingId", params: { bookingId: newId } });
+      } else {
+        navigate({ to: "/my-bookings" });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha na inscrição");
     } finally {
