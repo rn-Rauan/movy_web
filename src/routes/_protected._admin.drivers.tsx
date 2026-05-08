@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { handleApiError } from "@/lib/handle-error";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/feedback/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -225,9 +226,12 @@ function DriversPage() {
       ) : error ? (
         <Card className="p-6 text-center text-sm text-destructive">{error}</Card>
       ) : list.length === 0 ? (
-        <Card className="p-6 text-center text-sm text-muted-foreground">
-          Nenhum motorista cadastrado.
-        </Card>
+        <EmptyState
+          variant="drivers"
+          title="Nenhum motorista ainda"
+          description="Adicione motoristas para que possam ser atribuídos às viagens."
+          action={{ label: "Adicionar motorista", onClick: () => setDialogOpen(true) }}
+        />
       ) : (
         <div className="space-y-2">
           {list.map((d) => (
