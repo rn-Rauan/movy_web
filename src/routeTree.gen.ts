@@ -27,6 +27,7 @@ import { Route as PublicTripInstancesIdRouteImport } from './routes/public.trip-
 import { Route as PublicOrganizationsSlugRouteImport } from './routes/public.organizations.$slug'
 import { Route as ProtectedTripsOrgIdRouteImport } from './routes/_protected.trips.$orgId'
 import { Route as ProtectedMyBookingsBookingIdRouteImport } from './routes/_protected.my-bookings.$bookingId'
+import { Route as ProtectedBookingsSuccessBookingIdRouteImport } from './routes/_protected.bookings-success.$bookingId'
 import { Route as ProtectedDriverMyTripsRouteImport } from './routes/_protected._driver.my-trips'
 import { Route as ProtectedAdminTripsRouteImport } from './routes/_protected._admin.trips'
 import { Route as ProtectedAdminTemplatesRouteImport } from './routes/_protected._admin.templates'
@@ -127,6 +128,12 @@ const ProtectedMyBookingsBookingIdRoute =
     path: '/$bookingId',
     getParentRoute: () => ProtectedMyBookingsRoute,
   } as any)
+const ProtectedBookingsSuccessBookingIdRoute =
+  ProtectedBookingsSuccessBookingIdRouteImport.update({
+    id: '/bookings-success/$bookingId',
+    path: '/bookings-success/$bookingId',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
 const ProtectedDriverMyTripsRoute = ProtectedDriverMyTripsRouteImport.update({
   id: '/my-trips',
   path: '/my-trips',
@@ -200,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/templates': typeof ProtectedAdminTemplatesRoute
   '/trips': typeof ProtectedAdminTripsRouteWithChildren
   '/my-trips': typeof ProtectedDriverMyTripsRoute
+  '/bookings-success/$bookingId': typeof ProtectedBookingsSuccessBookingIdRoute
   '/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
   '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
@@ -225,6 +233,7 @@ export interface FileRoutesByTo {
   '/templates': typeof ProtectedAdminTemplatesRoute
   '/trips': typeof ProtectedAdminTripsRouteWithChildren
   '/my-trips': typeof ProtectedDriverMyTripsRoute
+  '/bookings-success/$bookingId': typeof ProtectedBookingsSuccessBookingIdRoute
   '/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
   '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
@@ -256,6 +265,7 @@ export interface FileRoutesById {
   '/_protected/_admin/templates': typeof ProtectedAdminTemplatesRoute
   '/_protected/_admin/trips': typeof ProtectedAdminTripsRouteWithChildren
   '/_protected/_driver/my-trips': typeof ProtectedDriverMyTripsRoute
+  '/_protected/bookings-success/$bookingId': typeof ProtectedBookingsSuccessBookingIdRoute
   '/_protected/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
   '/_protected/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/trips'
     | '/my-trips'
+    | '/bookings-success/$bookingId'
     | '/my-bookings/$bookingId'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/trips'
     | '/my-trips'
+    | '/bookings-success/$bookingId'
     | '/my-bookings/$bookingId'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
@@ -340,6 +352,7 @@ export interface FileRouteTypes {
     | '/_protected/_admin/templates'
     | '/_protected/_admin/trips'
     | '/_protected/_driver/my-trips'
+    | '/_protected/bookings-success/$bookingId'
     | '/_protected/my-bookings/$bookingId'
     | '/_protected/trips/$orgId'
     | '/public/organizations/$slug'
@@ -486,6 +499,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/my-bookings/$bookingId'
       preLoaderRoute: typeof ProtectedMyBookingsBookingIdRouteImport
       parentRoute: typeof ProtectedMyBookingsRoute
+    }
+    '/_protected/bookings-success/$bookingId': {
+      id: '/_protected/bookings-success/$bookingId'
+      path: '/bookings-success/$bookingId'
+      fullPath: '/bookings-success/$bookingId'
+      preLoaderRoute: typeof ProtectedBookingsSuccessBookingIdRouteImport
+      parentRoute: typeof ProtectedRoute
     }
     '/_protected/_driver/my-trips': {
       id: '/_protected/_driver/my-trips'
@@ -648,6 +668,7 @@ interface ProtectedRouteChildren {
   ProtectedOrganizationsRoute: typeof ProtectedOrganizationsRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSetupRoute: typeof ProtectedSetupRoute
+  ProtectedBookingsSuccessBookingIdRoute: typeof ProtectedBookingsSuccessBookingIdRoute
   ProtectedTripsOrgIdRoute: typeof ProtectedTripsOrgIdRouteWithChildren
 }
 
@@ -658,6 +679,8 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedOrganizationsRoute: ProtectedOrganizationsRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSetupRoute: ProtectedSetupRoute,
+  ProtectedBookingsSuccessBookingIdRoute:
+    ProtectedBookingsSuccessBookingIdRoute,
   ProtectedTripsOrgIdRoute: ProtectedTripsOrgIdRouteWithChildren,
 }
 
