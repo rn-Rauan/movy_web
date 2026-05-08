@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, MapPin, Pencil, Trash2, X } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { handleApiError } from "@/lib/handle-error";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -233,7 +234,7 @@ function TemplatesPage() {
       }
       setSheetOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao salvar template");
+      handleApiError(err, "Erro ao salvar template");
     } finally {
       setSubmitting(false);
     }
@@ -247,7 +248,7 @@ function TemplatesPage() {
       setTemplates((prev) => (prev ? prev.filter((t) => t.id !== deleteTarget.id) : prev));
       toast.success("Template removido");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao remover template");
+      handleApiError(err, "Erro ao remover template");
     } finally {
       setDeleting(false);
       setDeleteTarget(null);

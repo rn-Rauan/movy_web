@@ -43,6 +43,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { organizationsService } from "@/services/organizations.service";
@@ -53,7 +54,7 @@ import { plansService } from "@/services/plans.service";
 import { ApiError } from "@/lib/api";
 import { useRole } from "@/lib/role-context";
 import type { Organization, Vehicle, Driver, Paginated, Plan, Subscription } from "@/lib/types";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, formatPrice } from "@/lib/format";
 
 export const Route = createFileRoute("/_protected/_admin/organization")({
   component: OrganizationPage,
@@ -120,6 +121,29 @@ function OrganizationPage() {
   const [drivers, setDrivers] = useState<Driver[] | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null | undefined>(undefined);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  function loadSubscription(orgId: string) {
+    setSubscription(undefined);
+    subscriptionsService
+      .getActive(orgId)
+      .then((sub) => {
+        setSubscription(sub);
+        if (sub?.planId) {
+          plansService
+            .getById(sub.planId)
+            .then(setPlan)
+            .catch(() => setPlan(null));
+        } else {
+          setPlan(null);
+        }
+      })
+      .catch((err) => {
+        if (err instanceof ApiError && err.status === 404) setSubscription(null);
+        else setSubscription(null);
+        setPlan(null);
+      });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -150,21 +174,7 @@ function OrganizationPage() {
       .listByOrgId(adminOrgId)
       .then((res) => setDrivers(Array.isArray(res) ? res : ((res as Paginated<Driver>).data ?? [])))
       .catch(() => setDrivers([]));
-    subscriptionsService
-      .getActive(adminOrgId)
-      .then((sub) => {
-        setSubscription(sub);
-        if (sub?.planId) {
-          plansService
-            .getById(sub.planId)
-            .then(setPlan)
-            .catch(() => setPlan(null));
-        }
-      })
-      .catch((err) => {
-        if (err instanceof ApiError && err.status === 404) setSubscription(null);
-        else setSubscription(null);
-      });
+    loadSubscription(adminOrgId);
   }, [adminOrgId]);
 
   function openOrgEdit() {
@@ -233,6 +243,19 @@ function OrganizationPage() {
         plan={plan}
         vehiclesCount={(vehicles ?? []).filter((v) => v.status !== "INACTIVE").length}
         driversCount={(drivers ?? []).filter((d) => d.driverStatus === "ACTIVE").length}
+        onUpgrade={() => setUpgradeOpen(true)}
+      />
+
+      {/* Upgrade plan dialog */}
+      <UpgradePlanDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        currentPlanId={subscription?.planId}
+        currentSubscriptionId={subscription?.id}
+        orgId={adminOrgId}
+        onSuccess={() => {
+          if (adminOrgId) loadSubscription(adminOrgId);
+        }}
       />
 
       {/* Org info card */}
@@ -618,11 +641,13 @@ function PlanCard({
   plan,
   vehiclesCount,
   driversCount,
+  onUpgrade,
 }: {
   subscription: Subscription | null | undefined;
   plan: Plan | null;
   vehiclesCount: number;
   driversCount: number;
+  onUpgrade: () => void;
 }) {
   if (subscription === undefined) {
     return (
@@ -640,7 +665,7 @@ function PlanCard({
         <p className="text-sm text-muted-foreground mt-1 mb-3">
           Escolha um plano para liberar mais veículos, motoristas e viagens.
         </p>
-        <Button size="sm" disabled>
+        <Button size="sm" onClick={onUpgrade}>
           Escolher um plano
         </Button>
       </Card>
@@ -659,7 +684,7 @@ function PlanCard({
           </p>
         </div>
         <div className="text-right">
-          <div className="text-lg font-semibold">{plan ? `R$ ${plan.price.toFixed(2)}` : "—"}</div>
+          <div className="text-lg font-semibold">{formatPrice(plan?.price)}</div>
           <div className="text-xs text-muted-foreground">por mês</div>
         </div>
       </div>
@@ -670,6 +695,15 @@ function PlanCard({
           <UsageRow label="Motoristas" used={driversCount} max={plan.maxDrivers} />
         </div>
       )}
+
+      <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t">
+        <Button asChild variant="ghost" size="sm" className="h-8 px-2 text-xs">
+          <Link to="/payments">Ver pagamentos →</Link>
+        </Button>
+        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onUpgrade}>
+          Trocar de plano
+        </Button>
+      </div>
     </Card>
   );
 }
@@ -687,5 +721,119 @@ function UsageRow({ label, used, max }: { label: string; used: number; max: numb
       </div>
       <Progress value={pct} />
     </div>
+  );
+}
+
+// ── Upgrade Plan Dialog ───────────────────────────────────────────────────────
+
+function UpgradePlanDialog({
+  open,
+  onOpenChange,
+  currentPlanId,
+  currentSubscriptionId,
+  orgId,
+  onSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentPlanId?: string;
+  currentSubscriptionId?: string;
+  orgId: string | null;
+  onSuccess: () => void;
+}) {
+  const [plans, setPlans] = useState<Plan[] | null>(null);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setSelectedId(currentPlanId ?? "");
+    setPlans(null);
+    plansService
+      .list()
+      .then((res) => {
+        const list = Array.isArray(res) ? res : ((res as Paginated<Plan>).data ?? []);
+        setPlans(list.filter((p) => p.isActive));
+      })
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Erro ao carregar planos");
+        setPlans([]);
+      });
+  }, [open, currentPlanId]);
+
+  async function handleConfirm() {
+    if (!orgId || !selectedId || selectedId === currentPlanId) return;
+    setSubmitting(true);
+    try {
+      if (currentSubscriptionId) {
+        await subscriptionsService.changePlan(orgId, currentSubscriptionId, selectedId);
+      } else {
+        await subscriptionsService.create(orgId, selectedId);
+      }
+      toast.success("Plano atualizado");
+      onOpenChange(false);
+      onSuccess();
+    } catch (err) {
+      handleApiError(err, "Erro ao atualizar plano");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const noChange = !!currentPlanId && selectedId === currentPlanId;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Escolher um plano</DialogTitle>
+        </DialogHeader>
+        <div className="mt-2">
+          {plans === null ? (
+            <LoadingList count={3} height="h-20" />
+          ) : plans.length === 0 ? (
+            <Card className="p-4 text-sm text-center text-muted-foreground">
+              Nenhum plano disponível.
+            </Card>
+          ) : (
+            <RadioGroup value={selectedId} onValueChange={setSelectedId} className="space-y-2">
+              {plans.map((p) => {
+                const isCurrent = p.id === currentPlanId;
+                return (
+                  <Label
+                    key={p.id}
+                    htmlFor={`plan-${p.id}`}
+                    className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-accent/50"
+                  >
+                    <RadioGroupItem value={p.id} id={`plan-${p.id}`} className="mt-1" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{p.name}</span>
+                        {isCurrent && (
+                          <Badge variant="secondary" className="text-xs">
+                            Atual
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {formatPrice(p.price)}/mês · {p.maxVehicles} veículos · {p.maxDrivers}{" "}
+                        motoristas · {p.maxMonthlyTrips} viagens/mês
+                      </div>
+                    </div>
+                  </Label>
+                );
+              })}
+            </RadioGroup>
+          )}
+        </div>
+        <Button
+          className="w-full mt-4"
+          disabled={!selectedId || submitting || noChange}
+          onClick={handleConfirm}
+        >
+          {submitting ? "Confirmando..." : noChange ? "Plano atual" : "Confirmar"}
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -23,7 +23,7 @@ function DashboardPage() {
   const finished = list.filter((t) => t.tripStatus === "FINISHED").length;
 
   const upcoming = list
-    .filter((t) => new Date(t.departureTime).getTime() >= Date.now())
+    .filter((t) => t.tripStatus !== "FINISHED" && t.tripStatus !== "CANCELED")
     .slice(0, 5);
 
   return (

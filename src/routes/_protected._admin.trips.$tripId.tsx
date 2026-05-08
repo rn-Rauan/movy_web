@@ -33,6 +33,7 @@ import { driversService } from "@/services/drivers.service";
 import { vehiclesService } from "@/services/vehicles.service";
 import { templatesService } from "@/services/templates.service";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
+import { handleApiError } from "@/lib/handle-error";
 import type {
   TripInstance,
   TripStatus,
@@ -136,7 +137,7 @@ function TripDetailPage() {
       toast.success(`Viagem ${statusLabel(newStatus).toLowerCase()}`);
       if (newStatus === "CANCELED") navigate({ to: "/trips" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao atualizar status");
+      handleApiError(err, "Erro ao atualizar status");
     } finally {
       setTransitioning(false);
       setCancelDialog(false);
@@ -154,7 +155,7 @@ function TripDetailPage() {
       setTrip(updated);
       toast.success("Motorista atualizado");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao atribuir motorista");
+      handleApiError(err, "Erro ao atribuir motorista");
     } finally {
       setAssigningDriver(false);
     }
@@ -167,7 +168,7 @@ function TripDetailPage() {
       setBookings((prev) => prev.map((b) => (b.id === bookingId ? updated : b)));
       toast.success("Presença confirmada");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao confirmar presença");
+      handleApiError(err, "Erro ao confirmar presença");
     } finally {
       setBusyBookingId(null);
     }
@@ -209,7 +210,7 @@ function TripDetailPage() {
       setTrip(updated);
       toast.success("Veículo atualizado");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao atribuir veículo");
+      handleApiError(err, "Erro ao atribuir veículo");
     } finally {
       setAssigningVehicle(false);
     }

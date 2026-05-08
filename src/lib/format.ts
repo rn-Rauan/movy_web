@@ -83,6 +83,31 @@ export function paymentMethodLabel(m: string) {
   return map[m] ?? m;
 }
 
+export function paymentStatusLabel(s: string) {
+  const map: Record<string, string> = {
+    PENDING: "Pendente",
+    CONFIRMED: "Confirmado",
+    FAILED: "Falhou",
+  };
+  return map[s] ?? s;
+}
+
+export function paymentStatusVariant(
+  s: string,
+): "default" | "secondary" | "destructive" | "outline" {
+  if (s === "CONFIRMED") return "default";
+  if (s === "FAILED") return "destructive";
+  return "secondary";
+}
+
+export function formatPrice(value: number | null | undefined): string {
+  if (value == null) return "—";
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+}
+
 /** Compute price from a public trip + chosen enrollment type. */
 export function tripPriceFor(
   trip: { priceOneWay?: number; priceReturn?: number; priceRoundTrip?: number },

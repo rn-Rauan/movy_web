@@ -190,3 +190,16 @@ export type Plan = {
   durationDays: number;
   isActive: boolean;
 };
+
+export type PaymentStatus = "PENDING" | "CONFIRMED" | "FAILED";
+
+export type Payment = {
+  id: string;
+  organizationId: string;
+  enrollmentId?: string;
+  method: PaymentMethod;
+  amount: number;
+  status: PaymentStatus;
+  createdAt: string;
+  updatedAt?: string;
+};
