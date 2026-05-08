@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Card } from "@/components/ui/card";
-import { Ticket } from "lucide-react";
 import { BookingCard } from "./BookingCard";
+import { EmptyState } from "@/components/feedback/EmptyState";
 import type { Booking } from "@/lib/types";
 
 interface BookingsListProps {
@@ -11,10 +10,12 @@ interface BookingsListProps {
 export function BookingsList({ bookings }: BookingsListProps) {
   if (bookings.length === 0) {
     return (
-      <Card className="p-8 text-center">
-        <Ticket className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-        <p className="text-muted-foreground">Você ainda não tem inscrições.</p>
-      </Card>
+      <EmptyState
+        variant="bookings"
+        title="Nenhuma inscrição ainda"
+        description="Quando você reservar uma viagem, ela aparece aqui."
+        action={{ label: "Explorar viagens", to: "/public/trip-instances" }}
+      />
     );
   }
 
