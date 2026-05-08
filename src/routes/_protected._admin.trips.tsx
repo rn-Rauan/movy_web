@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { LoadingList } from "@/components/feedback/LoadingList";
+import { EmptyState } from "@/components/feedback/EmptyState";
 import { useRole } from "@/lib/role-context";
 import { useTrips } from "@/features/trips/hooks/useTrips";
 import { tripsService } from "@/services/trips.service";
@@ -235,9 +236,12 @@ function TripsList() {
       {loading ? (
         <LoadingList count={4} height="h-20" />
       ) : list.length === 0 ? (
-        <Card className="p-6 text-center text-sm text-muted-foreground">
-          Nenhuma viagem encontrada.
-        </Card>
+        <EmptyState
+          variant="trips"
+          title="Nenhuma viagem agendada"
+          description="Crie sua primeira viagem a partir de um template para começar a receber reservas."
+          action={{ label: "Criar viagem", onClick: () => setSheetOpen(true) }}
+        />
       ) : (
         <div className="space-y-2">
           {list.map((t) => {

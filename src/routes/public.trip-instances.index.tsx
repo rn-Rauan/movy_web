@@ -4,13 +4,13 @@ import { AppShell } from "@/components/layout/AppShell";
 import { ContextBanner } from "@/components/layout/ContextBanner";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
-import { Card } from "@/components/ui/card";
 import { usePublicTrips } from "@/features/trips/hooks/usePublicTrips";
 import { PublicTripCard } from "@/features/trips/components/PublicTripCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Compass } from "lucide-react";
+import { Search } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { EmptyState } from "@/components/feedback/EmptyState";
 
 type Shift = "ALL" | "MORNING" | "AFTERNOON" | "EVENING";
 const SHIFTS: { value: Shift; label: string }[] = [
@@ -93,10 +93,18 @@ function PublicTripsPage() {
       ) : error ? (
         <ErrorCard message={error} />
       ) : visible.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-          <Compass className="h-6 w-6" />
-          Nenhuma viagem encontrada com esses filtros.
-        </Card>
+        <EmptyState
+          variant="search"
+          title="Nenhuma viagem encontrada"
+          description="Tente ajustar a busca ou ver todos os turnos disponíveis."
+          action={{
+            label: "Limpar filtros",
+            onClick: () => {
+              setSearch("");
+              setShift("ALL");
+            },
+          }}
+        />
       ) : (
         <>
           <p className="text-sm text-muted-foreground mb-3">{visible.length} viagens encontradas</p>

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { handleApiError } from "@/lib/handle-error";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/feedback/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -273,9 +274,12 @@ function TemplatesPage() {
       {loading ? (
         <LoadingList count={3} height="h-24" />
       ) : list.length === 0 ? (
-        <Card className="p-6 text-center text-sm text-muted-foreground">
-          Nenhum template cadastrado.
-        </Card>
+        <EmptyState
+          variant="templates"
+          title="Nenhum template criado"
+          description="Templates definem rotas reutilizáveis para gerar viagens rapidamente."
+          action={{ label: "Criar template", onClick: () => setSheetOpen(true) }}
+        />
       ) : (
         <div className="space-y-2">
           {list.map((tpl) => (
