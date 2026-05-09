@@ -4,16 +4,26 @@ import { tripsService } from "@/services/trips.service";
 import { bookingsService } from "@/services/bookings.service";
 import type { TripInstance, BookingAvailability } from "@/lib/types";
 
-export function useTripDetail(tripId: string) {
+type Options = {
+  /** When true, fetch via JWT-protected /trip-instances/{id} (enriched with template,
+   *  bookedCount, availableSlots). Default false uses the public /public/trip-instances/{id}. */
+  authenticated?: boolean;
+};
+
+export function useTripDetail(tripId: string, opts: Options = {}) {
   const [trip, setTrip] = useState<TripInstance | null>(null);
   const [availability, setAvailability] = useState<BookingAvailability | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { authenticated = false } = opts;
 
   useEffect(() => {
     let cancelled = false;
 
-    tripsService
-      .getPublicById(tripId)
+    const fetchTrip = authenticated
+      ? tripsService.getById(tripId)
+      : tripsService.getPublicById(tripId);
+
+    fetchTrip
       .then((res) => {
         if (!cancelled) setTrip(res);
       })
@@ -36,7 +46,7 @@ export function useTripDetail(tripId: string) {
     return () => {
       cancelled = true;
     };
-  }, [tripId]);
+  }, [tripId, authenticated]);
 
   return { trip, availability, loading: trip === null && !error, error };
 }

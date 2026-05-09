@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_protected/trips/$orgId/$tripId")({
 
 function TripDetailPage() {
   const { orgId, tripId } = Route.useParams();
-  const { trip, availability, loading, error } = useTripDetail(tripId);
+  const { trip, availability, loading, error } = useTripDetail(tripId, { authenticated: true });
   const { passengers } = useTripPassengers(tripId);
 
   return (

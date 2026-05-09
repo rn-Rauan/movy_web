@@ -154,8 +154,10 @@ function PublicOrgPage() {
       ) : (
         <ul className="space-y-3">
           {visible.map((trip) => {
-            const seats = trip.availableSlots ?? 0;
-            const lotada = seats <= 0;
+            // Fallback to totalCapacity when availableSlots is absent (the public-by-slug endpoint
+            // returns PublicTripInstanceResponse, which doesn't include availableSlots).
+            const seats = trip.availableSlots ?? trip.totalCapacity;
+            const lotada = seats != null && seats <= 0;
             return (
               <li key={trip.id}>
                 <Card className="p-4">
