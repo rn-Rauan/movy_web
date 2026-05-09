@@ -147,16 +147,20 @@ function Row({
 function toIcsDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  return d
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}/, "");
 }
 
 function buildIcs(booking: BookingDetails): string {
   const start = booking.tripDepartureTime || booking.enrollmentDate;
   const end = booking.tripArrivalEstimate || start;
   const trip = booking.tripInstance;
-  const summary = trip?.departurePoint && trip?.destination
-    ? `Viagem: ${trip.departurePoint} → ${trip.destination}`
-    : "Viagem reservada";
+  const summary =
+    trip?.departurePoint && trip?.destination
+      ? `Viagem: ${trip.departurePoint} → ${trip.destination}`
+      : "Viagem reservada";
   const description = `Embarque: ${booking.boardingStop}\\nDesembarque: ${booking.alightingStop}`;
   return [
     "BEGIN:VCALENDAR",

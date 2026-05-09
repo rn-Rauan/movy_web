@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import type { Subscription } from "@/lib/types";
+import type { Subscription, PlanUsage } from "@/lib/types";
 
 export const subscriptionsService = {
   getActive: (orgId: string) => api<Subscription>(`/organizations/${orgId}/subscriptions/active`),
@@ -14,4 +14,5 @@ export const subscriptionsService = {
       method: "PATCH",
       body: JSON.stringify({ planId: Number(planId) }),
     }),
+  getPlanUsage: (orgId: string) => api<PlanUsage>(`/organizations/${orgId}/plan-usage`),
 };

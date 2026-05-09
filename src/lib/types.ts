@@ -40,13 +40,20 @@ export type TripInstance = {
   availableSlots?: number;
   departureTime: string;
   arrivalEstimate?: string;
-  /** Public trip fields (PublicTripInstanceResponse) */
+  /** Denormalized template fields (populated on enriched endpoints — see API_FRONTEND.md) */
   departurePoint?: string;
   destination?: string;
   priceOneWay?: number;
   priceReturn?: number;
   priceRoundTrip?: number;
   isRecurring?: boolean;
+  /** Populated only on GET /trip-instances/{id} */
+  template?: {
+    id: string;
+    origin: string;
+    destination: string;
+    stops: string[];
+  };
   /** Optional helpers possibly returned by some endpoints */
   organizationName?: string;
   organizationSlug?: string;
@@ -189,6 +196,13 @@ export type Plan = {
   maxMonthlyTrips: number;
   durationDays: number;
   isActive: boolean;
+};
+
+/** Returned by GET /organizations/{id}/plan-usage */
+export type PlanUsage = {
+  vehicles: { used: number; max: number };
+  drivers: { used: number; max: number };
+  monthlyTrips: { used: number; max: number };
 };
 
 export type PaymentStatus = "PENDING" | "CONFIRMED" | "FAILED";

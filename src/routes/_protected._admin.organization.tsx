@@ -53,7 +53,15 @@ import { subscriptionsService } from "@/services/subscriptions.service";
 import { plansService } from "@/services/plans.service";
 import { ApiError } from "@/lib/api";
 import { useRole } from "@/lib/role-context";
-import type { Organization, Vehicle, Driver, Paginated, Plan, Subscription } from "@/lib/types";
+import type {
+  Organization,
+  Vehicle,
+  Driver,
+  Paginated,
+  Plan,
+  PlanUsage,
+  Subscription,
+} from "@/lib/types";
 import { formatDateTime, formatPrice } from "@/lib/format";
 
 export const Route = createFileRoute("/_protected/_admin/organization")({
@@ -121,10 +129,14 @@ function OrganizationPage() {
   const [drivers, setDrivers] = useState<Driver[] | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null | undefined>(undefined);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [usage, setUsage] = useState<PlanUsage | null | undefined>(undefined);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  function loadSubscription(orgId: string) {
+  function loadPlanData(orgId: string) {
     setSubscription(undefined);
+    setUsage(undefined);
+    setPlan(null);
+
     subscriptionsService
       .getActive(orgId)
       .then((sub) => {
@@ -134,14 +146,17 @@ function OrganizationPage() {
             .getById(sub.planId)
             .then(setPlan)
             .catch(() => setPlan(null));
-        } else {
-          setPlan(null);
         }
       })
+      .catch(() => setSubscription(null));
+
+    subscriptionsService
+      .getPlanUsage(orgId)
+      .then(setUsage)
       .catch((err) => {
-        if (err instanceof ApiError && err.status === 404) setSubscription(null);
-        else setSubscription(null);
-        setPlan(null);
+        // 403 NO_ACTIVE_SUBSCRIPTION_FORBIDDEN: org sem plano ativo
+        if (err instanceof ApiError && (err.status === 403 || err.status === 404)) setUsage(null);
+        else setUsage(null);
       });
   }
 
@@ -174,7 +189,7 @@ function OrganizationPage() {
       .listByOrgId(adminOrgId)
       .then((res) => setDrivers(Array.isArray(res) ? res : ((res as Paginated<Driver>).data ?? [])))
       .catch(() => setDrivers([]));
-    loadSubscription(adminOrgId);
+    loadPlanData(adminOrgId);
   }, [adminOrgId]);
 
   function openOrgEdit() {
@@ -241,8 +256,7 @@ function OrganizationPage() {
       <PlanCard
         subscription={subscription}
         plan={plan}
-        vehiclesCount={(vehicles ?? []).filter((v) => v.status !== "INACTIVE").length}
-        driversCount={(drivers ?? []).filter((d) => d.driverStatus === "ACTIVE").length}
+        usage={usage}
         onUpgrade={() => setUpgradeOpen(true)}
       />
 
@@ -254,7 +268,7 @@ function OrganizationPage() {
         currentSubscriptionId={subscription?.id}
         orgId={adminOrgId}
         onSuccess={() => {
-          if (adminOrgId) loadSubscription(adminOrgId);
+          if (adminOrgId) loadPlanData(adminOrgId);
         }}
       />
 
@@ -639,14 +653,12 @@ function Field2({
 function PlanCard({
   subscription,
   plan,
-  vehiclesCount,
-  driversCount,
+  usage,
   onUpgrade,
 }: {
   subscription: Subscription | null | undefined;
   plan: Plan | null;
-  vehiclesCount: number;
-  driversCount: number;
+  usage: PlanUsage | null | undefined;
   onUpgrade: () => void;
 }) {
   if (subscription === undefined) {
@@ -689,12 +701,19 @@ function PlanCard({
         </div>
       </div>
 
-      {plan && (
+      {usage ? (
         <div className="space-y-3 mt-2">
-          <UsageRow label="Veículos" used={vehiclesCount} max={plan.maxVehicles} />
-          <UsageRow label="Motoristas" used={driversCount} max={plan.maxDrivers} />
+          <UsageRow label="Veículos" used={usage.vehicles.used} max={usage.vehicles.max} />
+          <UsageRow label="Motoristas" used={usage.drivers.used} max={usage.drivers.max} />
+          <UsageRow
+            label="Viagens este mês"
+            used={usage.monthlyTrips.used}
+            max={usage.monthlyTrips.max}
+          />
         </div>
-      )}
+      ) : usage === undefined ? (
+        <LoadingList count={1} height="h-12" />
+      ) : null}
 
       <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t">
         <Button asChild variant="ghost" size="sm" className="h-8 px-2 text-xs">

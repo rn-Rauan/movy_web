@@ -2,7 +2,7 @@
 
 > Snapshot vivo do que existe vs. o que falta. Atualizar a cada feature concluída. Pra **próxima ação**, ver [BACKLOG.md](./BACKLOG.md). Pra **roadmap de longo prazo**, ver [ROADMAP.md](./ROADMAP.md).
 
-**Última atualização:** 2026-05-07 (W2 admin 100% · W3.1 plan card e W3.4 handler 403 entregues · landing + signup B2B prontos)
+**Última atualização:** 2026-05-09 (W3 admin 100% fechado · backend entregou plan-usage, detalhe enriquecido de trip-instance e error codes estáveis · admin agora consome todas as novas APIs)
 
 > Para contexto de retomada (notebook), ver [HANDOFF.md](./HANDOFF.md).
 
@@ -128,12 +128,12 @@
 
 ## Plans, Subscriptions & Payments (W3)
 
-- [x] Card de plano em `/_admin/organization` — plano atual, preço, validade, uso vs. limite (Veículos, Motoristas) — W3.1
-- [x] Handler genérico de 403 limite-de-plano (`src/lib/handle-error.ts`) — toast com action "Ver planos" — W3.4 parcial
-- [ ] Tela `/_admin/payments` — lista de pagamentos da subscription com badges — W3.2
-- [ ] Modal de upgrade — listar planos via `GET /plans`, criar nova subscription — W3.3
-- [ ] Plan-usage em uma chamada — depende de backend criar `GET /organizations/{id}/plan-usage` — W3.5
-- [ ] Plugar `handleApiError` em todas as rotas (hoje só em `_admin.drivers`, `_admin.organization`, `_admin.trips`, `signup`)
+- [x] Card de plano em `/_admin/organization` — plano atual, preço, validade, uso vs. limite (Veículos, Motoristas, Viagens este mês) — W3.1
+- [x] Handler genérico de 403 limite-de-plano (`src/lib/handle-error.ts`) — toast com action "Ver planos" — usa `errorCode` estável (`NO_ACTIVE_SUBSCRIPTION_FORBIDDEN`, `*_PLAN_LIMIT_*`) — W3.4
+- [x] Tela `/_admin/payments` — lista paginada com "Carregar mais", badges (`PENDING`/`CONFIRMED`/`FAILED`), formatação BRL — W3.2
+- [x] Modal de upgrade — `UpgradePlanDialog` em `_admin.organization.tsx`: lista planos via `plansService.list()`, RadioGroup, troca/cria subscription via `POST /organizations/{id}/subscriptions` ou `PATCH .../{id}` — W3.3
+- [x] Plan-usage em uma chamada — `subscriptionsService.getPlanUsage()` consome `GET /organizations/{id}/plan-usage`; `PlanCard` mostra Veículos / Motoristas / Viagens este mês alinhado com `PlanLimitService` do backend — W3.5
+- [ ] Plugar `handleApiError` em `_admin.payments` e `_admin.templates` (hoje usam `toast.error(err.message)` cru) — W3.6
 
 ## Landing & Onboarding
 
@@ -162,8 +162,14 @@
 - **Padrão dual de fetching**: rotas passenger usam feature hooks (`useTrips`, `useBookings`); rotas admin usam `useState + useEffect + service.then()` direto. Convergir um padrão único.
 - **Tokens em localStorage**: vetor XSS aceito no MVP. Revisitar antes de produção comercial (Fase 4).
 - **`RoleContext` pega só `orgs[0]`**: ver ADR-001.
-- **Detalhe de trip-instance é "magro"**: `GET /trip-instances/{id}` não retorna campos enriquecidos (template, ocupação). Frontend continua fazendo 2 requests (`templatesService.getById`). Pedir backend pra estender o detalhe ou criar `/details` análogo a `BookingDetailsResponse`.
-- **`stops` não denormalizado em `TripInstanceResponse`**: detalhe da viagem precisa do template lookup só pra mostrar paradas.
+- **`useTripDetail` (passenger) ainda usa `getPublicById`**: o endpoint público não traz `template`/`bookedCount` enriquecidos. Migrar pra `getById` (JWT) já que a rota é protegida — desbloqueia também o cálculo correto de "lotada" no passenger.
 - **`TokenResponse.user` sem `telephone`**: profile faz `/users/me` extra após login.
 - **Sem endpoint `/trip-instances/driver/me`**: bloqueia driver flow (W4 / Fase 1 do roadmap).
 - **`DELETE /drivers/{id}` parece hard-delete**: inconsistente com o padrão soft dos outros recursos.
+
+## Resolvido em 2026-05-09
+
+- ~~Detalhe de trip-instance "magro"~~: backend agora retorna `template`, `bookedCount`, `availableSlots` em `GET /trip-instances/{id}`. Admin removeu o `templatesService.getById` extra.
+- ~~Lista admin de trips precisava de lookup de templates~~: `GET /trip-instances/organization/{id}` agora vem com `departurePoint`, `destination`, `bookedCount` denormalizados.
+- ~~Mensagem crua de erro ao cancelar booking~~: backend padronizou `errorCode` (`BOOKING_CANCEL_WINDOW_CLOSED_BAD_REQUEST` etc); helper `bookingCancelErrorMessage` em `lib/handle-error.ts` mapeia pra PT-BR.
+- ~~Plan-usage calculado localmente~~: `GET /organizations/{id}/plan-usage` é a nova source-of-truth do `PlanCard`.

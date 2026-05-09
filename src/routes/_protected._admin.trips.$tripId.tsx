@@ -31,16 +31,14 @@ import { tripsService } from "@/services/trips.service";
 import { bookingsService } from "@/services/bookings.service";
 import { driversService } from "@/services/drivers.service";
 import { vehiclesService } from "@/services/vehicles.service";
-import { templatesService } from "@/services/templates.service";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
-import { handleApiError } from "@/lib/handle-error";
+import { handleApiError, bookingCancelErrorMessage } from "@/lib/handle-error";
 import type {
   TripInstance,
   TripStatus,
   TripPassenger,
   Driver,
   Vehicle,
-  TripTemplate,
   Booking,
   Paginated,
 } from "@/lib/types";
@@ -73,7 +71,6 @@ function TripDetailPage() {
   const navigate = useNavigate();
 
   const [trip, setTrip] = useState<TripInstance | null>(null);
-  const [template, setTemplate] = useState<TripTemplate | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [passengers, setPassengers] = useState<TripPassenger[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -93,14 +90,6 @@ function TripDetailPage() {
       .then(setTrip)
       .catch((err) => setError(err instanceof Error ? err.message : "Erro ao carregar viagem"));
   }, [tripId]);
-
-  useEffect(() => {
-    if (!trip?.tripTemplateId) return;
-    templatesService
-      .getById(trip.tripTemplateId)
-      .then(setTemplate)
-      .catch(() => {});
-  }, [trip?.tripTemplateId]);
 
   useEffect(() => {
     if (!tripId || !trip) return;
@@ -187,12 +176,7 @@ function TripDetailPage() {
         // silent
       }
     } catch (err) {
-      const raw = err instanceof Error ? err.message : "Erro ao cancelar inscrição";
-      const friendly =
-        /30/.test(raw) || /minute/i.test(raw)
-          ? "Cancelamento não permitido a menos de 30 minutos da partida"
-          : raw;
-      toast.error(friendly);
+      toast.error(bookingCancelErrorMessage(err));
     } finally {
       setBusyBookingId(null);
       setCancelBooking(null);
@@ -236,6 +220,9 @@ function TripDetailPage() {
   const canEdit = !["FINISHED", "CANCELED"].includes(trip.tripStatus);
   const nonCancelTransitions = transitions.filter((s) => s !== "CANCELED");
   const namesByUserId = new Map(passengers.map((p) => [p.userId, p.name]));
+  const origin = trip.template?.origin ?? trip.departurePoint;
+  const destination = trip.template?.destination ?? trip.destination;
+  const stops = trip.template?.stops ?? [];
 
   return (
     <AppShell title="Detalhes da viagem" back>
@@ -254,10 +241,10 @@ function TripDetailPage() {
           <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
         </div>
 
-        {(template?.departurePoint || template?.destination) && (
+        {(origin || destination) && (
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
             <MapPin className="h-4 w-4 shrink-0" />
-            {template?.departurePoint ?? "—"} → {template?.destination ?? "—"}
+            {origin ?? "—"} → {destination ?? "—"}
           </div>
         )}
 
@@ -266,11 +253,11 @@ function TripDetailPage() {
           {trip.bookedCount ?? 0} / {trip.totalCapacity} lugares
         </div>
 
-        {template?.stops && template.stops.length > 0 && (
+        {stops.length > 0 && (
           <div className="mt-3 pt-3 border-t border-border">
             <div className="text-xs text-muted-foreground mb-1.5">Paradas</div>
             <ol className="text-sm space-y-1 list-decimal list-inside">
-              {template.stops.map((stop, i) => (
+              {stops.map((stop, i) => (
                 <li key={i}>{stop}</li>
               ))}
             </ol>

@@ -35,10 +35,13 @@ export const tokenStorage = {
 export class ApiError extends Error {
   status: number;
   data: unknown;
-  constructor(message: string, status: number, data: unknown) {
+  /** Stable domain error code from the backend payload (`error` field). Use this — not `message` — to drive UI copy. */
+  errorCode: string | null;
+  constructor(message: string, status: number, data: unknown, errorCode: string | null = null) {
     super(message);
     this.status = status;
     this.data = data;
+    this.errorCode = errorCode;
   }
 }
 
@@ -97,11 +100,13 @@ export async function api<T = unknown>(
   }
 
   if (!res.ok) {
-    const message = (data && (data.message || data.error)) || `Erro ${res.status}`;
+    const message = (data && data.message) || `Erro ${res.status}`;
+    const errorCode = data && typeof data.error === "string" ? data.error : null;
     throw new ApiError(
       Array.isArray(message) ? message.join(", ") : String(message),
       res.status,
       data,
+      errorCode,
     );
   }
   return data as T;

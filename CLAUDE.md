@@ -93,6 +93,7 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
 /_protected/                  ← layout pathless com guard de auth
   my-bookings/                → inscrições do usuário
   my-bookings/$bookingId/     → detalhe da inscrição
+  bookings-success/$bookingId/ → tela de confirmação pós-inscrição (com confetti)
   organizations/              → lista de organizações
   trips/$orgId/               → viagens de uma organização
   trips/$orgId/$tripId/       → detalhe da viagem
@@ -106,7 +107,8 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
     trips/$tripId/            → detalhe + passageiros + ações de status
     templates/                → CRUD de templates de rota
     drivers/                  → gestão de motoristas da organização
-    organization/             → configurações da organização
+    organization/             → configurações + card de plano (uso vs. limite) + sheet de veículos
+    payments/                 → histórico de pagamentos da subscription (paginado)
 
   _driver/ (guard: isDriver)
     my-trips/                 → viagens do motorista logado
@@ -299,12 +301,24 @@ bookingsService.confirmPresence(bookingId);
 plansService.list();
 plansService.getById(id);
 
+// payments.service.ts
+paymentsService.list(orgId, page?, size?);
+paymentsService.getById(orgId, id);
+
 // subscriptions.service.ts
 subscriptionsService.getActive(orgId);
 subscriptionsService.list(orgId);
+subscriptionsService.create(orgId, planId);
+subscriptionsService.changePlan(orgId, subscriptionId, planId);
+subscriptionsService.getPlanUsage(orgId);   // GET /organizations/{id}/plan-usage — fonte única do PlanCard
 ```
 
-**Tratamento de erros:** `src/lib/handle-error.ts` exporta `handleApiError(err, fallbackMsg)` — detecta 403 com mensagens de "limite/plano" e mostra toast contextual com link pra `/organization`. Plugar nas rotas que fazem mutações sujeitas a limite (criação de driver, vehicle, trip, etc.).
+**Tratamento de erros:** `src/lib/handle-error.ts` exporta:
+
+- `handleApiError(err, fallbackMsg)` — detecta 403 limite-de-plano via `errorCode` estável (`NO_ACTIVE_SUBSCRIPTION_FORBIDDEN`, `*_PLAN_LIMIT_*`) e mostra toast com action "Ver planos" → `/organization`. Plugar nas rotas que fazem mutações sujeitas a limite.
+- `bookingCancelErrorMessage(err)` — mapeia `errorCode` de cancelamento (`BOOKING_CANCEL_WINDOW_CLOSED_BAD_REQUEST`, `BOOKING_TRIP_TERMINAL_BAD_REQUEST`, `BOOKING_ALREADY_INACTIVE_BAD_REQUEST`) pra mensagens em PT-BR.
+
+`ApiError` (em `lib/api.ts`) carrega `status`, `message`, `data` e `errorCode` (campo `error` do payload). Sempre prefira `errorCode` a parsing de `message` — é o contrato estável documentado em `docs/API_FRONTEND.md`.
 
 ---
 
@@ -314,7 +328,8 @@ subscriptionsService.list(orgId);
 2. Detalhe `/public/trip-instances/$id`
 3. "Ver detalhes" → `/_protected/trips/$orgId/$tripId` (requer auth)
 4. "Inscrever-se" → `/_protected/trips/$orgId/$tripId/book`
-5. Após confirmação → `/_protected/my-bookings`
+5. Confirmação → `/_protected/bookings-success/$bookingId` (confetti)
+6. Voltar pra `/_protected/my-bookings`
 
 ---
 
@@ -347,6 +362,8 @@ subscriptionsService.list(orgId);
 - Não duplicar lógica de fetch — criar/reutilizar hook de feature
 - Não modificar `src/components/ui/` — componentes shadcn, atualizar via CLI
 - Não duplicar guard de auth — adicionar apenas em `_protected.tsx`
-- Não adicionar React Query ainda — Context API + hooks é suficiente para o MVP
+- Não adicionar React Query ainda — apesar do `@tanstack/react-query` estar no `package.json`, nenhuma rota o consome. Manter padrão Context + hooks até decisão explícita de migrar (ver ADR-002)
 - Não criar OrganizationContext global — `adminOrgId` do `useRole()` é suficiente
 - Não adicionar plugins ao `vite.config.ts` — o preset `@lovable.dev/vite-tanstack-config` já os inclui
+- Não fazer parsing de `err.message` pra detectar tipo de erro — usar `err.errorCode` (campo estável documentado em `docs/API_FRONTEND.md`)
+- Não buscar `template` separado pra hidratar `TripInstance` — `GET /trip-instances/{id}` e `GET /trip-instances/organization/{id}` já vêm enriquecidos com `template`/`departurePoint`/`destination`/`bookedCount`
