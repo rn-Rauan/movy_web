@@ -34,7 +34,7 @@ function TripsListPage() {
       ) : error ? (
         <ErrorCard message={error} />
       ) : (
-        <TripsList trips={trips ?? []} orgId={orgId} />
+        <TripsList trips={trips ?? []} />
       )}
     </AppShell>
   );

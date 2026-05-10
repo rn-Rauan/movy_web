@@ -6,12 +6,17 @@ import { bookingsService } from "@/services/bookings.service";
 import { canEnroll } from "@/lib/format";
 import type { TripInstance, EnrollmentType, PaymentMethod } from "@/lib/types";
 
-const schema = z.object({
-  enrollmentType: z.enum(["ONE_WAY", "RETURN", "ROUND_TRIP"]),
-  boardingStop: z.string().trim().min(1, "Informe a parada de embarque"),
-  alightingStop: z.string().trim().min(1, "Informe a parada de desembarque"),
-  method: z.enum(["MONEY", "PIX", "CREDIT_CARD", "DEBIT_CARD"]),
-});
+const schema = z
+  .object({
+    enrollmentType: z.enum(["ONE_WAY", "RETURN", "ROUND_TRIP"]),
+    boardingStop: z.string().trim().min(1, "Selecione a parada de embarque"),
+    alightingStop: z.string().trim().min(1, "Selecione a parada de desembarque"),
+    method: z.enum(["MONEY", "PIX", "CREDIT_CARD", "DEBIT_CARD"]),
+  })
+  .refine((d) => d.boardingStop !== d.alightingStop, {
+    message: "Embarque e desembarque devem ser diferentes",
+    path: ["alightingStop"],
+  });
 
 export function useBookingForm(tripId: string) {
   const navigate = useNavigate();

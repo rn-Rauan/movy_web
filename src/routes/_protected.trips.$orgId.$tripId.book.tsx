@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { useTripDetail } from "@/features/trips/hooks/useTripDetail";
 import { useBookingForm } from "@/features/bookings/hooks/useBookingForm";
+import { useUserBookingForTrip } from "@/features/bookings/hooks/useUserBookingForTrip";
 import { formatDateTime, tripPriceFor } from "@/lib/format";
 import type { EnrollmentType, PaymentMethod } from "@/lib/types";
 
@@ -23,14 +24,37 @@ export const Route = createFileRoute("/_protected/trips/$orgId/$tripId/book")({
 
 function BookPage() {
   const { tripId } = Route.useParams();
-  const { trip } = useTripDetail(tripId);
+  const navigate = useNavigate();
+  const { trip } = useTripDetail(tripId, { authenticated: true });
+  const { booking: existingBooking, loading: checkingExisting } = useUserBookingForTrip(tripId);
   const { form, setForm, prefill, submit, submitting } = useBookingForm(tripId);
 
   useEffect(() => {
     if (trip) prefill(trip);
   }, [trip, prefill]);
 
+  useEffect(() => {
+    if (existingBooking) {
+      toast.info("Você já está inscrito nesta viagem.");
+      navigate({
+        to: "/my-bookings/$bookingId",
+        params: { bookingId: existingBooking.id },
+        replace: true,
+      });
+    }
+  }, [existingBooking, navigate]);
+
   const price = trip ? tripPriceFor(trip, form.enrollmentType) : undefined;
+
+  const stopOptions = useMemo(() => {
+    if (!trip) return [];
+    const all = [
+      trip.departurePoint,
+      ...(trip.template?.stops ?? trip.stops ?? []),
+      trip.destination,
+    ].filter((s): s is string => Boolean(s && s.trim()));
+    return Array.from(new Set(all));
+  }, [trip]);
 
   return (
     <AppShell title="Inscrição" back>
@@ -77,27 +101,43 @@ function BookPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="boardingStop">Parada de embarque</Label>
-          <Input
-            id="boardingStop"
+          <Label>Parada de embarque</Label>
+          <Select
             value={form.boardingStop}
-            onChange={(e) => setForm((f) => ({ ...f, boardingStop: e.target.value }))}
-            placeholder={trip?.departurePoint || "Ex: Terminal Rodoviário"}
-            className="h-12 text-base"
-            required
-          />
+            onValueChange={(v) => setForm((f) => ({ ...f, boardingStop: v }))}
+            disabled={stopOptions.length === 0}
+          >
+            <SelectTrigger className="h-12 text-base">
+              <SelectValue placeholder="Selecione onde você sobe" />
+            </SelectTrigger>
+            <SelectContent>
+              {stopOptions.map((stop) => (
+                <SelectItem key={`b-${stop}`} value={stop} disabled={stop === form.alightingStop}>
+                  {stop}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="alightingStop">Parada de desembarque</Label>
-          <Input
-            id="alightingStop"
+          <Label>Parada de desembarque</Label>
+          <Select
             value={form.alightingStop}
-            onChange={(e) => setForm((f) => ({ ...f, alightingStop: e.target.value }))}
-            placeholder={trip?.destination || "Ex: Universidade"}
-            className="h-12 text-base"
-            required
-          />
+            onValueChange={(v) => setForm((f) => ({ ...f, alightingStop: v }))}
+            disabled={stopOptions.length === 0}
+          >
+            <SelectTrigger className="h-12 text-base">
+              <SelectValue placeholder="Selecione onde você desce" />
+            </SelectTrigger>
+            <SelectContent>
+              {stopOptions.map((stop) => (
+                <SelectItem key={`a-${stop}`} value={stop} disabled={stop === form.boardingStop}>
+                  {stop}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
@@ -125,7 +165,11 @@ function BookPage() {
           </Card>
         ) : null}
 
-        <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
+        <Button
+          type="submit"
+          disabled={submitting || checkingExisting || Boolean(existingBooking)}
+          className="w-full h-12 text-base"
+        >
           {submitting ? "Confirmando..." : "Confirmar inscrição"}
         </Button>
       </form>

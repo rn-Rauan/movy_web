@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, MapPin, DollarSign, Route as RouteIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useTripDetail } from "@/features/trips/hooks/useTripDetail";
+import { useUserBookingForTrip } from "@/features/bookings/hooks/useUserBookingForTrip";
 import { formatDateTime, formatFullDate, statusLabel, statusVariant } from "@/lib/format";
 
 export const Route = createFileRoute("/public/trip-instances/$id")({
@@ -24,6 +25,7 @@ function PublicTripDetailPage() {
   const { id } = Route.useParams();
   const { isAuthenticated } = useAuth();
   const { trip, loading, error } = useTripDetail(id);
+  const { booking: existingBooking } = useUserBookingForTrip(isAuthenticated ? id : undefined);
 
   function renderContent() {
     if (loading) return <LoadingList count={3} height="h-32" />;
@@ -104,23 +106,33 @@ function PublicTripDetailPage() {
           </Card>
         ) : null}
 
-        {isAuthenticated && trip.organizationId ? (
-          <Link
-            to="/trips/$orgId/$tripId"
-            params={{ orgId: trip.organizationId, tripId: id }}
-            className="block"
-          >
-            <Button className="w-full h-12 text-base" disabled={lotada}>
-              {lotada ? "Viagem lotada" : "Ver detalhes e reservar"}
-            </Button>
-          </Link>
-        ) : (
+        {!isAuthenticated ? (
           <Link to="/login" search={{ redirect: `/public/trip-instances/${id}` }} className="block">
             <Button className="w-full h-12 text-base" disabled={lotada}>
               {lotada ? "Viagem lotada" : "Entrar para reservar"}
             </Button>
           </Link>
-        )}
+        ) : existingBooking ? (
+          <Link
+            to="/my-bookings/$bookingId"
+            params={{ bookingId: existingBooking.id }}
+            className="block"
+          >
+            <Button className="w-full h-12 text-base" variant="outline">
+              Você já está inscrito — ver inscrição
+            </Button>
+          </Link>
+        ) : trip.organizationId ? (
+          <Link
+            to="/trips/$orgId/$tripId/book"
+            params={{ orgId: trip.organizationId, tripId: id }}
+            className="block"
+          >
+            <Button className="w-full h-12 text-base" disabled={lotada}>
+              {lotada ? "Viagem lotada" : "Inscrever-se"}
+            </Button>
+          </Link>
+        ) : null}
       </>
     );
   }
