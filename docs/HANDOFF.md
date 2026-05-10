@@ -2,22 +2,48 @@
 
 > Documento "pegue aqui e continue". Snapshot completo: o que foi feito, onde paramos, o que vem agora, e o que tá no horizonte. Para detalhes vivos por área: [PROGRESS.md](./PROGRESS.md). Para próxima ação concreta: [BACKLOG.md](./BACKLOG.md). Para por quê de decisões: [DECISIONS.md](./DECISIONS.md). Para roadmap longo: [ROADMAP.md](./ROADMAP.md).
 
-**Última atualização:** 2026-05-07
-**Próxima sessão:** seguir com W3.2 (tela `/payments`) ou destravar driver flow (depende de backend).
+**Última atualização:** 2026-05-10
+**Próxima sessão:** Driver Flow (D1–D4) — depende do backend entregar `GET /trip-instances/driver/me`.
 
 ---
 
 ## TL;DR
 
 - **W1 (bug-fixes admin) — 100%** entregue em 2026-05-03.
-- **W2 (admin operacional) — 100%** entregue em 2026-05-05 no commit `01d6173` (BookingRow com presença/cancelamento, edição de motorista, undo de remoção, hidratação de `bookedCount`).
-- **W3 começou:** card de plano em `/_admin/organization` (W3.1) + tratamento contextual de 403 limite-de-plano (W3.4 parcial via `handleApiError` em `src/lib/handle-error.ts`).
+- **W2 (admin operacional) — 100%** entregue em 2026-05-05.
+- **W3 (planos / subscriptions / payments) — 100%** fechado em 2026-05-10, incluindo cleanup W3.6/W3.7 e P3 (warnings exhaustive-deps).
+- **Bugs do passenger (B1, B2) — resolvidos** em 2026-05-10. Bônus: telas de detalhe consolidadas (intermediário removido), paradas via `<Select>`, guard contra inscrição duplicada (`useUserBookingForTrip`).
 - **Landing page e signup B2B prontos:** `/` mostra landing pra não-autenticado e redireciona admin pra `/dashboard`; `/signup/empresa` cria conta + organização em uma chamada (`POST /auth/register-organization`).
-- **Próximo passo:** W3.2 (tela `/_admin/payments`) ou D1 (driver flow) se o backend já tiver `GET /trip-instances/driver/me`.
+- **Próximo passo:** Driver Flow (D1) — bloqueado pelo backend até existir `GET /trip-instances/driver/me`. Enquanto isso: P1 (telephone em `TokenResponse.user` — também depende de backend) e P2 (endpoint dedicado de duplicate-check, opcional).
 
 ---
 
-## O que foi feito desde o último handoff (2026-05-04 → 2026-05-07)
+## O que foi feito desde o último handoff (2026-05-07 → 2026-05-10)
+
+### W3 — fechado em 2026-05-09 → 2026-05-10
+
+- **W3.1–W3.5 (commit anterior):** PlanCard com plan-usage do backend, modal de upgrade, tela `/payments`, helper `handleApiError`.
+- **W3.6 (2026-05-10):** `handleApiError` plugado em `_admin.payments` e `_admin.templates`.
+- **W3.7 (2026-05-10):** `useBookingDetail` (passenger) usa `bookingCancelErrorMessage` pra mensagens estáveis de cancelamento.
+- **P3 (2026-05-10):** `loadDrivers`/`loadTemplates` viraram `useCallback([adminOrgId])` — warnings `react-hooks/exhaustive-deps` zerados em `_admin.drivers.tsx` e `_admin.templates.tsx`.
+
+### Bugs do passenger e consolidação de UX (2026-05-10)
+
+- **B1 — "Ver detalhes" pedia admin:** parent `_protected.trips.$orgId.tsx` ganhou Outlet pattern; tela duplicada `_protected.trips.$orgId.$tripId.tsx` removida — `/public/trip-instances/$id` é a tela única de detalhe (logado e deslogado). `TripsList` aponta pra ela.
+- **B2 — Viagens "lotadas" no perfil da org:** `/public/organizations/$slug` usava fallback `?? 0`; trocado por `?? trip.totalCapacity`.
+- **Form de booking:** `<Input>` substituído por `<Select>` listando paradas (`origem + template.stops + destino` deduplicado); opção espelhada desabilitada no outro select; Zod `.refine(boarding !== alighting)`.
+- **Guard de duplicata:** `useUserBookingForTrip(tripId)` busca booking ATIVO. UI vira "Ver inscrição" e `/book` redireciona via `replace: true` com toast.
+- **`useTripDetail` parameterizado:** opção `{ authenticated: true }` rota o fetch pra `getById` (JWT enriquecido) em rotas protegidas.
+
+### Arquivos removidos
+
+- `src/routes/_protected.trips.$orgId.$tripId.tsx` (duplicado da tela pública)
+- `src/features/trips/hooks/useTripPassengers.ts` (órfão)
+- `src/features/trips/components/TripDetailView.tsx` (órfão)
+
+---
+
+## O que foi feito antes (2026-05-04 → 2026-05-07)
 
 ### W2 — fechado em 2026-05-05 (commit `01d6173`)
 
@@ -59,60 +85,29 @@ Bônus: `TripPassenger.userId` adicionado em `lib/types.ts` (match exato com `Bo
 
 ### Frontend
 
-- Branch: `main`. Working tree limpo. Tudo commitado.
-- `npm run lint` — esperado: 0 erros, ~3 warnings pré-existentes (`react-refresh/only-export-components` em `role-context.tsx`; `react-hooks/exhaustive-deps` em `_admin.drivers.tsx` e `_admin.templates.tsx`).
-- `npm run build` — esperado: verde (não validado nesta sessão).
-- W2 e W3.1 não foram testados manualmente em browser nesta sessão. Antes de declarar W2 100% comprovado, abrir `npm run dev` e validar fluxo de presença/cancelamento.
+- Branch: `main`. Working tree pode ter ajustes pendentes desta sessão até commit final.
+- `npm run lint` — esperado: 0 erros, **1 warning** pré-existente (`react-refresh/only-export-components` em `role-context.tsx`). Os warnings de `exhaustive-deps` foram zerados nesta sessão.
+- `npx tsc --noEmit` — verde.
+- Recomendado: rodar `npm run dev` e testar manualmente os fluxos do passenger (detalhe + booking + duplicata) antes de declarar W3 + bug-fixes 100% comprovados.
 
-### Backend (snapshot conforme `docs/API_FRONTEND.md`, sem alterações nesta janela)
+### Backend (snapshot conforme `docs/API_FRONTEND.md`)
 
-Permanece com os 3 críticos resolvidos. Gaps abertos:
+Resolvidos desde a janela anterior:
 
-- `stops` não denormalizado em `TripInstanceResponse` (detalhe ainda precisa de template lookup).
-- `GET /trip-instances/{id}` (detalhe) não traz campos enriquecidos.
-- `TokenResponse.user` sem `telephone`.
-- **`GET /trip-instances/driver/me` ainda não existe** — bloqueia driver flow.
-- **`GET /organizations/{id}/plan-usage` ainda não existe** — `PlanCard` hoje conta veículos/motoristas localmente.
+- ✅ `GET /trip-instances/{id}` agora retorna `template`, `bookedCount`, `availableSlots`.
+- ✅ `GET /trip-instances/organization/{id}` denormaliza `departurePoint`, `destination`, `bookedCount`.
+- ✅ `GET /organizations/{id}/plan-usage` existe e é a source-of-truth do `PlanCard`.
+- ✅ Error codes estáveis (`BOOKING_CANCEL_WINDOW_CLOSED_BAD_REQUEST` etc).
+
+Gaps ainda abertos:
+
+- `TokenResponse.user` sem `telephone` (bloqueia P1).
+- **`GET /trip-instances/driver/me` ainda não existe** — bloqueia driver flow inteiro (D1–D4).
+- `DELETE /drivers/{id}` parece hard-delete (inconsistente com soft-delete dos outros recursos).
 
 ---
 
 ## Próximas tarefas (em ordem)
-
-### 🟢 W3.2 — Tela `/_admin/payments`
-
-**Quê:** Lista paginada de pagamentos da subscription com badges (`PENDING` / `CONFIRMED` / `FAILED`).
-
-**Como:**
-
-1. Criar `src/services/payments.service.ts` com `listByOrgId(orgId, page?, size?)` chamando `GET /organizations/{id}/payments`.
-2. Criar rota `src/routes/_protected._admin.payments.tsx` (admin guard).
-3. Adicionar link no `BottomNav` ou em "Configurações" da org.
-4. Reutilizar `LoadingList` + `ErrorCard`.
-
-**Aceite:** admin abre `/payments`, vê histórico paginado com filtro por status.
-
----
-
-### 🟢 W3.3 — Modal de upgrade de plano
-
-**Quê:** Lista planos via `GET /plans`, seleciona, chama `POST /organizations/{id}/subscriptions`.
-
-**Como:**
-
-1. Habilitar o botão "Escolher um plano" no `PlanCard` (`_admin.organization.tsx`).
-2. Criar `<Dialog>` que carrega `plansService.list()`.
-3. `subscriptionsService.create(orgId, planId)` — adicionar no service (não existe ainda).
-4. Refetch da subscription ativa após sucesso. Toast.
-
-**Aceite:** admin troca plano, card reflete novo plano + limites sem F5.
-
----
-
-### 🟢 W3.5 — Plan-usage em uma chamada (depende de backend)
-
-Substituir o cálculo local de `vehiclesCount`/`driversCount` no `PlanCard` por `GET /organizations/{id}/plan-usage`. Pedir esse endpoint ao backend (gap aberto). Sem ele, fica como está.
-
----
 
 ### 🟡 D1-D4 — Driver flow (depende de backend)
 
@@ -120,25 +115,27 @@ Bloqueado até existir `GET /trip-instances/driver/me`. Pedir ao backend antes d
 
 ---
 
-### 🟡 P1 — Profile + telephone
+### 🟡 P1 — Profile + telephone (depende de backend)
 
 `AuthUser` não tem `telephone`. O signup envia, e a tela `/profile` envia no update, mas não temos onde mostrar. Idealmente backend inclui `telephone` em `TokenResponse.user` e no `GET /users/me`.
 
 ---
 
+### 🟢 P2 — Endpoint dedicado de duplicate-check (opcional)
+
+`useUserBookingForTrip` hoje baixa `listForUser` inteiro e filtra client-side. Se a lista crescer, considerar `GET /bookings/by-trip/{tripId}/mine` no backend, ou adotar React Query (ADR-002) pra cachear.
+
+---
+
 ## Riscos / pontos de atenção
 
-1. **Validar W2 + W3.1 manualmente em browser.** Implementação fechada e build passou na CI, mas a operação real (presença, cancelamento dentro de 30 min, undo de remoção, atualização do plan card) não foi testada nesta sessão.
+1. **Validar manualmente em browser** o fluxo do passenger pós-consolidação: detalhe único → "Inscrever-se" → form com selects de parada → confirmação. E o caminho do guard de duplicata (tentar inscrever 2x; colar URL `/book` quando já há booking ATIVO).
 
-2. **`paymentMethod` pode ser `null`** em bookings antigos — `BookingRow` já trata (só renderiza se truthy).
+2. **`paymentMethod` pode ser `null`** em bookings antigos — `BookingRow` já trata.
 
-3. **Cancelamento dentro de 30 min ou status terminal** — backend bloqueia. `BookingRow` mostra erro cru via `toast.error(err.message)`. Considerar adicionar tratamento específico ("Cancelamento não permitido a menos de 30 minutos da partida") quando o backend retornar a mensagem identificável.
+3. **`useUserBookingForTrip` baixa lista completa** de bookings do usuário pra detectar duplicata. Aceitável no MVP; trocar quando a lista crescer (ver P2).
 
-4. **`react-hooks/exhaustive-deps` warnings** continuam em `_admin.drivers.tsx` e `_admin.templates.tsx`. Pré-existentes.
-
-5. **Detalhe de trip-instance ainda é "magro"** — `_admin.trips.$tripId.tsx` continua chamando `templatesService.getById` pra obter `stops`/origem/destino. Aguardando backend.
-
-6. **`PlanCard` conta limites localmente** (do array de veículos/drivers carregado na própria tela). Se um deles falhar, mostra `0 / N`. Endpoint `/plan-usage` resolveria.
+4. **Sobra 1 warning de lint:** `react-refresh/only-export-components` em `role-context.tsx` (RoleProvider + useRole no mesmo arquivo). Cosmético, não causa runtime issue. Resolução envolve separar em 2 arquivos.
 
 ---
 

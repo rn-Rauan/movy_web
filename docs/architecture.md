@@ -77,13 +77,13 @@ movy_web/
 │   │   │   └── components/
 │   │   │       ├── TripCard.tsx         # Card compacto (lista privada)
 │   │   │       ├── TripsList.tsx
-│   │   │       ├── PublicTripCard.tsx   # Card rico do marketplace
-│   │   │       └── TripDetailView.tsx
+│   │   │       └── PublicTripCard.tsx   # Card rico do marketplace
 │   │   ├── bookings/
 │   │   │   ├── hooks/
 │   │   │   │   ├── useBookings.ts
 │   │   │   │   ├── useBookingDetail.ts
-│   │   │   │   └── useBookingForm.ts
+│   │   │   │   ├── useBookingForm.ts
+│   │   │   │   └── useUserBookingForTrip.ts  # Guard de duplicata por viagem
 │   │   │   └── components/
 │   │   │       ├── BookingCard.tsx
 │   │   │       ├── BookingsList.tsx
@@ -123,8 +123,7 @@ movy_web/
 │   │   ├── signup.tsx
 │   │   ├── _protected.organizations.tsx
 │   │   ├── _protected.trips.$orgId.tsx
-│   │   ├── _protected.trips.$orgId.$tripId.tsx
-│   │   ├── _protected.trips.$orgId.$tripId.book.tsx
+│   │   ├── _protected.trips.$orgId.$tripId.book.tsx  # único filho (detalhe consolidado em /public)
 │   │   ├── _protected.my-bookings.tsx
 │   │   ├── _protected.my-bookings.$bookingId.tsx
 │   │   ├── _protected.setup.tsx

@@ -95,9 +95,8 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
   my-bookings/$bookingId/     → detalhe da inscrição
   bookings-success/$bookingId/ → tela de confirmação pós-inscrição (com confetti)
   organizations/              → lista de organizações
-  trips/$orgId/               → viagens de uma organização
-  trips/$orgId/$tripId/       → detalhe da viagem
-  trips/$orgId/$tripId/book/  → formulário de inscrição
+  trips/$orgId/               → viagens de uma organização (lista; sem tela de detalhe própria)
+  trips/$orgId/$tripId/book/  → formulário de inscrição (paradas via Select)
   profile/                    → perfil e senha do usuário autenticado
   setup/                      → wizard de criação de organização (admin)
 
@@ -325,11 +324,13 @@ subscriptionsService.getPlanUsage(orgId);   // GET /organizations/{id}/plan-usag
 ## Caminho de Booking (Usuário)
 
 1. Browse `/public/trip-instances`
-2. Detalhe `/public/trip-instances/$id`
-3. "Ver detalhes" → `/_protected/trips/$orgId/$tripId` (requer auth)
-4. "Inscrever-se" → `/_protected/trips/$orgId/$tripId/book`
-5. Confirmação → `/_protected/bookings-success/$bookingId` (confetti)
-6. Voltar pra `/_protected/my-bookings`
+2. Detalhe `/public/trip-instances/$id` (tela única de detalhe — funciona logado e deslogado)
+   - Deslogado: botão "Entrar para reservar" → `/login`
+   - Logado sem inscrição: botão "Inscrever-se" → `/_protected/trips/$orgId/$tripId/book`
+   - Logado já inscrito: botão "Ver inscrição" → `/_protected/my-bookings/$bookingId` (guard via `useUserBookingForTrip`)
+3. Form de inscrição (`/book`): paradas de embarque/desembarque via `<Select>` (lista as paradas da viagem; impede selecionar a mesma)
+4. Confirmação → `/_protected/bookings-success/$bookingId` (confetti)
+5. Voltar pra `/_protected/my-bookings`
 
 ---
 

@@ -136,9 +136,8 @@ function TripsList({ trips, orgId }: { trips: TripInstance[]; orgId: string }) {
 | Componente       | Descrição                                                    |
 | ---------------- | ------------------------------------------------------------ |
 | `TripCard`       | Card compacto — lista privada                                |
-| `TripsList`      | Lista com links para detalhe                                 |
+| `TripsList`      | Lista com links para o detalhe público                       |
 | `PublicTripCard` | Card rico do marketplace (botões "ver empresa"/"ver viagem") |
-| `TripDetailView` | Detalhe completo + botão de inscrição                        |
 
 ### bookings
 

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, UserX, Pencil } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -86,7 +86,7 @@ function DriversPage() {
   const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string>>({});
   const [editSubmitting, setEditSubmitting] = useState(false);
 
-  function loadDrivers() {
+  const loadDrivers = useCallback(() => {
     if (!adminOrgId) return;
     driversService
       .listByOrgId(adminOrgId)
@@ -99,11 +99,11 @@ function DriversPage() {
         setError(msg);
         toast.error(msg);
       });
-  }
+  }, [adminOrgId]);
 
   useEffect(() => {
     loadDrivers();
-  }, [adminOrgId]);
+  }, [loadDrivers]);
 
   function openAdd() {
     setForm({ userEmail: "", cnh: "" });

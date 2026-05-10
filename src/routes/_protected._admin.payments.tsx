@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Receipt } from "lucide-react";
-import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +10,7 @@ import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { paymentsService } from "@/services/payments.service";
 import { useRole } from "@/lib/role-context";
 import { ApiError } from "@/lib/api";
+import { handleApiError } from "@/lib/handle-error";
 import {
   formatDateTime,
   formatPrice,
@@ -51,10 +51,10 @@ function PaymentsPage() {
       if (err instanceof ApiError && err.status === 404) {
         if (pageNum === 1) setPayments([]);
         setHasMore(false);
+      } else if (pageNum === 1) {
+        setError(err instanceof Error ? err.message : "Erro ao carregar pagamentos");
       } else {
-        const msg = err instanceof Error ? err.message : "Erro ao carregar pagamentos";
-        if (pageNum === 1) setError(msg);
-        else toast.error(msg);
+        handleApiError(err, "Erro ao carregar pagamentos");
       }
     } finally {
       setLoadingMore(false);

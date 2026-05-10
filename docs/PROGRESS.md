@@ -2,7 +2,7 @@
 
 > Snapshot vivo do que existe vs. o que falta. Atualizar a cada feature concluída. Pra **próxima ação**, ver [BACKLOG.md](./BACKLOG.md). Pra **roadmap de longo prazo**, ver [ROADMAP.md](./ROADMAP.md).
 
-**Última atualização:** 2026-05-09 (W3 admin 100% fechado · backend entregou plan-usage, detalhe enriquecido de trip-instance e error codes estáveis · admin agora consome todas as novas APIs)
+**Última atualização:** 2026-05-10 (W3 100% fechado incluindo cleanup W3.6/W3.7/P3 · bugs do passenger B1/B2 resolvidos · consolidação das telas de detalhe de viagem + guard contra inscrição duplicada · próxima frente é Driver Flow, bloqueado por backend)
 
 > Para contexto de retomada (notebook), ver [HANDOFF.md](./HANDOFF.md).
 
@@ -20,7 +20,7 @@
 - [x] Toaster global (sonner) montado no `__root`
 - [-] React Query — instalado mas não usado (ver ADR-002)
 - [ ] Framework de testes (ver ADR-003)
-- [~] Error handling padronizado — `handleApiError` em `src/lib/handle-error.ts` cobre 403 limite-de-plano. Falta plugar nas rotas restantes e generalizar pra outros status
+- [x] Error handling padronizado — `handleApiError` plugado em admin (drivers, organization, trips, signup, payments, templates); `bookingCancelErrorMessage` em passenger e admin
 
 ## Autenticação
 
@@ -48,11 +48,12 @@
 
 - [x] Lista "minhas inscrições" (`/_protected/my-bookings`)
 - [x] Detalhe da inscrição (`/_protected/my-bookings/$bookingId`)
-- [x] Reservar viagem (`/_protected/trips/$orgId/$tripId/book`)
-- [x] Cancelar inscrição (do próprio passageiro)
+- [x] Reservar viagem (`/_protected/trips/$orgId/$tripId/book`) — paradas selecionáveis via `<Select>` com validação anti-duplicado
+- [x] Cancelar inscrição (do próprio passageiro) — mensagens PT-BR estáveis via `bookingCancelErrorMessage`
 - [x] Lista de organizações (`/_protected/organizations`)
 - [x] Lista de viagens de uma org (`/_protected/trips/$orgId`)
-- [x] Detalhe de viagem (`/_protected/trips/$orgId/$tripId`)
+- [x] Detalhe de viagem — tela única em `/public/trip-instances/$id` (funciona logado e deslogado; intermediário `/_protected/trips/$orgId/$tripId` removido por ser duplicado)
+- [x] Guard contra inscrição duplicada (`useUserBookingForTrip`) — botão "Inscrever-se" vira "Ver inscrição" e `/book` redireciona se já há booking ATIVO
 - [x] Profile (visualizar, editar nome/email, alterar senha)
 - [ ] Notificação quando viagem reservada é cancelada/alterada
 
@@ -133,7 +134,8 @@
 - [x] Tela `/_admin/payments` — lista paginada com "Carregar mais", badges (`PENDING`/`CONFIRMED`/`FAILED`), formatação BRL — W3.2
 - [x] Modal de upgrade — `UpgradePlanDialog` em `_admin.organization.tsx`: lista planos via `plansService.list()`, RadioGroup, troca/cria subscription via `POST /organizations/{id}/subscriptions` ou `PATCH .../{id}` — W3.3
 - [x] Plan-usage em uma chamada — `subscriptionsService.getPlanUsage()` consome `GET /organizations/{id}/plan-usage`; `PlanCard` mostra Veículos / Motoristas / Viagens este mês alinhado com `PlanLimitService` do backend — W3.5
-- [ ] Plugar `handleApiError` em `_admin.payments` e `_admin.templates` (hoje usam `toast.error(err.message)` cru) — W3.6
+- [x] `handleApiError` plugado em `_admin.payments` e `_admin.templates` — W3.6
+- [x] `bookingCancelErrorMessage` em `useBookingDetail` (passenger) — W3.7
 
 ## Landing & Onboarding
 
@@ -162,10 +164,21 @@
 - **Padrão dual de fetching**: rotas passenger usam feature hooks (`useTrips`, `useBookings`); rotas admin usam `useState + useEffect + service.then()` direto. Convergir um padrão único.
 - **Tokens em localStorage**: vetor XSS aceito no MVP. Revisitar antes de produção comercial (Fase 4).
 - **`RoleContext` pega só `orgs[0]`**: ver ADR-001.
-- **`useTripDetail` (passenger) ainda usa `getPublicById`**: o endpoint público não traz `template`/`bookedCount` enriquecidos. Migrar pra `getById` (JWT) já que a rota é protegida — desbloqueia também o cálculo correto de "lotada" no passenger.
 - **`TokenResponse.user` sem `telephone`**: profile faz `/users/me` extra após login.
 - **Sem endpoint `/trip-instances/driver/me`**: bloqueia driver flow (W4 / Fase 1 do roadmap).
 - **`DELETE /drivers/{id}` parece hard-delete**: inconsistente com o padrão soft dos outros recursos.
+- **`useUserBookingForTrip` faz `listForUser` completo**: client-side filtering pra detectar duplicata. Funciona, mas se a lista crescer, considerar endpoint dedicado (ex: `GET /bookings/by-trip/{tripId}/mine`) ou cache.
+
+## Resolvido em 2026-05-10
+
+- ~~B1 "Ver detalhes" pedia role de admin~~: parent `_protected.trips.$orgId.tsx` não tinha `<Outlet />`; ao navegar pro filho, disparava o fetch admin-only e dava 403. Adicionado Outlet pattern (renderiza filhos quando pathname é filho), e a tela duplicada `_protected.trips.$orgId.$tripId.tsx` foi removida (consolidada em `/public/trip-instances/$id`).
+- ~~B2 Viagens aparecem como "lotadas"~~: `/public/organizations/$slug` usava fallback `?? 0`; trocado por `?? trip.totalCapacity` (endpoint público não retorna `availableSlots`).
+- ~~Bug de inscrição duplicada~~: `useUserBookingForTrip` checa booking ATIVO do usuário; UI vira "Ver inscrição" e `/book` redireciona/desabilita submit.
+- ~~Form de booking pedia digitação livre~~: trocado por `<Select>` listando as paradas da viagem (origem + stops + destino), com opção espelhada desabilitada no outro select e validação Zod `embarque !== desembarque`.
+- ~~`useTripDetail` (passenger) usava `getPublicById` magro~~: agora aceita `{ authenticated: true }` que rota o fetch pra `getById` (JWT, enriquecido).
+- ~~W3.6 `handleApiError` faltando em payments/templates~~: plugado.
+- ~~W3.7 cancel de booking do passenger sem mensagens PT-BR~~: `useBookingDetail` usa `bookingCancelErrorMessage`.
+- ~~Warnings `react-hooks/exhaustive-deps` em drivers/templates~~: `loadDrivers`/`loadTemplates` viraram `useCallback([adminOrgId])`.
 
 ## Resolvido em 2026-05-09
 

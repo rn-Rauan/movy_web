@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, MapPin, Pencil, Trash2, X } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -164,7 +164,7 @@ function TemplatesPage() {
   const [deleteTarget, setDeleteTarget] = useState<TripTemplate | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  function loadTemplates() {
+  const loadTemplates = useCallback(() => {
     if (!adminOrgId) return;
     templatesService
       .listByOrgId(adminOrgId)
@@ -173,15 +173,14 @@ function TemplatesPage() {
         setTemplates(list);
       })
       .catch((err) => {
-        const msg = err instanceof Error ? err.message : "Erro ao carregar templates";
-        setError(msg);
-        toast.error(msg);
+        setError(err instanceof Error ? err.message : "Erro ao carregar templates");
+        handleApiError(err, "Erro ao carregar templates");
       });
-  }
+  }, [adminOrgId]);
 
   useEffect(() => {
     loadTemplates();
-  }, [adminOrgId]);
+  }, [loadTemplates]);
 
   function openCreate() {
     setEditing(null);

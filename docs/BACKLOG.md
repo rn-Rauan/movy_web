@@ -2,37 +2,15 @@
 
 > Lista priorizada das próximas tarefas. Cada uma deve ser concluível em 1–3 dias. Pra contexto estratégico, ver [ROADMAP.md](./ROADMAP.md). Pra estado geral, ver [PROGRESS.md](./PROGRESS.md). Pra contexto de retomada, ver [HANDOFF.md](./HANDOFF.md).
 
-**Última atualização:** 2026-05-09 (W3 100% fechado — backend entregou plan-usage + detalhe enriquecido + error codes; admin migrado · Bugs do passenger e Driver Flow são as próximas frentes)
+**Última atualização:** 2026-05-10 (W3 100% fechado · bugs B1/B2 do passenger resolvidos · consolidação de telas de detalhe + guard de duplicata feitos · próxima frente: Driver Flow, bloqueado por backend)
 
 **Como usar:** Pegue do topo. Quando concluir, marque o item correspondente em PROGRESS.md e remova daqui.
 
 ---
 
-## Top próximas — Bugs do passenger (rápido)
+## Top próximas — Driver Flow (Fase 1 do ROADMAP)
 
-Reportados pelo usuário em 2026-05-09 — afetam a experiência do passageiro logado.
-
-### B1. "Ver detalhes" pede role de admin
-
-**Sintoma:** ao clicar em "Ver detalhes" de uma viagem (provavelmente a partir de `PublicTripCard` ou da landing), a navegação cai numa rota guardada por `_admin`. Investigar `Link to="/_admin/trips/..."` indevido em componentes do passenger.
-
-**Suspeitos:** `src/features/trips/components/PublicTripCard.tsx`, `TripDetailView.tsx`, `index.tsx` (redirects).
-
----
-
-### B2. Viagens aparecem como "lotadas"
-
-**Sintoma:** no menu do user (passenger), todas as viagens mostram "lotada" mesmo quando há vagas. Provavelmente `bookedCount`/`availableSlots` chegando `undefined` e o componente comparando com 0 / `totalCapacity`.
-
-**Causa provável:** `useTripDetail` em `src/features/trips/hooks/useTripDetail.ts` ainda usa `tripsService.getPublicById` — endpoint público que **não** retorna `bookedCount`/`availableSlots` enriquecidos. Migrar pra `tripsService.getById` (a rota já é `_protected`, então JWT está disponível). Mesma raiz da dívida técnica fechada do lado admin hoje.
-
-**Aceite:** passenger vê "X / Y lugares" correto e botão "Inscrever-se" só desabilita quando realmente não há vaga.
-
----
-
-## Em seguida — Driver Flow (Fase 1 do ROADMAP)
-
-Bloqueado pelo backend até existir `GET /trip-instances/driver/me` (ou equivalente).
+**Bloqueado pelo backend** até existir `GET /trip-instances/driver/me` (ou equivalente). Pedir ao backend antes de começar.
 
 ### D1. Driver — listar viagens designadas
 
@@ -80,27 +58,15 @@ Bloqueado pelo backend até existir `GET /trip-instances/driver/me` (ou equivale
 
 ---
 
-## Pendências W3 (não-bloqueantes)
-
-### W3.6 — Plugar `handleApiError` em `_admin.payments` e `_admin.templates`
-
-Hoje essas duas rotas usam `toast.error(err.message)` cru — perdem o redirect contextual de 403 limite-de-plano e o mapeamento de `errorCode`.
-
-### W3.7 — Aplicar `bookingCancelErrorMessage` em `BookingDetailView` (passenger)
-
-Helper já existe em `lib/handle-error.ts` e é usado em `_admin.trips.$tripId`. Falta plugar no fluxo do passenger (`features/bookings/components/BookingDetailView.tsx`).
-
----
-
 ## Limpeza pendente
 
 ### P1. Profile — telephone
 
 **O quê:** Tipo `AuthUser` não tem `telephone`. Signup B2C envia o campo, profile envia no update, mas não há como exibir. Pedir backend pra incluir `telephone` em `TokenResponse.user`. `GET /users/me` já retorna. Depois adicionar no `AuthUser` e renderizar no `_protected.profile.tsx`.
 
-### P3. `react-hooks/exhaustive-deps` warnings
+### P2. Endpoint dedicado pra checar booking duplicado (opcional)
 
-Resolver em `_admin.drivers.tsx` e `_admin.templates.tsx` — embrulhar `loadX` em `useCallback` ou inlinear na useEffect.
+Hoje `useUserBookingForTrip` baixa `listForUser` inteiro e filtra client-side. Se a lista crescer, considerar `GET /bookings/by-trip/{tripId}/mine` no backend, ou adotar React Query pra cachear.
 
 ---
 
@@ -110,7 +76,7 @@ Resolver em `_admin.drivers.tsx` e `_admin.templates.tsx` — embrulhar `loadX` 
 - Notificação in-app: passageiro vê badge quando viagem reservada muda de status
 - Adotar React Query em uma rota piloto (sugerido: `/_admin/trips`) — ver ADR-002
 - Convergir padrão de fetching: definir e migrar (passenger usa hooks, admin imperativo)
-- Generalizar `handleApiError` para todos os fluxos (já existe em `lib/handle-error.ts`, plugar nas rotas restantes)
+- Filtros + busca + ordenação no marketplace público
 
 ---
 
@@ -118,7 +84,6 @@ Resolver em `_admin.drivers.tsx` e `_admin.templates.tsx` — embrulhar `loadX` 
 
 Títulos pra não esquecer — refinar antes de começar:
 
-- Filtros + busca + ordenação no marketplace público
 - Dashboard rico (receita prevista vs. realizada, ocupação, top rotas)
 - Multi-organização (encerra ADR-001)
 - Pagamento real (Pix)

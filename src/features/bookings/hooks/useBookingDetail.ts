@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { bookingsService } from "@/services/bookings.service";
+import { bookingCancelErrorMessage } from "@/lib/handle-error";
 import type { BookingDetails } from "@/lib/types";
 
 export function useBookingDetail(bookingId: string) {
@@ -29,7 +30,7 @@ export function useBookingDetail(bookingId: string) {
       toast.success("Inscrição cancelada.");
       reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao cancelar");
+      toast.error(bookingCancelErrorMessage(err, "Falha ao cancelar"));
     } finally {
       setCancelling(false);
     }
