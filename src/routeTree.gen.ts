@@ -32,7 +32,6 @@ import { Route as ProtectedDriverMyTripsRouteImport } from './routes/_protected.
 import { Route as ProtectedAdminTripsRouteImport } from './routes/_protected._admin.trips'
 import { Route as ProtectedAdminTemplatesRouteImport } from './routes/_protected._admin.templates'
 import { Route as ProtectedAdminOrganizationRouteImport } from './routes/_protected._admin.organization'
-import { Route as ProtectedAdminDriversRouteImport } from './routes/_protected._admin.drivers'
 import { Route as ProtectedAdminDashboardRouteImport } from './routes/_protected._admin.dashboard'
 import { Route as ProtectedAdminTripsTripIdRouteImport } from './routes/_protected._admin.trips.$tripId'
 import { Route as ProtectedTripsOrgIdTripIdBookRouteImport } from './routes/_protected.trips.$orgId.$tripId.book'
@@ -153,11 +152,6 @@ const ProtectedAdminOrganizationRoute =
     path: '/organization',
     getParentRoute: () => ProtectedAdminRoute,
   } as any)
-const ProtectedAdminDriversRoute = ProtectedAdminDriversRouteImport.update({
-  id: '/drivers',
-  path: '/drivers',
-  getParentRoute: () => ProtectedAdminRoute,
-} as any)
 const ProtectedAdminDashboardRoute = ProtectedAdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -188,7 +182,6 @@ export interface FileRoutesByFullPath {
   '/signup/empresa': typeof SignupEmpresaRoute
   '/signup/': typeof SignupIndexRoute
   '/dashboard': typeof ProtectedAdminDashboardRoute
-  '/drivers': typeof ProtectedAdminDriversRoute
   '/organization': typeof ProtectedAdminOrganizationRoute
   '/templates': typeof ProtectedAdminTemplatesRoute
   '/trips': typeof ProtectedAdminTripsRouteWithChildren
@@ -212,7 +205,6 @@ export interface FileRoutesByTo {
   '/signup/empresa': typeof SignupEmpresaRoute
   '/signup': typeof SignupIndexRoute
   '/dashboard': typeof ProtectedAdminDashboardRoute
-  '/drivers': typeof ProtectedAdminDriversRoute
   '/organization': typeof ProtectedAdminOrganizationRoute
   '/templates': typeof ProtectedAdminTemplatesRoute
   '/trips': typeof ProtectedAdminTripsRouteWithChildren
@@ -242,7 +234,6 @@ export interface FileRoutesById {
   '/signup/empresa': typeof SignupEmpresaRoute
   '/signup/': typeof SignupIndexRoute
   '/_protected/_admin/dashboard': typeof ProtectedAdminDashboardRoute
-  '/_protected/_admin/drivers': typeof ProtectedAdminDriversRoute
   '/_protected/_admin/organization': typeof ProtectedAdminOrganizationRoute
   '/_protected/_admin/templates': typeof ProtectedAdminTemplatesRoute
   '/_protected/_admin/trips': typeof ProtectedAdminTripsRouteWithChildren
@@ -270,7 +261,6 @@ export interface FileRouteTypes {
     | '/signup/empresa'
     | '/signup/'
     | '/dashboard'
-    | '/drivers'
     | '/organization'
     | '/templates'
     | '/trips'
@@ -294,7 +284,6 @@ export interface FileRouteTypes {
     | '/signup/empresa'
     | '/signup'
     | '/dashboard'
-    | '/drivers'
     | '/organization'
     | '/templates'
     | '/trips'
@@ -323,7 +312,6 @@ export interface FileRouteTypes {
     | '/signup/empresa'
     | '/signup/'
     | '/_protected/_admin/dashboard'
-    | '/_protected/_admin/drivers'
     | '/_protected/_admin/organization'
     | '/_protected/_admin/templates'
     | '/_protected/_admin/trips'
@@ -510,13 +498,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedAdminOrganizationRouteImport
       parentRoute: typeof ProtectedAdminRoute
     }
-    '/_protected/_admin/drivers': {
-      id: '/_protected/_admin/drivers'
-      path: '/drivers'
-      fullPath: '/drivers'
-      preLoaderRoute: typeof ProtectedAdminDriversRouteImport
-      parentRoute: typeof ProtectedAdminRoute
-    }
     '/_protected/_admin/dashboard': {
       id: '/_protected/_admin/dashboard'
       path: '/dashboard'
@@ -554,7 +535,6 @@ const ProtectedAdminTripsRouteWithChildren =
 
 interface ProtectedAdminRouteChildren {
   ProtectedAdminDashboardRoute: typeof ProtectedAdminDashboardRoute
-  ProtectedAdminDriversRoute: typeof ProtectedAdminDriversRoute
   ProtectedAdminOrganizationRoute: typeof ProtectedAdminOrganizationRoute
   ProtectedAdminTemplatesRoute: typeof ProtectedAdminTemplatesRoute
   ProtectedAdminTripsRoute: typeof ProtectedAdminTripsRouteWithChildren
@@ -562,7 +542,6 @@ interface ProtectedAdminRouteChildren {
 
 const ProtectedAdminRouteChildren: ProtectedAdminRouteChildren = {
   ProtectedAdminDashboardRoute: ProtectedAdminDashboardRoute,
-  ProtectedAdminDriversRoute: ProtectedAdminDriversRoute,
   ProtectedAdminOrganizationRoute: ProtectedAdminOrganizationRoute,
   ProtectedAdminTemplatesRoute: ProtectedAdminTemplatesRoute,
   ProtectedAdminTripsRoute: ProtectedAdminTripsRouteWithChildren,
