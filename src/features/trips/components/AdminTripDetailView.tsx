@@ -1,8 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { User, Bus, Users, Clock, MapPin } from "lucide-react";
-import { AppShell } from "@/components/layout/AppShell";
+import { useState } from "react";
+import { Bus, Clock, MapPin, User, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,29 +20,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { LoadingList } from "@/components/feedback/LoadingList";
-import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { BookingRow } from "@/features/bookings/components/BookingRow";
-import { useRole } from "@/lib/role-context";
-import { tripsService } from "@/services/trips.service";
-import { bookingsService } from "@/services/bookings.service";
-import { driversService } from "@/services/drivers.service";
-import { vehiclesService } from "@/services/vehicles.service";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
-import { handleApiError, bookingCancelErrorMessage } from "@/lib/handle-error";
 import type {
-  TripInstance,
-  TripStatus,
-  TripPassenger,
-  Driver,
-  Vehicle,
   Booking,
-  Paginated,
+  Driver,
+  TripInstance,
+  TripPassenger,
+  TripStatus,
+  Vehicle,
 } from "@/lib/types";
-
-export const Route = createFileRoute("/_protected/_admin/trips/$tripId")({
-  component: TripDetailPage,
-});
 
 const STATUS_TRANSITIONS: Record<TripStatus, TripStatus[]> = {
   DRAFT: ["SCHEDULED", "CANCELED"],
@@ -65,156 +49,41 @@ const STATUS_ACTION_LABEL: Record<TripStatus, string> = {
   DRAFT: "",
 };
 
-function TripDetailPage() {
-  const { tripId } = Route.useParams();
-  const { adminOrgId } = useRole();
-  const navigate = useNavigate();
+type Props = {
+  trip: TripInstance;
+  passengers: TripPassenger[];
+  bookings: Booking[];
+  drivers: Driver[];
+  vehicles: Vehicle[];
+  transitioning: boolean;
+  assigningDriver: boolean;
+  assigningVehicle: boolean;
+  busyBookingId: string | null;
+  onTransition: (s: TripStatus) => void;
+  onAssignDriver: (id: string) => void;
+  onAssignVehicle: (id: string) => void;
+  onConfirmPresence: (id: string) => void;
+  onCancelBooking: (id: string) => Promise<void>;
+};
 
-  const [trip, setTrip] = useState<TripInstance | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [passengers, setPassengers] = useState<TripPassenger[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-
-  const [transitioning, setTransitioning] = useState(false);
+export function AdminTripDetailView({
+  trip,
+  passengers,
+  bookings,
+  drivers,
+  vehicles,
+  transitioning,
+  assigningDriver,
+  assigningVehicle,
+  busyBookingId,
+  onTransition,
+  onAssignDriver,
+  onAssignVehicle,
+  onConfirmPresence,
+  onCancelBooking,
+}: Props) {
   const [cancelDialog, setCancelDialog] = useState(false);
-  const [assigningDriver, setAssigningDriver] = useState(false);
-  const [assigningVehicle, setAssigningVehicle] = useState(false);
-  const [busyBookingId, setBusyBookingId] = useState<string | null>(null);
   const [cancelBooking, setCancelBooking] = useState<Booking | null>(null);
-
-  useEffect(() => {
-    tripsService
-      .getById(tripId)
-      .then(setTrip)
-      .catch((err) => setError(err instanceof Error ? err.message : "Erro ao carregar viagem"));
-  }, [tripId]);
-
-  useEffect(() => {
-    if (!tripId || !trip) return;
-    tripsService
-      .listPassengers(tripId)
-      .then(setPassengers)
-      .catch(() => {});
-    bookingsService
-      .listByTripInstance(tripId)
-      .then((res) =>
-        setBookings(Array.isArray(res) ? res : ((res as Paginated<Booking>).data ?? [])),
-      )
-      .catch(() => {});
-  }, [tripId, trip]);
-
-  useEffect(() => {
-    if (!adminOrgId) return;
-    driversService
-      .listByOrgId(adminOrgId)
-      .then((res) => setDrivers(Array.isArray(res) ? res : (res.data ?? [])))
-      .catch(() => {});
-    vehiclesService
-      .listByOrgId(adminOrgId)
-      .then((res) => setVehicles(Array.isArray(res) ? res : (res.data ?? [])))
-      .catch(() => {});
-  }, [adminOrgId]);
-
-  async function transitionStatus(newStatus: TripStatus) {
-    if (!trip) return;
-    setTransitioning(true);
-    try {
-      const updated = await tripsService.updateStatus(trip.id, newStatus);
-      setTrip(updated);
-      toast.success(`Viagem ${statusLabel(newStatus).toLowerCase()}`);
-      if (newStatus === "CANCELED") navigate({ to: "/trips" });
-    } catch (err) {
-      handleApiError(err, "Erro ao atualizar status");
-    } finally {
-      setTransitioning(false);
-      setCancelDialog(false);
-    }
-  }
-
-  async function handleDriverChange(driverId: string) {
-    if (!trip) return;
-    setAssigningDriver(true);
-    try {
-      const updated = await tripsService.assignDriver(
-        trip.id,
-        driverId === "none" ? undefined : driverId,
-      );
-      setTrip(updated);
-      toast.success("Motorista atualizado");
-    } catch (err) {
-      handleApiError(err, "Erro ao atribuir motorista");
-    } finally {
-      setAssigningDriver(false);
-    }
-  }
-
-  async function handleConfirmPresence(bookingId: string) {
-    setBusyBookingId(bookingId);
-    try {
-      const updated = await bookingsService.confirmPresence(bookingId);
-      setBookings((prev) => prev.map((b) => (b.id === bookingId ? updated : b)));
-      toast.success("Presença confirmada");
-    } catch (err) {
-      handleApiError(err, "Erro ao confirmar presença");
-    } finally {
-      setBusyBookingId(null);
-    }
-  }
-
-  async function handleCancelBooking(bookingId: string) {
-    setBusyBookingId(bookingId);
-    try {
-      const updated = await bookingsService.cancel(bookingId);
-      setBookings((prev) => prev.map((b) => (b.id === bookingId ? updated : b)));
-      toast.success("Inscrição cancelada");
-      try {
-        const refreshed = await tripsService.getById(tripId);
-        setTrip(refreshed);
-      } catch {
-        // silent
-      }
-    } catch (err) {
-      toast.error(bookingCancelErrorMessage(err));
-    } finally {
-      setBusyBookingId(null);
-      setCancelBooking(null);
-    }
-  }
-
-  async function handleVehicleChange(vehicleId: string) {
-    if (!trip) return;
-    setAssigningVehicle(true);
-    try {
-      const updated = await tripsService.assignVehicle(
-        trip.id,
-        vehicleId === "none" ? undefined : vehicleId,
-      );
-      setTrip(updated);
-      toast.success("Veículo atualizado");
-    } catch (err) {
-      handleApiError(err, "Erro ao atribuir veículo");
-    } finally {
-      setAssigningVehicle(false);
-    }
-  }
-
-  if (error) {
-    return (
-      <AppShell title="Viagem" back>
-        <ErrorCard message={error} />
-      </AppShell>
-    );
-  }
-
-  if (!trip) {
-    return (
-      <AppShell title="Viagem" back>
-        <LoadingList count={3} height="h-24" />
-      </AppShell>
-    );
-  }
 
   const transitions = STATUS_TRANSITIONS[trip.tripStatus] ?? [];
   const canEdit = !["FINISHED", "CANCELED"].includes(trip.tripStatus);
@@ -225,8 +94,7 @@ function TripDetailPage() {
   const stops = trip.template?.stops ?? [];
 
   return (
-    <AppShell title="Detalhes da viagem" back>
-      {/* Header card */}
+    <>
       <Card className="p-4 mb-3">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
@@ -265,7 +133,6 @@ function TripDetailPage() {
         )}
       </Card>
 
-      {/* Driver assignment */}
       {canEdit && (
         <Card className="p-4 mb-3">
           <div className="flex items-center gap-2 mb-2 text-sm font-medium">
@@ -273,7 +140,7 @@ function TripDetailPage() {
           </div>
           <Select
             value={trip.driverId ?? "none"}
-            onValueChange={handleDriverChange}
+            onValueChange={onAssignDriver}
             disabled={assigningDriver}
           >
             <SelectTrigger>
@@ -291,7 +158,6 @@ function TripDetailPage() {
         </Card>
       )}
 
-      {/* Vehicle assignment */}
       {canEdit && (
         <Card className="p-4 mb-3">
           <div className="flex items-center gap-2 mb-2 text-sm font-medium">
@@ -299,7 +165,7 @@ function TripDetailPage() {
           </div>
           <Select
             value={trip.vehicleId ?? "none"}
-            onValueChange={handleVehicleChange}
+            onValueChange={onAssignVehicle}
             disabled={assigningVehicle}
           >
             <SelectTrigger>
@@ -317,14 +183,13 @@ function TripDetailPage() {
         </Card>
       )}
 
-      {/* Status actions */}
       {transitions.length > 0 && (
         <div className="space-y-2 mb-3">
           {nonCancelTransitions.map((next) => (
             <Button
               key={next}
               className="w-full"
-              onClick={() => transitionStatus(next)}
+              onClick={() => onTransition(next)}
               disabled={transitioning}
             >
               {transitioning ? "Atualizando..." : STATUS_ACTION_LABEL[next]}
@@ -343,7 +208,6 @@ function TripDetailPage() {
         </div>
       )}
 
-      {/* Bookings list */}
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3 text-sm font-medium">
           <Users className="h-4 w-4" />
@@ -360,7 +224,7 @@ function TripDetailPage() {
                 key={b.id}
                 booking={b}
                 passengerName={namesByUserId.get(b.userId)}
-                onConfirmPresence={handleConfirmPresence}
+                onConfirmPresence={onConfirmPresence}
                 onCancel={(id) => {
                   const target = bookings.find((x) => x.id === id);
                   if (target) setCancelBooking(target);
@@ -372,7 +236,6 @@ function TripDetailPage() {
         )}
       </Card>
 
-      {/* Cancel trip confirmation */}
       <AlertDialog open={cancelDialog} onOpenChange={setCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -384,7 +247,10 @@ function TripDetailPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Voltar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => transitionStatus("CANCELED")}
+              onClick={() => {
+                onTransition("CANCELED");
+                setCancelDialog(false);
+              }}
               disabled={transitioning}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
@@ -394,7 +260,6 @@ function TripDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Cancel booking confirmation */}
       <AlertDialog open={!!cancelBooking} onOpenChange={(o) => !o && setCancelBooking(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -408,7 +273,12 @@ function TripDetailPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Voltar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => cancelBooking && handleCancelBooking(cancelBooking.id)}
+              onClick={async () => {
+                if (cancelBooking) {
+                  await onCancelBooking(cancelBooking.id);
+                  setCancelBooking(null);
+                }
+              }}
               disabled={busyBookingId === cancelBooking?.id}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
@@ -417,6 +287,6 @@ function TripDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AppShell>
+    </>
   );
 }

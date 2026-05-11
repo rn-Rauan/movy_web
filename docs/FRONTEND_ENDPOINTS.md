@@ -73,10 +73,10 @@ Chamados automaticamente após login:
 
 **Arquivo:** `src/routes/public.trip-instances.$id.tsx` — consolidado em 2026-05-10. A rota protegida `/_protected/trips/:orgId/:tripId` foi removida.
 
-| Ação                                  | Método | Endpoint                          | Acesso |
-| ------------------------------------- | ------ | --------------------------------- | ------ |
-| Carregar dados da viagem              | GET    | `/public/trip-instances/{tripId}` | 🌐     |
-| Listar bookings do usuário (duplicata)| GET    | `/bookings/user`                  | 🔒 JWT |
+| Ação                                   | Método | Endpoint                          | Acesso |
+| -------------------------------------- | ------ | --------------------------------- | ------ |
+| Carregar dados da viagem               | GET    | `/public/trip-instances/{tripId}` | 🌐     |
+| Listar bookings do usuário (duplicata) | GET    | `/bookings/user`                  | 🔒 JWT |
 
 ---
 

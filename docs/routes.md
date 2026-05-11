@@ -179,12 +179,12 @@ A tela de detalhe foi consolidada em `/public/trip-instances/$id` (funciona loga
 **Arquivo:** `src/routes/_protected.trips.$orgId.$tripId.book.tsx`  
 **Parâmetros:** `orgId`, `tripId`
 
-| Campo            | Opções                                                                          |
-| ---------------- | ------------------------------------------------------------------------------- |
-| `enrollmentType` | `ONE_WAY` · `RETURN` · `ROUND_TRIP`                                             |
-| `boardingStop`   | `<Select>` — lista de paradas da viagem (origem + template.stops + destino)     |
-| `alightingStop`  | `<Select>` — mesma lista; a opção igual ao embarque fica disabled               |
-| `method`         | `MONEY` · `PIX` · `CREDIT_CARD` · `DEBIT_CARD`                                  |
+| Campo            | Opções                                                                      |
+| ---------------- | --------------------------------------------------------------------------- |
+| `enrollmentType` | `ONE_WAY` · `RETURN` · `ROUND_TRIP`                                         |
+| `boardingStop`   | `<Select>` — lista de paradas da viagem (origem + template.stops + destino) |
+| `alightingStop`  | `<Select>` — mesma lista; a opção igual ao embarque fica disabled           |
+| `method`         | `MONEY` · `PIX` · `CREDIT_CARD` · `DEBIT_CARD`                              |
 
 - Hook: `useBookingForm()` — schema Zod com `.refine(boarding !== alighting)`
 - Hook: `useUserBookingForTrip(tripId)` — se já há booking ATIVO, redireciona pra `/my-bookings/$bookingId` com `replace: true`
