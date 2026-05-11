@@ -31,7 +31,6 @@ import { Route as ProtectedBookingsSuccessBookingIdRouteImport } from './routes/
 import { Route as ProtectedDriverMyTripsRouteImport } from './routes/_protected._driver.my-trips'
 import { Route as ProtectedAdminOrganizationRouteImport } from './routes/_protected._admin.organization'
 import { Route as ProtectedAdminDashboardRouteImport } from './routes/_protected._admin.dashboard'
-import { Route as ProtectedAdminTripsTripIdRouteImport } from './routes/_protected._admin.trips.$tripId'
 import { Route as ProtectedTripsOrgIdTripIdBookRouteImport } from './routes/_protected.trips.$orgId.$tripId.book'
 
 const SignupRoute = SignupRouteImport.update({
@@ -145,12 +144,6 @@ const ProtectedAdminDashboardRoute = ProtectedAdminDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => ProtectedAdminRoute,
 } as any)
-const ProtectedAdminTripsTripIdRoute =
-  ProtectedAdminTripsTripIdRouteImport.update({
-    id: '/trips/$tripId',
-    path: '/trips/$tripId',
-    getParentRoute: () => ProtectedAdminRoute,
-  } as any)
 const ProtectedTripsOrgIdTripIdBookRoute =
   ProtectedTripsOrgIdTripIdBookRouteImport.update({
     id: '/$tripId/book',
@@ -178,7 +171,6 @@ export interface FileRoutesByFullPath {
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
   '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
-  '/trips/$tripId': typeof ProtectedAdminTripsTripIdRoute
   '/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesByTo {
@@ -199,7 +191,6 @@ export interface FileRoutesByTo {
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
   '/public/trip-instances': typeof PublicTripInstancesIndexRoute
-  '/trips/$tripId': typeof ProtectedAdminTripsTripIdRoute
   '/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesById {
@@ -226,7 +217,6 @@ export interface FileRoutesById {
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
   '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
-  '/_protected/_admin/trips/$tripId': typeof ProtectedAdminTripsTripIdRoute
   '/_protected/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
 export interface FileRouteTypes {
@@ -251,7 +241,6 @@ export interface FileRouteTypes {
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
     | '/public/trip-instances/'
-    | '/trips/$tripId'
     | '/trips/$orgId/$tripId/book'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -272,7 +261,6 @@ export interface FileRouteTypes {
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
     | '/public/trip-instances'
-    | '/trips/$tripId'
     | '/trips/$orgId/$tripId/book'
   id:
     | '__root__'
@@ -298,7 +286,6 @@ export interface FileRouteTypes {
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
     | '/public/trip-instances/'
-    | '/_protected/_admin/trips/$tripId'
     | '/_protected/trips/$orgId/$tripId/book'
   fileRoutesById: FileRoutesById
 }
@@ -467,13 +454,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedAdminDashboardRouteImport
       parentRoute: typeof ProtectedAdminRoute
     }
-    '/_protected/_admin/trips/$tripId': {
-      id: '/_protected/_admin/trips/$tripId'
-      path: '/trips/$tripId'
-      fullPath: '/trips/$tripId'
-      preLoaderRoute: typeof ProtectedAdminTripsTripIdRouteImport
-      parentRoute: typeof ProtectedAdminRoute
-    }
     '/_protected/trips/$orgId/$tripId/book': {
       id: '/_protected/trips/$orgId/$tripId/book'
       path: '/$tripId/book'
@@ -487,13 +467,11 @@ declare module '@tanstack/react-router' {
 interface ProtectedAdminRouteChildren {
   ProtectedAdminDashboardRoute: typeof ProtectedAdminDashboardRoute
   ProtectedAdminOrganizationRoute: typeof ProtectedAdminOrganizationRoute
-  ProtectedAdminTripsTripIdRoute: typeof ProtectedAdminTripsTripIdRoute
 }
 
 const ProtectedAdminRouteChildren: ProtectedAdminRouteChildren = {
   ProtectedAdminDashboardRoute: ProtectedAdminDashboardRoute,
   ProtectedAdminOrganizationRoute: ProtectedAdminOrganizationRoute,
-  ProtectedAdminTripsTripIdRoute: ProtectedAdminTripsTripIdRoute,
 }
 
 const ProtectedAdminRouteWithChildren = ProtectedAdminRoute._addFileChildren(
