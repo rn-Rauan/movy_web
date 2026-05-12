@@ -49,6 +49,16 @@ const STATUS_ACTION_LABEL: Record<TripStatus, string> = {
   DRAFT: "",
 };
 
+const DRIVER_STATUS_LABEL: Record<Driver["driverStatus"], string> = {
+  ACTIVE: "Ativo",
+  INACTIVE: "Inativo",
+  SUSPENDED: "Suspenso",
+};
+
+function driverPrimaryLabel(d: Driver) {
+  return d.userName?.trim() || d.userEmail?.trim() || `Motorista ${d.id.slice(0, 6)}`;
+}
+
 type Props = {
   trip: TripInstance;
   passengers: TripPassenger[];
@@ -92,6 +102,7 @@ export function AdminTripDetailView({
   const origin = trip.template?.origin ?? trip.departurePoint;
   const destination = trip.template?.destination ?? trip.destination;
   const stops = trip.template?.stops ?? [];
+  const assignedDriver = drivers.find((d) => d.id === trip.driverId) ?? null;
 
   return (
     <>
@@ -135,9 +146,42 @@ export function AdminTripDetailView({
 
       {canEdit && (
         <Card className="p-4 mb-3">
-          <div className="flex items-center gap-2 mb-2 text-sm font-medium">
+          <div className="flex items-center gap-2 mb-3 text-sm font-medium">
             <User className="h-4 w-4" /> Motorista
           </div>
+
+          {assignedDriver && (
+            <div className="mb-3 rounded-lg border border-border bg-muted/30 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate">
+                    {driverPrimaryLabel(assignedDriver)}
+                  </div>
+                  {assignedDriver.userEmail && assignedDriver.userName && (
+                    <div className="text-xs text-muted-foreground truncate">
+                      {assignedDriver.userEmail}
+                    </div>
+                  )}
+                </div>
+                <Badge
+                  variant={assignedDriver.driverStatus === "ACTIVE" ? "default" : "outline"}
+                  className="text-xs shrink-0"
+                >
+                  {DRIVER_STATUS_LABEL[assignedDriver.driverStatus]}
+                </Badge>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                <span>CNH {assignedDriver.cnh}</span>
+                <span>·</span>
+                <span>Cat. {assignedDriver.cnhCategory}</span>
+                <span>·</span>
+                <span>
+                  Val. {new Date(assignedDriver.cnhExpiresAt).toLocaleDateString("pt-BR")}
+                </span>
+              </div>
+            </div>
+          )}
+
           <Select
             value={trip.driverId ?? "none"}
             onValueChange={onAssignDriver}
@@ -149,8 +193,13 @@ export function AdminTripDetailView({
             <SelectContent>
               <SelectItem value="none">Sem motorista</SelectItem>
               {drivers.map((d) => (
-                <SelectItem key={d.id} value={d.id}>
-                  {d.userName ? `${d.userName} — CNH ${d.cnh}` : `CNH ${d.cnh}`}
+                <SelectItem key={d.id} value={d.id} textValue={driverPrimaryLabel(d)}>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{driverPrimaryLabel(d)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      CNH {d.cnh} · Cat. {d.cnhCategory}
+                    </span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>

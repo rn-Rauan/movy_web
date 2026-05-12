@@ -7,7 +7,7 @@ import type { TripInstance } from "@/lib/types";
 
 export function AdminTripCard({ trip: t }: { trip: TripInstance }) {
   return (
-    <Link to="/trips/$tripId" params={{ tripId: t.id }} className="block">
+    <Link to="/trip/$tripId" params={{ tripId: t.id }} className="block">
       <Card className="p-4 hover:bg-accent/50 transition-colors">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="text-sm font-semibold">{formatDateTime(t.departureTime)}</div>

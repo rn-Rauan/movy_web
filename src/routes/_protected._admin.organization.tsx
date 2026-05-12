@@ -7,8 +7,6 @@ import {
   Phone,
   MapPin,
   Hash,
-  Plus,
-  Trash2,
   Car,
   Users,
   ChevronRight,
@@ -24,25 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
@@ -85,26 +65,6 @@ const orgSchema = z.object({
     .or(z.literal("")),
 });
 
-const vehicleSchema = z.object({
-  plate: z
-    .string()
-    .trim()
-    .min(7, "Placa deve ter 7 caracteres")
-    .max(7, "Placa deve ter 7 caracteres"),
-  model: z.string().trim().min(2, "Informe o modelo"),
-  type: z.enum(["VAN", "BUS", "MINIBUS", "CAR"]),
-  maxCapacity: z.coerce.number().int().min(1).max(200, "Máximo 200"),
-});
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const VEHICLE_TYPE_LABEL: Record<string, string> = {
-  VAN: "Van",
-  BUS: "Ônibus",
-  MINIBUS: "Micro-ônibus",
-  CAR: "Carro",
-};
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 function OrganizationPage() {
@@ -122,8 +82,6 @@ function OrganizationPage() {
   });
   const [orgFieldErrors, setOrgFieldErrors] = useState<Record<string, string>>({});
   const [orgSubmitting, setOrgSubmitting] = useState(false);
-
-  const [vehiclesOpen, setVehiclesOpen] = useState(false);
 
   const [vehicles, setVehicles] = useState<Vehicle[] | null>(null);
   const [drivers, setDrivers] = useState<Driver[] | null>(null);
@@ -295,8 +253,8 @@ function OrganizationPage() {
 
       {/* Resource cards */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <button
-          onClick={() => setVehiclesOpen(true)}
+        <Link
+          to="/vehicles"
           className="rounded-xl border border-border bg-card p-4 text-left hover:bg-accent/50 transition-colors"
         >
           <div className="flex items-center justify-between mb-2">
@@ -307,7 +265,7 @@ function OrganizationPage() {
             {vehicles === null ? "—" : activeVehicles.length}
           </div>
           <div className="text-xs text-muted-foreground mt-0.5">Veículos</div>
-        </button>
+        </Link>
 
         <Link
           to="/drivers"
@@ -373,246 +331,7 @@ function OrganizationPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Vehicles sheet */}
-      <VehiclesSheet
-        open={vehiclesOpen}
-        onOpenChange={setVehiclesOpen}
-        orgId={adminOrgId ?? ""}
-        vehicles={vehicles}
-        onVehiclesChange={setVehicles}
-      />
     </AppShell>
-  );
-}
-
-// ── Vehicles Sheet ────────────────────────────────────────────────────────────
-
-function VehiclesSheet({
-  open,
-  onOpenChange,
-  orgId,
-  vehicles,
-  onVehiclesChange,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  orgId: string;
-  vehicles: Vehicle[] | null;
-  onVehiclesChange: (fn: (prev: Vehicle[] | null) => Vehicle[] | null) => void;
-}) {
-  const [addOpen, setAddOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Vehicle | null>(null);
-  const [deactivateTarget, setDeactivateTarget] = useState<Vehicle | null>(null);
-  const [form, setForm] = useState<{
-    plate: string;
-    model: string;
-    type: "VAN" | "BUS" | "MINIBUS" | "CAR";
-    maxCapacity: string;
-  }>({ plate: "", model: "", type: "VAN", maxCapacity: "" });
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
-  const [deactivating, setDeactivating] = useState(false);
-
-  function openAdd() {
-    setEditTarget(null);
-    setForm({ plate: "", model: "", type: "VAN", maxCapacity: "" });
-    setFieldErrors({});
-    setAddOpen(true);
-  }
-
-  function openEdit(v: Vehicle) {
-    setEditTarget(v);
-    setForm({ plate: v.plate, model: v.model, type: v.type, maxCapacity: String(v.maxCapacity) });
-    setFieldErrors({});
-    setAddOpen(true);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const parsed = vehicleSchema.safeParse(form);
-    if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => {
-        errs[e.path.join(".")] = e.message;
-      });
-      setFieldErrors(errs);
-      return;
-    }
-    setFieldErrors({});
-    setSubmitting(true);
-    try {
-      if (editTarget) {
-        const updated = await vehiclesService.update(editTarget.id, parsed.data);
-        onVehiclesChange((prev) =>
-          prev ? prev.map((v) => (v.id === updated.id ? updated : v)) : prev,
-        );
-        toast.success("Veículo atualizado");
-      } else {
-        const created = await vehiclesService.create(orgId, parsed.data);
-        onVehiclesChange((prev) => (prev ? [created, ...prev] : [created]));
-        toast.success("Veículo adicionado");
-      }
-      setAddOpen(false);
-    } catch (err) {
-      handleApiError(err, "Erro ao salvar veículo");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleDeactivate() {
-    if (!deactivateTarget) return;
-    setDeactivating(true);
-    try {
-      await vehiclesService.deactivate(deactivateTarget.id);
-      onVehiclesChange((prev) => (prev ? prev.filter((v) => v.id !== deactivateTarget.id) : prev));
-      toast.success("Veículo removido");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao remover");
-    } finally {
-      setDeactivating(false);
-      setDeactivateTarget(null);
-    }
-  }
-
-  const activeVehicles = (vehicles ?? []).filter((v) => v.status !== "INACTIVE");
-
-  return (
-    <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[85dvh] overflow-y-auto">
-          <SheetHeader className="mb-4">
-            <div className="flex items-center justify-between">
-              <SheetTitle className="flex items-center gap-2">
-                <Car className="h-5 w-5" /> Veículos
-              </SheetTitle>
-              <Button size="sm" onClick={openAdd}>
-                <Plus className="h-4 w-4 mr-1" /> Adicionar
-              </Button>
-            </div>
-          </SheetHeader>
-
-          {vehicles === null ? (
-            <LoadingList count={3} height="h-16" />
-          ) : activeVehicles.length === 0 ? (
-            <Card className="p-4 text-center text-sm text-muted-foreground">
-              Nenhum veículo cadastrado.
-            </Card>
-          ) : (
-            <div className="space-y-2 pb-8">
-              {activeVehicles.map((v) => (
-                <Card key={v.id} className="p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium">{v.model}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {v.plate} · {VEHICLE_TYPE_LABEL[v.type] ?? v.type} · {v.maxCapacity} lugares
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => openEdit(v)}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        onClick={() => setDeactivateTarget(v)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
-
-      {/* Add / edit vehicle dialog */}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{editTarget ? "Editar veículo" : "Novo veículo"}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-3 mt-2">
-            <Field2 label="Placa" error={fieldErrors.plate}>
-              <Input
-                value={form.plate}
-                maxLength={7}
-                placeholder="ABC1D23"
-                onChange={(e) => setForm((f) => ({ ...f, plate: e.target.value.toUpperCase() }))}
-              />
-            </Field2>
-            <Field2 label="Modelo" error={fieldErrors.model}>
-              <Input
-                value={form.model}
-                placeholder="Ex: Mercedes-Benz Sprinter"
-                onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))}
-              />
-            </Field2>
-            <Field2 label="Tipo">
-              <Select
-                value={form.type}
-                onValueChange={(v) => setForm((f) => ({ ...f, type: v as typeof f.type }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VAN">Van</SelectItem>
-                  <SelectItem value="BUS">Ônibus</SelectItem>
-                  <SelectItem value="MINIBUS">Micro-ônibus</SelectItem>
-                  <SelectItem value="CAR">Carro</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field2>
-            <Field2 label="Capacidade máxima" error={fieldErrors.maxCapacity}>
-              <Input
-                type="number"
-                min="1"
-                max="200"
-                value={form.maxCapacity}
-                placeholder="Ex: 15"
-                onChange={(e) => setForm((f) => ({ ...f, maxCapacity: e.target.value }))}
-              />
-            </Field2>
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Salvando..." : editTarget ? "Salvar alterações" : "Adicionar veículo"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Deactivate confirmation */}
-      <AlertDialog open={!!deactivateTarget} onOpenChange={(o) => !o && setDeactivateTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover veículo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deactivateTarget?.model} ({deactivateTarget?.plate}) será desativado.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeactivate}
-              disabled={deactivating}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deactivating ? "Removendo..." : "Remover"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
   );
 }
 
