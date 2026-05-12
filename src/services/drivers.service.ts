@@ -49,4 +49,6 @@ export const driversService = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+
+  getName: (id: string) => api<{ name: string }>(`/drivers/${id}/name`),
 };

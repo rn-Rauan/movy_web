@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { useBookingDetail } from "@/features/bookings/hooks/useBookingDetail";
+import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 import { formatDateTime, paymentMethodLabel, formatPrice } from "@/lib/format";
 import type { BookingDetails } from "@/lib/types";
 
@@ -56,6 +57,7 @@ function SuccessContent({ booking }: { booking: BookingDetails }) {
   const trip = booking.tripInstance;
   const origin = trip?.departurePoint;
   const destination = trip?.destination;
+  const { name: driverName } = useDriverName(trip?.driverId);
 
   function downloadIcs() {
     const ics = buildIcs(booking);
@@ -91,9 +93,9 @@ function SuccessContent({ booking }: { booking: BookingDetails }) {
         <Row icon={<MapPin className="h-4 w-4" />} label="Desembarque">
           {booking.alightingStop}
         </Row>
-        {trip?.driverId ? (
+        {trip?.driverId && driverName ? (
           <Row icon={<User className="h-4 w-4" />} label="Motorista">
-            {trip.driverId}
+            {driverName}
           </Row>
         ) : null}
         {booking.paymentMethod ? (

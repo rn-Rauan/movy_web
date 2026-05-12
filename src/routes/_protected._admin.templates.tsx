@@ -75,9 +75,7 @@ function TemplatesPage() {
       <DeleteTemplateDialog
         template={deleting}
         onClose={() => setDeleting(null)}
-        onDeleted={(tpl) =>
-          setTemplates((prev) => prev?.filter((t) => t.id !== tpl.id) ?? null)
-        }
+        onDeleted={(tpl) => setTemplates((prev) => prev?.filter((t) => t.id !== tpl.id) ?? null)}
       />
     </AppShell>
   );

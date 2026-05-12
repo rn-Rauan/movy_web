@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { BookingRow } from "@/features/bookings/components/BookingRow";
+import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
 import type {
   Booking,
@@ -55,8 +56,14 @@ const DRIVER_STATUS_LABEL: Record<Driver["driverStatus"], string> = {
   SUSPENDED: "Suspenso",
 };
 
-function driverPrimaryLabel(d: Driver) {
-  return d.userName?.trim() || d.userEmail?.trim() || `Motorista ${d.id.slice(0, 6)}`;
+function DriverLabel({ driver }: { driver: Driver }) {
+  const inline = driver.userName?.trim() || driver.userEmail?.trim();
+  const { name: fetched, loading } = useDriverName(inline ? null : driver.id);
+  return <>{inline || fetched || (loading ? "Carregando..." : "Motorista")}</>;
+}
+
+function driverTextValue(d: Driver): string {
+  return d.userName?.trim() || d.userEmail?.trim() || "Motorista";
 }
 
 type Props = {
@@ -155,7 +162,7 @@ export function AdminTripDetailView({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold truncate">
-                    {driverPrimaryLabel(assignedDriver)}
+                    <DriverLabel driver={assignedDriver} />
                   </div>
                   {assignedDriver.userEmail && assignedDriver.userName && (
                     <div className="text-xs text-muted-foreground truncate">
@@ -193,9 +200,11 @@ export function AdminTripDetailView({
             <SelectContent>
               <SelectItem value="none">Sem motorista</SelectItem>
               {drivers.map((d) => (
-                <SelectItem key={d.id} value={d.id} textValue={driverPrimaryLabel(d)}>
+                <SelectItem key={d.id} value={d.id} textValue={driverTextValue(d)}>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">{driverPrimaryLabel(d)}</span>
+                    <span className="text-sm font-medium">
+                      <DriverLabel driver={d} />
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       CNH {d.cnh} · Cat. {d.cnhCategory}
                     </span>

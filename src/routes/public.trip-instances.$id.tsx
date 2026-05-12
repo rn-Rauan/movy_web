@@ -5,10 +5,11 @@ import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, MapPin, DollarSign, Route as RouteIcon } from "lucide-react";
+import { Calendar, Clock, Users, MapPin, DollarSign, Route as RouteIcon, User } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useTripDetail } from "@/features/trips/hooks/useTripDetail";
 import { useUserBookingForTrip } from "@/features/bookings/hooks/useUserBookingForTrip";
+import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 import { formatDateTime, formatFullDate, statusLabel, statusVariant } from "@/lib/format";
 
 export const Route = createFileRoute("/public/trip-instances/$id")({
@@ -26,6 +27,7 @@ function PublicTripDetailPage() {
   const { isAuthenticated } = useAuth();
   const { trip, loading, error } = useTripDetail(id);
   const { booking: existingBooking } = useUserBookingForTrip(isAuthenticated ? id : undefined);
+  const { name: driverName } = useDriverName(isAuthenticated ? trip?.driverId : null);
 
   function renderContent() {
     if (loading) return <LoadingList count={3} height="h-32" />;
@@ -82,6 +84,11 @@ function PublicTripDetailPage() {
             {trip.priceOneWay != null ? (
               <Info icon={<DollarSign className="h-4 w-4" />} label="Preço">
                 R$ {trip.priceOneWay.toFixed(2)}
+              </Info>
+            ) : null}
+            {driverName ? (
+              <Info icon={<User className="h-4 w-4" />} label="Motorista">
+                {driverName}
               </Info>
             ) : null}
           </div>

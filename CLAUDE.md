@@ -103,10 +103,11 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
   _admin/ (guard: isAdmin)
     dashboard/                → resumo e próximas viagens
     trips/                    → CRUD de instâncias de viagem
-    trips/$tripId/            → detalhe + passageiros + ações de status
+    trip/$tripId/             → detalhe + passageiros + ações de status (singular "trip" — não "trips")
     templates/                → CRUD de templates de rota
     drivers/                  → gestão de motoristas da organização
-    organization/             → configurações + card de plano (uso vs. limite) + sheet de veículos
+    vehicles/                 → CRUD de veículos da organização
+    organization/             → configurações + card de plano (uso vs. limite)
     payments/                 → histórico de pagamentos da subscription (paginado)
 
   _driver/ (guard: isDriver)

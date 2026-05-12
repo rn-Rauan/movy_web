@@ -2,6 +2,7 @@ import { Pencil, UserX } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 import type { Driver } from "@/lib/types";
 
 type Props = {
@@ -11,14 +12,18 @@ type Props = {
 };
 
 export function DriverCard({ driver: d, onEdit, onRemove }: Props) {
+  const { name: fetchedName, loading: nameLoading } = useDriverName(
+    !d.userName && !d.userEmail ? d.id : null,
+  );
+  const displayName =
+    d.userName ?? fetchedName ?? d.userEmail ?? (nameLoading ? "Carregando..." : "Motorista");
+
   return (
     <Card className="p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">
-            {d.userName ?? d.userEmail ?? "Motorista"}
-          </div>
-          {d.userEmail && d.userName && (
+          <div className="text-sm font-medium truncate">{displayName}</div>
+          {d.userEmail && (d.userName || fetchedName) && (
             <div className="text-xs text-muted-foreground truncate">{d.userEmail}</div>
           )}
           <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground flex-wrap">

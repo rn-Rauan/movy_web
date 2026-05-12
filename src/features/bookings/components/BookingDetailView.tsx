@@ -21,7 +21,8 @@ import {
   statusLabel,
   statusVariant,
 } from "@/lib/format";
-import { Calendar, MapPin, CreditCard, Hash, Users, Clock } from "lucide-react";
+import { Calendar, MapPin, CreditCard, Hash, Users, Clock, User } from "lucide-react";
+import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 
 interface BookingDetailViewProps {
   booking: BookingDetails;
@@ -32,6 +33,7 @@ interface BookingDetailViewProps {
 export function BookingDetailView({ booking, onCancel, cancelling }: BookingDetailViewProps) {
   const isActive = booking.status === "ACTIVE";
   const departure = booking.tripDepartureTime || booking.enrollmentDate;
+  const { name: driverName } = useDriverName(booking.tripInstance?.driverId);
 
   return (
     <>
@@ -71,6 +73,11 @@ export function BookingDetailView({ booking, onCancel, cancelling }: BookingDeta
           <Row icon={<Hash className="h-4 w-4" />} label="Tipo">
             {enrollmentTypeLabel(booking.enrollmentType)}
           </Row>
+          {driverName ? (
+            <Row icon={<User className="h-4 w-4" />} label="Motorista">
+              {driverName}
+            </Row>
+          ) : null}
           {booking.availableSlots != null && booking.totalCapacity != null ? (
             <Row icon={<Users className="h-4 w-4" />} label="Vagas">
               {booking.availableSlots} de {booking.totalCapacity}

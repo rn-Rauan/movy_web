@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DRIVER_ROLE_ID } from "../hooks/useDrivers";
+import { useDriverName } from "../hooks/useDriverName";
 import type { Driver } from "@/lib/types";
 
 type Props = {
@@ -24,6 +25,9 @@ type Props = {
 
 export function RemoveDriverDialog({ driver, orgId, onClose, onRemoved, onRefetch }: Props) {
   const [removing, setRemoving] = useState(false);
+  const inlineName = driver?.userName ?? driver?.userEmail;
+  const { name: fetchedName } = useDriverName(driver && !inlineName ? driver.id : null);
+  const displayName = inlineName ?? fetchedName ?? "Este motorista";
 
   async function handleRemove() {
     if (!driver || !orgId) return;
@@ -60,8 +64,7 @@ export function RemoveDriverDialog({ driver, orgId, onClose, onRemoved, onRefetc
         <AlertDialogHeader>
           <AlertDialogTitle>Remover motorista?</AlertDialogTitle>
           <AlertDialogDescription>
-            {driver?.userName ?? driver?.userEmail ?? "Este motorista"} será desvinculado da
-            organização.
+            {displayName} será desvinculado da organização.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
