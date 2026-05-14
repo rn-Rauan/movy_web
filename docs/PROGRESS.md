@@ -84,6 +84,7 @@
 
 - [x] Listar viagens da org (origem→destino hidratados via lookup de templates)
 - [x] Filtrar por status
+- [x] Filtrar por intervalo de data (hoje · amanhã · esta semana · próxima semana) — pills com utilitário `lib/date-filters`
 - [x] Buscar por origem/destino (com lookup correto de template)
 - [x] Criar viagem (sheet — driver+veículo obrigatórios quando `SCHEDULED`)
 - [x] Detalhe de viagem (`/$tripId` — template hidratado: origem, destino, paradas)

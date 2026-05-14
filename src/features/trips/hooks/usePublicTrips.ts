@@ -1,57 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { tripsService } from "@/services/trips.service";
+import { isInDateRange, type DateRange } from "@/lib/date-filters";
 import type { TripInstance, Paginated } from "@/lib/types";
 
 type PublicTrip = TripInstance & { organizationName?: string; organizationSlug?: string };
 
 export type Shift = "ALL" | "MORNING" | "AFTERNOON" | "EVENING";
-export type DateRange = "ANY" | "TODAY" | "TOMORROW" | "THIS_WEEK" | "NEXT_WEEK";
 export type SortBy = "DEPARTURE_ASC" | "DEPARTURE_DESC" | "PRICE_ASC" | "PRICE_DESC";
+export type { DateRange };
 
 function shiftOf(iso: string): Exclude<Shift, "ALL"> {
   const h = new Date(iso).getHours();
   if (h < 12) return "MORNING";
   if (h < 18) return "AFTERNOON";
   return "EVENING";
-}
-
-function startOfDay(d: Date): Date {
-  const c = new Date(d);
-  c.setHours(0, 0, 0, 0);
-  return c;
-}
-
-function dateRangeBounds(range: DateRange): { from: Date; to: Date } | null {
-  if (range === "ANY") return null;
-  const now = new Date();
-  const today = startOfDay(now);
-  if (range === "TODAY") {
-    const to = new Date(today);
-    to.setDate(to.getDate() + 1);
-    return { from: today, to };
-  }
-  if (range === "TOMORROW") {
-    const from = new Date(today);
-    from.setDate(from.getDate() + 1);
-    const to = new Date(from);
-    to.setDate(to.getDate() + 1);
-    return { from, to };
-  }
-  // Semana = domingo a sábado (locale BR usa segunda; ambos funcionam, escolhi domingo pra simplicidade)
-  const weekStart = new Date(today);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  if (range === "THIS_WEEK") {
-    const to = new Date(weekStart);
-    to.setDate(to.getDate() + 7);
-    return { from: today, to };
-  }
-  // NEXT_WEEK
-  const from = new Date(weekStart);
-  from.setDate(from.getDate() + 7);
-  const to = new Date(from);
-  to.setDate(to.getDate() + 7);
-  return { from, to };
 }
 
 function priceOf(t: PublicTrip): number {
@@ -78,7 +41,6 @@ export function usePublicTrips() {
   const filtered = useMemo(() => {
     const list = trips ?? [];
     const q = search.trim().toLowerCase();
-    const bounds = dateRangeBounds(dateRange);
 
     const filteredList = list.filter((t) => {
       if (q) {
@@ -89,10 +51,7 @@ export function usePublicTrips() {
         if (!matchesText) return false;
       }
       if (shift !== "ALL" && shiftOf(t.departureTime) !== shift) return false;
-      if (bounds) {
-        const departure = new Date(t.departureTime);
-        if (departure < bounds.from || departure >= bounds.to) return false;
-      }
+      if (!isInDateRange(t.departureTime, dateRange)) return false;
       return true;
     });
 

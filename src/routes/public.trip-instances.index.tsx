@@ -6,7 +6,8 @@ import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { usePublicTrips } from "@/features/trips/hooks/usePublicTrips";
-import type { DateRange, Shift, SortBy } from "@/features/trips/hooks/usePublicTrips";
+import type { Shift, SortBy } from "@/features/trips/hooks/usePublicTrips";
+import { DATE_RANGE_OPTIONS } from "@/lib/date-filters";
 import { PublicTripCard } from "@/features/trips/components/PublicTripCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,14 +25,6 @@ const SHIFTS: { value: Shift; label: string }[] = [
   { value: "MORNING", label: "Manhã" },
   { value: "AFTERNOON", label: "Tarde" },
   { value: "EVENING", label: "Noite" },
-];
-
-const DATE_RANGES: { value: DateRange; label: string }[] = [
-  { value: "ANY", label: "Qualquer data" },
-  { value: "TODAY", label: "Hoje" },
-  { value: "TOMORROW", label: "Amanhã" },
-  { value: "THIS_WEEK", label: "Esta semana" },
-  { value: "NEXT_WEEK", label: "Próxima semana" },
 ];
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
@@ -95,7 +88,7 @@ function PublicTripsPage() {
 
       <div className="-mx-4 px-4 mb-2 overflow-x-auto">
         <div className="flex gap-2 pb-1 w-max">
-          {DATE_RANGES.map((d) => (
+          {DATE_RANGE_OPTIONS.map((d) => (
             <FilterPill
               key={d.value}
               active={dateRange === d.value}
