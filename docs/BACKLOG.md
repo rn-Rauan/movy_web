@@ -76,7 +76,6 @@ Hoje `useUserBookingForTrip` baixa `listForUser` inteiro e filtra client-side. S
 - Notificação in-app: passageiro vê badge quando viagem reservada muda de status
 - Adotar React Query em uma rota piloto (sugerido: `/_admin/trips`) — ver ADR-002
 - Convergir padrão de fetching: definir e migrar (passenger usa hooks, admin imperativo)
-- Filtros + busca + ordenação no marketplace público
 
 ---
 

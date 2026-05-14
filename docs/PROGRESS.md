@@ -40,9 +40,9 @@
 - [x] Lista de trip-instances públicas (`/public/trip-instances`)
 - [x] Detalhe público (`/public/trip-instances/$id`)
 - [x] Perfil público de organização (`/public/organizations/$slug`)
-- [ ] Filtros (data, origem, destino, preço)
-- [ ] Busca textual
-- [ ] Ordenação
+- [x] Filtros (turno, intervalo de datas) — `usePublicTrips` centraliza search + shift + dateRange + sortBy
+- [x] Busca textual (origem, destino, organização)
+- [x] Ordenação (data ↑↓, preço ↑↓)
 
 ## Passenger flow
 
