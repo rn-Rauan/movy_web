@@ -2,7 +2,7 @@
 
 > Lista priorizada das próximas tarefas. Cada uma deve ser concluível em 1–3 dias. Pra contexto estratégico, ver [ROADMAP.md](./ROADMAP.md). Pra estado geral, ver [PROGRESS.md](./PROGRESS.md). Pra contexto de retomada, ver [HANDOFF.md](./HANDOFF.md).
 
-**Última atualização:** 2026-05-10 (W3 100% fechado · bugs B1/B2 do passenger resolvidos · consolidação de telas de detalhe + guard de duplicata feitos · próxima frente: Driver Flow, bloqueado por backend)
+**Última atualização:** 2026-05-14 (rodada de polish sem backend: filtros em /my-bookings e /organizations · dashboard admin com métricas reais · ShareButton reusável · página pública de planos. Próxima frente: Driver Flow, bloqueado por backend)
 
 **Como usar:** Pegue do topo. Quando concluir, marque o item correspondente em PROGRESS.md e remova daqui.
 
@@ -76,6 +76,8 @@ Hoje `useUserBookingForTrip` baixa `listForUser` inteiro e filtra client-side. S
 - Notificação in-app: passageiro vê badge quando viagem reservada muda de status
 - Adotar React Query em uma rota piloto (sugerido: `/_admin/trips`) — ver ADR-002
 - Convergir padrão de fetching: definir e migrar (passenger usa hooks, admin imperativo)
+- Polir CRUD de templates: duplicar template, indicador "X viagens usam este template"
+- Filtro por status ativo/inativo em `/_admin/vehicles`
 
 ---
 
@@ -83,7 +85,7 @@ Hoje `useUserBookingForTrip` baixa `listForUser` inteiro e filtra client-side. S
 
 Títulos pra não esquecer — refinar antes de começar:
 
-- Dashboard rico (receita prevista vs. realizada, ocupação, top rotas)
+- Dashboard rico: receita realizada (depende de payments confirmados), top rotas, cancelamentos
 - Multi-organização (encerra ADR-001)
 - Pagamento real (Pix)
 - LGPD (termos, política, exclusão de conta)

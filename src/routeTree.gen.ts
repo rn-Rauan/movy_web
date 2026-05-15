@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignupIndexRouteImport } from './routes/signup.index'
 import { Route as SignupEmpresaRouteImport } from './routes/signup.empresa'
 import { Route as PublicTripInstancesRouteImport } from './routes/public.trip-instances'
+import { Route as PublicPlansRouteImport } from './routes/public.plans'
 import { Route as ProtectedSetupRouteImport } from './routes/_protected.setup'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected.profile'
 import { Route as ProtectedOrganizationsRouteImport } from './routes/_protected.organizations'
@@ -71,6 +72,11 @@ const SignupEmpresaRoute = SignupEmpresaRouteImport.update({
 const PublicTripInstancesRoute = PublicTripInstancesRouteImport.update({
   id: '/public/trip-instances',
   path: '/public/trip-instances',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicPlansRoute = PublicPlansRouteImport.update({
+  id: '/public/plans',
+  path: '/public/plans',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProtectedSetupRoute = ProtectedSetupRouteImport.update({
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/organizations': typeof ProtectedOrganizationsRoute
   '/profile': typeof ProtectedProfileRoute
   '/setup': typeof ProtectedSetupRoute
+  '/public/plans': typeof PublicPlansRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
   '/signup/empresa': typeof SignupEmpresaRoute
   '/signup/': typeof SignupIndexRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/organizations': typeof ProtectedOrganizationsRoute
   '/profile': typeof ProtectedProfileRoute
   '/setup': typeof ProtectedSetupRoute
+  '/public/plans': typeof PublicPlansRoute
   '/signup/empresa': typeof SignupEmpresaRoute
   '/signup': typeof SignupIndexRoute
   '/dashboard': typeof ProtectedAdminDashboardRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/_protected/organizations': typeof ProtectedOrganizationsRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/setup': typeof ProtectedSetupRoute
+  '/public/plans': typeof PublicPlansRoute
   '/public/trip-instances': typeof PublicTripInstancesRouteWithChildren
   '/signup/empresa': typeof SignupEmpresaRoute
   '/signup/': typeof SignupIndexRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/profile'
     | '/setup'
+    | '/public/plans'
     | '/public/trip-instances'
     | '/signup/empresa'
     | '/signup/'
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/organizations'
     | '/profile'
     | '/setup'
+    | '/public/plans'
     | '/signup/empresa'
     | '/signup'
     | '/dashboard'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/_protected/organizations'
     | '/_protected/profile'
     | '/_protected/setup'
+    | '/public/plans'
     | '/public/trip-instances'
     | '/signup/empresa'
     | '/signup/'
@@ -367,6 +379,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRouteWithChildren
+  PublicPlansRoute: typeof PublicPlansRoute
   PublicTripInstancesRoute: typeof PublicTripInstancesRouteWithChildren
   PublicOrganizationsSlugRoute: typeof PublicOrganizationsSlugRoute
 }
@@ -420,6 +433,13 @@ declare module '@tanstack/react-router' {
       path: '/public/trip-instances'
       fullPath: '/public/trip-instances'
       preLoaderRoute: typeof PublicTripInstancesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/public/plans': {
+      id: '/public/plans'
+      path: '/public/plans'
+      fullPath: '/public/plans'
+      preLoaderRoute: typeof PublicPlansRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_protected/setup': {
@@ -697,6 +717,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRouteWithChildren,
+  PublicPlansRoute: PublicPlansRoute,
   PublicTripInstancesRoute: PublicTripInstancesRouteWithChildren,
   PublicOrganizationsSlugRoute: PublicOrganizationsSlugRoute,
 }

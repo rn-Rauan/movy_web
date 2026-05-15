@@ -86,22 +86,23 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
 /signup/ → cadastro de usuário comum (B2C)
 /signup/empresa → cadastro empresa + admin em uma chamada (B2B)
 
-/public/trip-instances/       → marketplace de viagens
-/public/trip-instances/$id/   → detalhe público
-/public/organizations/$slug/  → perfil público da organização
+/public/trip-instances/       → marketplace de viagens (busca + filtros: data/turno/ordenação)
+/public/trip-instances/$id/   → detalhe público (com ShareButton)
+/public/organizations/$slug/  → perfil público da organização (busca + filtros + ShareButton)
+/public/plans/                → comparativo público de planos (CTA → /signup/empresa)
 
 /_protected/                  ← layout pathless com guard de auth
-  my-bookings/                → inscrições do usuário
+  my-bookings/                → inscrições do usuário (busca + filtro por status)
   my-bookings/$bookingId/     → detalhe da inscrição
   bookings-success/$bookingId/ → tela de confirmação pós-inscrição (com confetti)
-  organizations/              → lista de organizações
+  organizations/              → lista de organizações (busca)
   trips/$orgId/               → viagens de uma organização (lista; sem tela de detalhe própria)
   trips/$orgId/$tripId/book/  → formulário de inscrição (paradas via Select)
   profile/                    → perfil e senha do usuário autenticado
   setup/                      → wizard de criação de organização (admin)
 
   _admin/ (guard: isAdmin)
-    dashboard/                → resumo e próximas viagens
+    dashboard/                → métricas (ativas/próximos 7 dias/passageiros/ocupação%) + receita prevista + próximas viagens
     trips/                    → CRUD de instâncias de viagem
     trip/$tripId/             → detalhe + passageiros + ações de status (singular "trip" — não "trips")
     templates/                → CRUD de templates de rota
@@ -174,9 +175,11 @@ src/
 │   ├── layout/
 │   │   ├── AppShell.tsx     Layout base (header + BottomNav)
 │   │   └── BottomNav.tsx    Tabs por role (passenger / admin)
-│   └── feedback/
-│       ├── LoadingList.tsx  Skeletons de lista
-│       └── ErrorCard.tsx    Card de erro
+│   ├── feedback/
+│   │   ├── LoadingList.tsx  Skeletons de lista
+│   │   ├── ErrorCard.tsx    Card de erro
+│   │   └── EmptyState.tsx   Estado vazio com action opcional
+│   └── ShareButton.tsx      Web Share API + clipboard fallback
 │
 └── lib/
     ├── api.ts               Cliente HTTP com auto-refresh de token
@@ -184,6 +187,8 @@ src/
     ├── role-context.tsx     RoleProvider + useRole()
     ├── types.ts             Tipos TypeScript do domínio
     ├── format.ts            Helpers de formatação (datas, status, preços)
+    ├── date-filters.ts      DateRange + isInDateRange — compartilhado entre marketplaces
+    ├── handle-error.ts      handleApiError + bookingCancelErrorMessage
     └── utils.ts
 ```
 

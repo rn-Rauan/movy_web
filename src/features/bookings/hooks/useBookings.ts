@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { bookingsService } from "@/services/bookings.service";
-import type { Booking } from "@/lib/types";
+import type { Booking, BookingStatus } from "@/lib/types";
+
+export type BookingStatusFilter = "ALL" | BookingStatus;
 
 export function useBookings() {
   const [bookings, setBookings] = useState<Booking[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<BookingStatusFilter>("ALL");
 
   useEffect(() => {
     bookingsService
@@ -20,5 +24,41 @@ export function useBookings() {
       });
   }, []);
 
-  return { bookings, loading: bookings === null && !error, error };
+  const filtered = useMemo(() => {
+    const list = bookings ?? [];
+    const q = search.trim().toLowerCase();
+    return list.filter((b) => {
+      if (statusFilter !== "ALL" && b.status !== statusFilter) return false;
+      if (q) {
+        const matches =
+          b.boardingStop?.toLowerCase().includes(q) ||
+          b.alightingStop?.toLowerCase().includes(q) ||
+          b.tripInstance?.departurePoint?.toLowerCase().includes(q) ||
+          b.tripInstance?.destination?.toLowerCase().includes(q) ||
+          b.tripInstance?.organizationName?.toLowerCase().includes(q);
+        if (!matches) return false;
+      }
+      return true;
+    });
+  }, [bookings, search, statusFilter]);
+
+  function resetFilters() {
+    setSearch("");
+    setStatusFilter("ALL");
+  }
+
+  const hasActiveFilters = search.trim() !== "" || statusFilter !== "ALL";
+
+  return {
+    bookings,
+    filtered,
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    resetFilters,
+    hasActiveFilters,
+    loading: bookings === null && !error,
+    error,
+  };
 }

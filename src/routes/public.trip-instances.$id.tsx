@@ -11,6 +11,7 @@ import { useTripDetail } from "@/features/trips/hooks/useTripDetail";
 import { useUserBookingForTrip } from "@/features/bookings/hooks/useUserBookingForTrip";
 import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 import { formatDateTime, formatFullDate, statusLabel, statusVariant } from "@/lib/format";
+import { ShareButton } from "@/components/ShareButton";
 
 export const Route = createFileRoute("/public/trip-instances/$id")({
   head: () => ({
@@ -37,8 +38,20 @@ function PublicTripDetailPage() {
     const seats = trip.availableSlots ?? trip.totalCapacity;
     const lotada = seats <= 0;
 
+    const shareText =
+      trip.departurePoint && trip.destination
+        ? `${trip.departurePoint} → ${trip.destination}`
+        : "Confira esta viagem";
+
     return (
       <>
+        <div className="flex justify-end mb-3">
+          <ShareButton
+            title="Viagem disponível"
+            text={shareText}
+            url={`/public/trip-instances/${id}`}
+          />
+        </div>
         <Card className="p-5 mb-4">
           <div className="flex items-start justify-between gap-2 mb-4">
             <div>

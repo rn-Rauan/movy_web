@@ -2,7 +2,7 @@
 
 > Snapshot vivo do que existe vs. o que falta. Atualizar a cada feature concluída. Pra **próxima ação**, ver [BACKLOG.md](./BACKLOG.md). Pra **roadmap de longo prazo**, ver [ROADMAP.md](./ROADMAP.md).
 
-**Última atualização:** 2026-05-10 (W3 100% fechado incluindo cleanup W3.6/W3.7/P3 · bugs do passenger B1/B2 resolvidos · consolidação das telas de detalhe de viagem + guard contra inscrição duplicada · próxima frente é Driver Flow, bloqueado por backend)
+**Última atualização:** 2026-05-14 (rodada de polish sem backend: filtros em /my-bookings e /organizations · dashboard admin com métricas reais (ocupação, passageiros, receita prevista) · ShareButton reusável (Web Share API + clipboard fallback) plugado em detalhe de viagem e perfil público de empresa · página pública /public/plans · busca + filtros (data + turno) no perfil público de empresa)
 
 > Para contexto de retomada (notebook), ver [HANDOFF.md](./HANDOFF.md).
 
@@ -38,19 +38,20 @@
 ## Marketplace público
 
 - [x] Lista de trip-instances públicas (`/public/trip-instances`)
-- [x] Detalhe público (`/public/trip-instances/$id`)
-- [x] Perfil público de organização (`/public/organizations/$slug`)
+- [x] Detalhe público (`/public/trip-instances/$id`) — com botão "Compartilhar" (Web Share API + clipboard fallback via `ShareButton`)
+- [x] Perfil público de organização (`/public/organizations/$slug`) — busca + filtros (data + turno) reusando `lib/date-filters` + botão "Compartilhar" no header
 - [x] Filtros (turno, intervalo de datas) — `usePublicTrips` centraliza search + shift + dateRange + sortBy
 - [x] Busca textual (origem, destino, organização)
 - [x] Ordenação (data ↑↓, preço ↑↓)
+- [x] Página pública de planos (`/public/plans`) — comparativo de planos via `plansService.list()`, "Mais popular" no segundo, CTA pra `/signup/empresa`. Link adicionado na landing page.
 
 ## Passenger flow
 
-- [x] Lista "minhas inscrições" (`/_protected/my-bookings`)
+- [x] Lista "minhas inscrições" (`/_protected/my-bookings`) — busca por origem/destino/empresa + filtro por status (Ativas/Canceladas) com pills + empty state com "Limpar filtros". `useBookings` agora expõe `filtered`/`hasActiveFilters`.
 - [x] Detalhe da inscrição (`/_protected/my-bookings/$bookingId`)
 - [x] Reservar viagem (`/_protected/trips/$orgId/$tripId/book`) — paradas selecionáveis via `<Select>` com validação anti-duplicado
 - [x] Cancelar inscrição (do próprio passageiro) — mensagens PT-BR estáveis via `bookingCancelErrorMessage`
-- [x] Lista de organizações (`/_protected/organizations`)
+- [x] Lista de organizações (`/_protected/organizations`) — busca por nome/slug; `useOrganizations` expõe `filtered`
 - [x] Lista de viagens de uma org (`/_protected/trips/$orgId`)
 - [x] Detalhe de viagem — tela única em `/public/trip-instances/$id` (funciona logado e deslogado; intermediário `/_protected/trips/$orgId/$tripId` removido por ser duplicado)
 - [x] Guard contra inscrição duplicada (`useUserBookingForTrip`) — botão "Inscrever-se" vira "Ver inscrição" e `/book` redireciona se já há booking ATIVO
@@ -66,10 +67,10 @@
 
 ### Dashboard
 
-- [x] Cards de contagem (total, agendadas, confirmadas, finalizadas)
-- [x] Lista das próximas 5 viagens
-- [ ] Métricas de receita (prevista vs. realizada)
-- [ ] Taxa de ocupação média
+- [x] Cards de métricas (viagens ativas / próximos 7 dias / passageiros inscritos / ocupação média %)
+- [x] Card destacado de receita prevista (soma de `bookedCount × priceOneWay` em viagens não canceladas/finalizadas)
+- [x] Lista das próximas 5 viagens ordenadas por data — itens clicáveis pra `/trip/$tripId`, mostram ocupação % e alerta visual "Sem motorista"
+- [ ] Métricas de receita realizada (depende de payments confirmados)
 - [ ] Top rotas / cancelamentos
 
 ### Empresa (`/_protected/_admin/organization`)
@@ -169,6 +170,16 @@
 - **Sem endpoint `/trip-instances/driver/me`**: bloqueia driver flow (W4 / Fase 1 do roadmap).
 - **`DELETE /drivers/{id}` parece hard-delete**: inconsistente com o padrão soft dos outros recursos.
 - **`useUserBookingForTrip` faz `listForUser` completo**: client-side filtering pra detectar duplicata. Funciona, mas se a lista crescer, considerar endpoint dedicado (ex: `GET /bookings/by-trip/{tripId}/mine`) ou cache.
+
+## Resolvido em 2026-05-14
+
+- Filtros em `/_protected/my-bookings`: busca + pills de status (ACTIVE/INACTIVE) + empty state com "Limpar filtros". Hook `useBookings` reescrito pra gerenciar filter state.
+- Busca em `/_protected/organizations`: hook `useOrganizations` reescrito.
+- Dashboard admin com métricas reais: 4 cards (viagens ativas, próximos 7 dias, passageiros, ocupação %) + card destacado de receita prevista + lista clicável de próximas viagens.
+- `ShareButton` reusável (`src/components/ShareButton.tsx`) — Web Share API quando disponível, clipboard como fallback, estado visual "copiado" 2s.
+- Detalhe público da viagem (`/public/trip-instances/$id`) e perfil público da empresa (`/public/organizations/$slug`) ganharam botão Compartilhar.
+- Perfil público da empresa também ganhou input de busca + pills de intervalo de data (reusando `lib/date-filters`).
+- Nova rota pública `/public/plans` — comparativo de planos via `plansService.list()`, segundo plano destacado como "Mais popular". Link na landing page (`index.tsx`).
 
 ## Resolvido em 2026-05-10
 

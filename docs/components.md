@@ -91,6 +91,58 @@ Card de erro simples.
 
 ---
 
+## Compartilhamento
+
+### `ShareButton`
+
+**Arquivo:** `src/components/ShareButton.tsx`
+
+Botão genérico de compartilhamento. Tenta `navigator.share` (Web Share API) e cai pra `navigator.clipboard.writeText` quando não suportado. Mostra ícone de "copiado" por 2s + toast.
+
+**Props:**
+
+| Prop        | Tipo                                    | Padrão           | Descrição                                                                      |
+| ----------- | --------------------------------------- | ---------------- | ------------------------------------------------------------------------------ |
+| `title`     | `string`                                | —                | Título compartilhado (Web Share API)                                           |
+| `text`      | `string`                                | —                | Texto curto opcional                                                           |
+| `url`       | `string`                                | —                | Pode ser relativo (`/public/...`) — vira absoluto com `window.location.origin` |
+| `variant`   | `outline`/`ghost`/`default`/`secondary` | `outline`        | Variante do `Button`                                                           |
+| `size`      | `default`/`sm`/`lg`/`icon`              | `sm`             | Tamanho do `Button`                                                            |
+| `label`     | `string`                                | `"Compartilhar"` | Texto do botão. Use `""` com `size="icon"` pra modo só-ícone                   |
+| `className` | `string`                                | —                | Classes extras                                                                 |
+
+```tsx
+<ShareButton
+  title="Viagem disponível"
+  text="Recife → João Pessoa"
+  url={`/public/trip-instances/${id}`}
+/>
+
+<ShareButton
+  title={orgName}
+  url={`/public/organizations/${slug}`}
+  variant="ghost"
+  size="icon"
+  label=""
+/>
+```
+
+---
+
+## Utilitários compartilhados
+
+### `lib/date-filters.ts`
+
+Helpers de filtro por intervalo de data usados nos marketplaces (público + admin):
+
+- `type DateRange = "ANY" | "TODAY" | "TOMORROW" | "THIS_WEEK" | "NEXT_WEEK"`
+- `DATE_RANGE_OPTIONS` — array `{ value, label }` pra renderizar pills
+- `isInDateRange(iso, range)` — boolean, retorna `true` para `ANY`. Semana é Domingo → Sábado em hora local; `THIS_WEEK` começa em "agora" pra não mostrar dias passados.
+
+Usado em: `usePublicTrips`, `_protected._admin.trips.tsx`, `public.organizations.$slug.tsx`.
+
+---
+
 ## Padrão de Feature Component
 
 Componentes de feature **recebem dados via props** — não fazem fetch próprio.

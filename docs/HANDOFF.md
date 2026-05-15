@@ -2,8 +2,8 @@
 
 > Documento "pegue aqui e continue". Snapshot completo: o que foi feito, onde paramos, o que vem agora, e o que tá no horizonte. Para detalhes vivos por área: [PROGRESS.md](./PROGRESS.md). Para próxima ação concreta: [BACKLOG.md](./BACKLOG.md). Para por quê de decisões: [DECISIONS.md](./DECISIONS.md). Para roadmap longo: [ROADMAP.md](./ROADMAP.md).
 
-**Última atualização:** 2026-05-10
-**Próxima sessão:** Driver Flow (D1–D4) — depende do backend entregar `GET /trip-instances/driver/me`.
+**Última atualização:** 2026-05-14
+**Próxima sessão:** Driver Flow (D1–D4) — depende do backend entregar `GET /trip-instances/driver/me`. Enquanto isso, P1 (telephone em `TokenResponse.user`) também bloqueado por backend.
 
 ---
 
@@ -12,9 +12,26 @@
 - **W1 (bug-fixes admin) — 100%** entregue em 2026-05-03.
 - **W2 (admin operacional) — 100%** entregue em 2026-05-05.
 - **W3 (planos / subscriptions / payments) — 100%** fechado em 2026-05-10, incluindo cleanup W3.6/W3.7 e P3 (warnings exhaustive-deps).
-- **Bugs do passenger (B1, B2) — resolvidos** em 2026-05-10. Bônus: telas de detalhe consolidadas (intermediário removido), paradas via `<Select>`, guard contra inscrição duplicada (`useUserBookingForTrip`).
+- **Bugs do passenger (B1, B2) — resolvidos** em 2026-05-10. Bônus: telas de detalhe consolidadas, paradas via `<Select>`, guard contra inscrição duplicada (`useUserBookingForTrip`).
 - **Landing page e signup B2B prontos:** `/` mostra landing pra não-autenticado e redireciona admin pra `/dashboard`; `/signup/empresa` cria conta + organização em uma chamada (`POST /auth/register-organization`).
+- **Rodada de polish em 2026-05-14 (sem backend):** filtros em `/my-bookings` e `/organizations`, dashboard admin com métricas reais (ocupação, passageiros, receita prevista), `ShareButton` reusável plugado em detalhe de viagem + perfil público de empresa, busca + filtros (data + turno) no perfil público de empresa, nova rota `/public/plans` com comparativo de planos.
 - **Próximo passo:** Driver Flow (D1) — bloqueado pelo backend até existir `GET /trip-instances/driver/me`. Enquanto isso: P1 (telephone em `TokenResponse.user` — também depende de backend) e P2 (endpoint dedicado de duplicate-check, opcional).
+
+---
+
+## O que foi feito nesta sessão (2026-05-14) — polish sem backend
+
+| Item                                | Arquivos                                                                                  | O que mudou                                                                                                                                                                                                                             |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Filtros em `/my-bookings`           | `features/bookings/hooks/useBookings.ts`, `routes/_protected.my-bookings.tsx`             | Busca por origem/destino/empresa + pills de status (ACTIVE/INACTIVE) + empty state com "Limpar filtros". Hook expõe `filtered`/`hasActiveFilters`/`resetFilters`.                                                                       |
+| Busca em `/organizations`           | `features/organizations/hooks/useOrganizations.ts`, `routes/_protected.organizations.tsx` | Busca por nome/slug. Mesmo padrão de outras listas.                                                                                                                                                                                     |
+| Dashboard admin com métricas reais  | `routes/_protected._admin.dashboard.tsx`                                                  | 4 cards (viagens ativas + total / próximos 7 dias / passageiros inscritos / ocupação %) + card destacado de receita prevista + lista de próximas 5 viagens ordenada por data, clicável pra `/trip/$tripId`, com alerta "Sem motorista". |
+| ShareButton reusável                | `components/ShareButton.tsx` (novo)                                                       | Web Share API quando disponível; clipboard como fallback; estado visual "copiado" 2s.                                                                                                                                                   |
+| Compartilhar no detalhe da viagem   | `routes/public.trip-instances.$id.tsx`                                                    | Botão "Compartilhar" no topo do card. Gera link absoluto com `window.location.origin`.                                                                                                                                                  |
+| Polir `/public/organizations/$slug` | `routes/public.organizations.$slug.tsx`                                                   | Busca + filtros (data via `lib/date-filters` + turno) + botão Compartilhar no header da empresa.                                                                                                                                        |
+| Nova rota `/public/plans`           | `routes/public.plans.tsx` (novo), `routes/index.tsx`                                      | Lista planos ativos via `plansService.list()` ordenados por preço; 2º plano marcado como "Mais popular"; CTA pra `/signup/empresa`. Link "Ver planos para empresas" adicionado na landing page.                                         |
+
+**Validação:** `npm run lint` → 0 erros (2 warnings pré-existentes); `npm run build` → OK em 7.16s.
 
 ---
 

@@ -7,10 +7,13 @@ import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Calendar, Users, MapPin, Mail, Phone } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Building2, Calendar, Users, MapPin, Mail, Phone, Search } from "lucide-react";
 import { useTrips } from "@/features/trips/hooks/useTrips";
 import { organizationsService } from "@/services/organizations.service";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
+import { DATE_RANGE_OPTIONS, isInDateRange, type DateRange } from "@/lib/date-filters";
+import { ShareButton } from "@/components/ShareButton";
 import type { Organization } from "@/lib/types";
 
 type Shift = "ALL" | "MORNING" | "AFTERNOON" | "EVENING";
@@ -21,7 +24,7 @@ const SHIFTS: { value: Shift; label: string }[] = [
   { value: "EVENING", label: "Noite" },
 ];
 function shiftOf(iso: string): Exclude<Shift, "ALL"> {
-  const h = new Date(iso).getUTCHours();
+  const h = new Date(iso).getHours();
   if (h < 12) return "MORNING";
   if (h < 18) return "AFTERNOON";
   return "EVENING";
@@ -42,6 +45,8 @@ function PublicOrgPage() {
   const { trips, loading, error } = useTrips({ orgId: "", slug });
   const [org, setOrg] = useState<Organization | null>(null);
   const [shift, setShift] = useState<Shift>("ALL");
+  const [dateRange, setDateRange] = useState<DateRange>("ANY");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -57,13 +62,31 @@ function PublicOrgPage() {
   }, [slug]);
 
   const orgName = org?.name || (trips && trips.length > 0 && trips[0].organizationName) || slug;
-  const visible = useMemo(
-    () =>
-      shift === "ALL"
-        ? (trips ?? [])
-        : (trips ?? []).filter((t) => shiftOf(t.departureTime) === shift),
-    [trips, shift],
-  );
+
+  const visible = useMemo(() => {
+    const list = trips ?? [];
+    const q = search.trim().toLowerCase();
+    return list.filter((t) => {
+      if (shift !== "ALL" && shiftOf(t.departureTime) !== shift) return false;
+      if (!isInDateRange(t.departureTime, dateRange)) return false;
+      if (q) {
+        const matches =
+          t.departurePoint?.toLowerCase().includes(q) || t.destination?.toLowerCase().includes(q);
+        if (!matches) return false;
+      }
+      return true;
+    });
+  }, [trips, shift, dateRange, search]);
+
+  const hasTrips = (trips?.length ?? 0) > 0;
+  const hasActiveFilters = shift !== "ALL" || dateRange !== "ANY" || search.trim() !== "";
+
+  function resetFilters() {
+    setShift("ALL");
+    setDateRange("ANY");
+    setSearch("");
+  }
+
   const contactHref = org?.email
     ? `mailto:${org.email}`
     : org?.telephone
@@ -83,6 +106,15 @@ function PublicOrgPage() {
             <h2 className="font-semibold text-lg leading-tight">{orgName}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">@{slug}</p>
           </div>
+          <ShareButton
+            title={typeof orgName === "string" ? orgName : "Empresa"}
+            text={`Confira as viagens de ${orgName}`}
+            url={`/public/organizations/${slug}`}
+            variant="ghost"
+            size="icon"
+            label=""
+            className="-mr-2"
+          />
         </div>
 
         {org?.email || org?.telephone || org?.address ? (
@@ -126,22 +158,47 @@ function PublicOrgPage() {
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-3">
-        {SHIFTS.map((s) => (
-          <button
-            key={s.value}
-            type="button"
-            onClick={() => setShift(s.value)}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-              shift === s.value
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      {hasTrips && (
+        <>
+          <div className="relative mb-3">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por origem ou destino"
+              className="pl-9 h-11"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="-mx-4 px-4 mb-2 overflow-x-auto">
+            <div className="flex gap-2 pb-1 w-max">
+              {DATE_RANGE_OPTIONS.map((d) => (
+                <FilterPill
+                  key={d.value}
+                  active={dateRange === d.value}
+                  onClick={() => setDateRange(d.value)}
+                >
+                  {d.label}
+                </FilterPill>
+              ))}
+            </div>
+          </div>
+
+          <div className="-mx-4 px-4 mb-4 overflow-x-auto">
+            <div className="flex gap-2 pb-1 w-max">
+              {SHIFTS.map((s) => (
+                <FilterPill
+                  key={s.value}
+                  active={shift === s.value}
+                  onClick={() => setShift(s.value)}
+                >
+                  {s.label}
+                </FilterPill>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {loading ? (
         <LoadingList count={2} height="h-36" />
@@ -149,13 +206,20 @@ function PublicOrgPage() {
         <ErrorCard message={error} />
       ) : visible.length === 0 ? (
         <Card className="p-8 text-center text-sm text-muted-foreground">
-          Nenhuma viagem disponível com esses filtros.
+          <p className="mb-3">
+            {hasActiveFilters
+              ? "Nenhuma viagem disponível com esses filtros."
+              : "Nenhuma viagem disponível no momento."}
+          </p>
+          {hasActiveFilters && (
+            <Button variant="outline" size="sm" onClick={resetFilters}>
+              Limpar filtros
+            </Button>
+          )}
         </Card>
       ) : (
         <ul className="space-y-3">
           {visible.map((trip) => {
-            // Fallback to totalCapacity when availableSlots is absent (the public-by-slug endpoint
-            // returns PublicTripInstanceResponse, which doesn't include availableSlots).
             const seats = trip.availableSlots ?? trip.totalCapacity;
             const lotada = seats != null && seats <= 0;
             return (
@@ -208,5 +272,29 @@ function PublicOrgPage() {
         </ul>
       )}
     </AppShell>
+  );
+}
+
+function FilterPill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-xs whitespace-nowrap px-3 py-1.5 rounded-full border transition-colors ${
+        active
+          ? "bg-primary text-primary-foreground border-primary"
+          : "bg-card border-border text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {children}
+    </button>
   );
 }

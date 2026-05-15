@@ -79,6 +79,15 @@ function LandingPage() {
           </Link>
         </section>
 
+        <section className="text-center mb-12">
+          <Link to="/public/plans">
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              Ver planos para empresas
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </section>
+
         {/* Como funciona */}
         <section className="mb-12">
           <h2 className="text-xl font-semibold mb-5 text-center">Como funciona</h2>
