@@ -155,12 +155,17 @@ src/
 │   │       ├── BookingsList.tsx     Lista com empty state
 │   │       └── BookingDetailView.tsx Detalhe + AlertDialog de cancelamento
 │   │
-│   └── organizations/
-│       ├── hooks/
-│       │   └── useOrganizations.ts  Lista organizações ativas
-│       └── components/
-│           ├── OrgCard.tsx
-│           └── OrgsList.tsx         Lista com links para trips
+│   ├── organizations/
+│   │   ├── hooks/
+│   │   │   └── useOrganizations.ts  Lista organizações ativas
+│   │   └── components/
+│   │       ├── OrgCard.tsx
+│   │       └── OrgsList.tsx         Lista com links para trips
+│   │
+│   ├── drivers/                Gestão admin de motoristas (hooks/ + components/)
+│   ├── templates/              CRUD admin de templates de rota (hooks/ + components/)
+│   ├── vehicles/               CRUD admin de veículos (hooks/ + components/)
+│   └── payments/               Histórico de pagamentos da subscription (hooks/ + components/)
 │
 ├── services/                Abstração de chamadas de API (repository pattern)
 │   ├── trips.service.ts

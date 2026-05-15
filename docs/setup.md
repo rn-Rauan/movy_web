@@ -4,10 +4,11 @@
 
 | Ferramenta            | Versão mínima recomendada   |
 | --------------------- | --------------------------- |
-| [Bun](https://bun.sh) | >= 1.1                      |
-| Node.js               | >= 20 (usado pelo Wrangler) |
+| Node.js               | >= 20                       |
+| npm                   | >= 10 (vem com Node)        |
+| [Bun](https://bun.sh) | opcional, >= 1.1            |
 
-> O projeto usa **Bun** como package manager e runtime. Não use `npm` ou `yarn`.
+> O projeto suporta tanto **npm** quanto **Bun** — ambos os lockfiles (`package-lock.json` e `bun.lock`) são versionados. Os scripts em `package.json` são neutros; use o gerenciador da sua preferência, mas seja consistente dentro de uma branch.
 
 ---
 
@@ -18,7 +19,9 @@
 git clone <url-do-repo>
 cd movy_web
 
-# Instale as dependências
+# Instale as dependências (escolha um)
+npm install
+# ou
 bun install
 ```
 
@@ -44,23 +47,28 @@ VITE_API_URL=https://sua-api.exemplo.com
 
 ```bash
 # Inicia o servidor de desenvolvimento (HMR)
-bun dev
+npm run dev
 
 # Build de produção
-bun build
+npm run build
 
 # Build em modo development (com source maps, sem minificação)
-bun build:dev
+npm run build:dev
 
 # Visualiza o build de produção localmente
-bun preview
+npm run preview
 
 # Lint (ESLint)
-bun lint
+npm run lint
 
-# Formatação (Prettier)
-bun format
+# Formatação (Prettier — auto-fix)
+npm run format
+
+# Formatação (Prettier — apenas verificação)
+npm run format:check
 ```
+
+> Com Bun, troque `npm run` por `bun` (ex: `bun dev`, `bun build`).
 
 ---
 
@@ -82,10 +90,10 @@ O output é compatível com **Cloudflare Workers** via `wrangler`.
 
 ```bash
 # Deploy para produção
-bunx wrangler deploy
+npx wrangler deploy
 
 # Deploy para preview/staging
-bunx wrangler deploy --env staging
+npx wrangler deploy --env staging
 ```
 
 A configuração está em `wrangler.jsonc`.
@@ -95,7 +103,7 @@ A configuração está em `wrangler.jsonc`.
 ## Adicionando Novos Componentes UI (shadcn/ui)
 
 ```bash
-bunx shadcn@latest add <nome-do-componente>
+npx shadcn@latest add <nome-do-componente>
 ```
 
 Os componentes são instalados em `src/components/ui/`. **Nunca modificar diretamente.**
@@ -133,7 +141,7 @@ export const Route = createFileRoute("/minha/rota")({ component: MinhaPage });
 export const Route = createFileRoute("/_protected/minha-rota")({ component: MinhaPage });
 ```
 
-4. A `routeTree.gen.ts` é **gerada automaticamente** ao iniciar `bun dev` — não edite manualmente.
+4. A `routeTree.gen.ts` é **gerada automaticamente** ao iniciar `npm run dev` — não edite manualmente.
 
 ---
 
@@ -214,14 +222,7 @@ toast.error(err instanceof Error ? err.message : "Ocorreu um erro");
 O projeto usa **ESLint** (configurado em `eslint.config.js`) e **Prettier**.
 
 ```bash
-bun lint    # verificar erros
-bun format  # formatar código
-```
-
-```bash
-# Verifica erros de lint
-bun lint
-
-# Formata todos os arquivos
-bun format
+npm run lint          # verifica erros
+npm run format        # formata código (auto-fix)
+npm run format:check  # apenas verifica formatação, sem alterar
 ```

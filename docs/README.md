@@ -36,7 +36,7 @@ Bem-vindo à documentação do projeto **movy_web**, um SaaS de transporte — s
 - **TanStack Start** (roteamento full-stack, file-based routing)
 - **Tailwind CSS v4** + **shadcn/ui** (Radix UI)
 - **Cloudflare Workers** (deploy)
-- **Bun** (package manager)
+- **npm** (package manager — `bun` também é suportado, mas o CLAUDE.md usa `npm`)
 
 ### Arquitetura
 
@@ -49,7 +49,7 @@ routes/ (thin controllers) → features/ (hooks + components) → services/ → 
 ### Início Rápido
 
 ```bash
-bun install
+npm install
 echo "VITE_API_URL=https://sua-api.com" > .env
-bun dev
+npm run dev
 ```

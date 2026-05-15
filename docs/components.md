@@ -213,7 +213,7 @@ function TripsList({ trips, orgId }: { trips: TripInstance[]; orgId: string }) {
 Todos em `src/components/ui/`. Baseados em **Radix UI**. **Não modificar diretamente** — atualizar via CLI:
 
 ```bash
-bunx shadcn@latest add <nome>
+npx shadcn@latest add <nome>
 ```
 
 ### Componentes utilizados

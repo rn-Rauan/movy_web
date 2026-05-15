@@ -23,7 +23,7 @@
 | Ícones                   | Lucide React                               |
 | Build                    | Vite + `@lovable.dev/vite-tanstack-config` |
 | Deploy                   | Cloudflare Workers (via Wrangler)          |
-| Package Manager          | Bun                                        |
+| Package Manager          | npm (Bun também suportado)                 |
 
 ---
 
@@ -44,11 +44,12 @@
 │                             │  /setup (wizard admin)         │
 ├─────────────────────────────────────────────────────────────┤
 │               Feature Modules (features/)                    │
-│  trips/hooks + components   │  bookings/hooks + components   │
-│  organizations/hooks + components                            │
+│  trips/  bookings/  organizations/                           │
+│  drivers/  templates/  vehicles/  payments/                  │
 ├─────────────────────────────────────────────────────────────┤
 │               Services (repository pattern)                  │
-│  trips.service.ts  │  bookings.service.ts  │  organizations.service.ts │
+│  trips · bookings · organizations · drivers · templates      │
+│  vehicles · plans · payments · subscriptions                 │
 ├─────────────────────────────────────────────────────────────┤
 │                           lib/                               │
 │  api.ts (HTTP + tokenStorage + auto-refresh + ApiError)      │
@@ -88,16 +89,26 @@ movy_web/
 │   │   │       ├── BookingCard.tsx
 │   │   │       ├── BookingsList.tsx
 │   │   │       └── BookingDetailView.tsx
-│   │   └── organizations/
-│   │       ├── hooks/
-│   │       │   └── useOrganizations.ts
-│   │       └── components/
-│   │           ├── OrgCard.tsx
-│   │           └── OrgsList.tsx
+│   │   ├── organizations/
+│   │   │   ├── hooks/
+│   │   │   │   └── useOrganizations.ts
+│   │   │   └── components/
+│   │   │       ├── OrgCard.tsx
+│   │   │       └── OrgsList.tsx
+│   │   ├── drivers/               # Gestão admin de motoristas (hooks + components)
+│   │   ├── templates/             # CRUD de templates de rota (hooks + components)
+│   │   ├── vehicles/              # CRUD de veículos (hooks + components)
+│   │   └── payments/              # Histórico de pagamentos (hooks + components)
 │   ├── services/                  # Abstração de API (repository pattern)
 │   │   ├── trips.service.ts
 │   │   ├── bookings.service.ts
-│   │   └── organizations.service.ts
+│   │   ├── organizations.service.ts
+│   │   ├── drivers.service.ts
+│   │   ├── templates.service.ts
+│   │   ├── vehicles.service.ts
+│   │   ├── plans.service.ts
+│   │   ├── payments.service.ts
+│   │   └── subscriptions.service.ts
 │   ├── components/
 │   │   ├── layout/
 │   │   │   ├── AppShell.tsx       # Layout base (header + BottomNav)
@@ -109,10 +120,12 @@ movy_web/
 │   ├── hooks/
 │   │   └── use-mobile.tsx
 │   ├── lib/
-│   │   ├── api.ts                 # Cliente HTTP + tokenStorage + auto-refresh
+│   │   ├── api.ts                 # Cliente HTTP + tokenStorage + auto-refresh + ApiError
 │   │   ├── auth-context.tsx       # AuthProvider + useAuth()
 │   │   ├── role-context.tsx       # RoleProvider + useRole()
-│   │   ├── format.ts              # Helpers de formatação
+│   │   ├── format.ts              # Helpers de formatação (datas, status, preços)
+│   │   ├── date-filters.ts        # DateRange + isInDateRange (filtros de marketplace)
+│   │   ├── handle-error.ts        # handleApiError + bookingCancelErrorMessage
 │   │   ├── types.ts               # Tipos TypeScript do domínio
 │   │   └── utils.ts               # cn() para mesclar classes Tailwind
 │   ├── routes/                    # Thin controllers (file-based routing)
