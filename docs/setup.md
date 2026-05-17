@@ -2,11 +2,11 @@
 
 ## Pré-requisitos
 
-| Ferramenta            | Versão mínima recomendada   |
-| --------------------- | --------------------------- |
-| Node.js               | >= 20                       |
-| npm                   | >= 10 (vem com Node)        |
-| [Bun](https://bun.sh) | opcional, >= 1.1            |
+| Ferramenta            | Versão mínima recomendada |
+| --------------------- | ------------------------- |
+| Node.js               | >= 20                     |
+| npm                   | >= 10 (vem com Node)      |
+| [Bun](https://bun.sh) | opcional, >= 1.1          |
 
 > O projeto suporta tanto **npm** quanto **Bun** — ambos os lockfiles (`package-lock.json` e `bun.lock`) são versionados. Os scripts em `package.json` são neutros; use o gerenciador da sua preferência, mas seja consistente dentro de uma branch.
 
