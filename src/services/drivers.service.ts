@@ -12,6 +12,18 @@ type DriverLookup = {
 };
 
 export const driversService = {
+  createMe: (payload: {
+    cnh: string;
+    cnhCategory: "A" | "B" | "C" | "D" | "E";
+    cnhExpiresAt: string;
+  }) =>
+    api<Driver>("/drivers", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  getMe: () => api<Driver>("/drivers/me"),
+
   listByOrgId: (orgId: string) =>
     api<Driver[] | Paginated<Driver>>(`/drivers/organization/${orgId}`),
 

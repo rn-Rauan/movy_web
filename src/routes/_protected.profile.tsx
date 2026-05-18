@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
-import { Pencil, Mail, User as UserIcon, LogOut, Phone, Lock } from "lucide-react";
+import { Pencil, Mail, User as UserIcon, LogOut, Lock, IdCard } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth-context";
+import { useRole } from "@/lib/role-context";
 import { api } from "@/lib/api";
 
 export const Route = createFileRoute("/_protected/profile")({
@@ -33,7 +34,16 @@ const passwordSchema = z
   });
 
 function ProfilePage() {
+  const location = useLocation();
+  if (location.pathname !== "/profile") {
+    return <Outlet />;
+  }
+  return <ProfileIndex />;
+}
+
+function ProfileIndex() {
   const { user, logout, refreshUser } = useAuth();
+  const { hasDriverProfile, isDriver } = useRole();
 
   const [editOpen, setEditOpen] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
@@ -134,6 +144,8 @@ function ProfilePage() {
           <Field icon={<Mail className="h-4 w-4" />} label="E-mail" value={user?.email} />
         </div>
       </Card>
+
+      <DriverProfileCard hasDriverProfile={hasDriverProfile} isDriver={isDriver} />
 
       <Card className="p-4">
         <h3 className="text-sm font-semibold mb-3">Conta</h3>
@@ -245,5 +257,73 @@ function Field({ icon, label, value }: { icon: React.ReactNode; label: string; v
         <div className="text-sm">{value ?? "—"}</div>
       </div>
     </div>
+  );
+}
+
+function DriverProfileCard({
+  hasDriverProfile,
+  isDriver,
+}: {
+  hasDriverProfile: boolean;
+  isDriver: boolean;
+}) {
+  if (!hasDriverProfile) {
+    return (
+      <Card className="p-4 mb-4">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <IdCard className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold">Trabalhar como motorista</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Apenas para motoristas que vão trabalhar para uma empresa cadastrada no sistema.
+            </p>
+          </div>
+        </div>
+        <Button asChild size="sm" variant="outline" className="w-full">
+          <Link to="/profile/driver">Ativar perfil de motorista</Link>
+        </Button>
+      </Card>
+    );
+  }
+
+  if (!isDriver) {
+    return (
+      <Card className="p-4 mb-4">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
+            <IdCard className="h-5 w-5 text-yellow-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold">Perfil de motorista</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Aguardando vínculo com uma empresa. Funcionalidades de motorista ficam disponíveis
+              após um admin te vincular à organização dele.
+            </p>
+          </div>
+        </div>
+        <Button asChild size="sm" variant="outline" className="w-full">
+          <Link to="/profile/driver">Ver dados</Link>
+        </Button>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-4 mb-4">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <IdCard className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-sm font-semibold">Perfil de motorista</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Ativo no sistema</p>
+        </div>
+      </div>
+      <Button asChild size="sm" variant="outline" className="w-full">
+        <Link to="/profile/driver">Editar dados</Link>
+      </Button>
+    </Card>
   );
 }

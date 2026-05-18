@@ -6,6 +6,7 @@ import type { Organization, Paginated } from "./types";
 type RoleContextValue = {
   isAdmin: boolean;
   isDriver: boolean;
+  hasDriverProfile: boolean;
   adminOrgId: string | null;
   roleLoading: boolean;
   refetchRole: () => void;
@@ -17,6 +18,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDriver, setIsDriver] = useState(false);
+  const [hasDriverProfile, setHasDriverProfile] = useState(false);
   const [adminOrgId, setAdminOrgId] = useState<string | null>(null);
   const [roleLoading, setRoleLoading] = useState(true);
 
@@ -24,6 +26,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated) {
       setIsAdmin(false);
       setIsDriver(false);
+      setHasDriverProfile(false);
       setAdminOrgId(null);
       setRoleLoading(false);
       return;
@@ -36,33 +39,41 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         api<Paginated<Organization>>("/organizations/me"),
       ]);
 
-      setIsDriver(driverResult.status === "fulfilled");
+      setHasDriverProfile(driverResult.status === "fulfilled");
 
-      if (orgsResult.status === "fulfilled") {
-        const orgs = orgsResult.value.data ?? [];
-        if (orgs.length > 0) {
-          const orgId = orgs[0].id;
-          try {
-            const role = await api<{ id: number; name: string }>(`/memberships/me/role/${orgId}`);
-            if (role.name === "ADMIN") {
-              setIsAdmin(true);
-              setAdminOrgId(orgId);
-            } else {
-              setIsAdmin(false);
-              setAdminOrgId(null);
-            }
-          } catch {
-            setIsAdmin(false);
-            setAdminOrgId(null);
-          }
-        } else {
-          setIsAdmin(false);
-          setAdminOrgId(null);
-        }
-      } else {
+      const orgs = orgsResult.status === "fulfilled" ? (orgsResult.value.data ?? []) : [];
+
+      if (orgs.length === 0) {
         setIsAdmin(false);
         setAdminOrgId(null);
+        setIsDriver(false);
+        return;
       }
+
+      const roleResults = await Promise.allSettled(
+        orgs.map((o) =>
+          api<{ id: number; name: string }>(`/memberships/me/role/${o.id}`).then((role) => ({
+            orgId: o.id,
+            role,
+          })),
+        ),
+      );
+
+      let foundAdminOrg: string | null = null;
+      let foundDriverMembership = false;
+      for (const r of roleResults) {
+        if (r.status !== "fulfilled") continue;
+        if (!foundAdminOrg && r.value.role.name === "ADMIN") {
+          foundAdminOrg = r.value.orgId;
+        }
+        if (r.value.role.name === "DRIVER") {
+          foundDriverMembership = true;
+        }
+      }
+
+      setIsAdmin(foundAdminOrg !== null);
+      setAdminOrgId(foundAdminOrg);
+      setIsDriver(driverResult.status === "fulfilled" && foundDriverMembership);
     } finally {
       setRoleLoading(false);
     }
@@ -74,7 +85,14 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <RoleContext.Provider
-      value={{ isAdmin, isDriver, adminOrgId, roleLoading, refetchRole: detectRoles }}
+      value={{
+        isAdmin,
+        isDriver,
+        hasDriverProfile,
+        adminOrgId,
+        roleLoading,
+        refetchRole: detectRoles,
+      }}
     >
       {children}
     </RoleContext.Provider>
