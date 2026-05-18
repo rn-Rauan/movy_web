@@ -101,19 +101,23 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
   profile/                    → perfil e senha do usuário autenticado
   setup/                      → wizard de criação de organização (admin)
 
+  profile/driver/             → opt-in self-service de perfil de motorista (CNH + categoria + validade)
+
   _admin/ (guard: isAdmin)
     dashboard/                → métricas (ativas/próximos 7 dias/passageiros/ocupação%) + receita prevista + próximas viagens
     trips/                    → CRUD de instâncias de viagem
     trip/$tripId/             → detalhe + passageiros + ações de status (singular "trip" — não "trips")
-    templates/                → CRUD de templates de rota
+    templates/                → CRUD de templates de rota + dialog de geração manual de instâncias
     drivers/                  → gestão de motoristas da organização
     vehicles/                 → CRUD de veículos da organização
-    organization/             → configurações + card de plano (uso vs. limite)
+    organization/             → configurações + card de plano (uso vs. limite) + SchedulingConfigCard
     payments/                 → histórico de pagamentos da subscription (paginado)
 
   _driver/ (guard: isDriver)
     my-trips/                 → viagens do motorista logado
 ```
+
+**Nota sobre rotas-pai com filho:** quando uma rota como `profile.tsx` ganha uma filha (`profile.driver.tsx`), o TanStack passa a tratar `profile.tsx` como layout. Pra evitar que o conteúdo do pai engula a filha, o componente precisa retornar `<Outlet />` quando `location.pathname` é da filha — ver `_protected.trips.$orgId.tsx:14-22` e `_protected.profile.tsx`.
 
 ### Guard Centralizado
 
@@ -162,9 +166,10 @@ src/
 │   │       ├── OrgCard.tsx
 │   │       └── OrgsList.tsx         Lista com links para trips
 │   │
-│   ├── drivers/                Gestão admin de motoristas (hooks/ + components/)
-│   ├── templates/              CRUD admin de templates de rota (hooks/ + components/)
+│   ├── drivers/                Gestão admin + self-service (useMyDriver, DriverProfileForm)
+│   ├── templates/              CRUD admin de templates de rota + GenerateInstancesDialog
 │   ├── vehicles/               CRUD admin de veículos (hooks/ + components/)
+│   ├── scheduling/             SchedulingConfigCard + useSchedulingConfig (cron de geração/auto-cancel)
 │   └── payments/               Histórico de pagamentos da subscription (hooks/ + components/)
 │
 ├── services/                Abstração de chamadas de API (repository pattern)
@@ -173,7 +178,11 @@ src/
 │   ├── organizations.service.ts
 │   ├── drivers.service.ts
 │   ├── templates.service.ts
-│   └── vehicles.service.ts
+│   ├── vehicles.service.ts
+│   ├── scheduling.service.ts
+│   ├── plans.service.ts
+│   ├── payments.service.ts
+│   └── subscriptions.service.ts
 │
 ├── components/
 │   ├── ui/                  shadcn/ui — não modificar diretamente
@@ -193,7 +202,8 @@ src/
     ├── types.ts             Tipos TypeScript do domínio
     ├── format.ts            Helpers de formatação (datas, status, preços)
     ├── date-filters.ts      DateRange + isInDateRange — compartilhado entre marketplaces
-    ├── handle-error.ts      handleApiError + bookingCancelErrorMessage
+    ├── timezone.ts          brHourToUtc / utcHourToBr — converte HH:mm BR↔UTC (UTC−3, sem DST)
+    ├── handle-error.ts      handleApiError + bookingCancelErrorMessage + TRIP_SCHEDULING_MESSAGES
     └── utils.ts
 ```
 
@@ -233,11 +243,14 @@ function TripsPage() {
 
 **useAuth()** → `{ user, isAuthenticated, loading, login, signup, logout, refreshUser }`
 
-**useRole()** → `{ isAdmin, isDriver, adminOrgId, roleLoading, refetchRole }`
+**useRole()** → `{ isAdmin, isDriver, hasDriverProfile, adminOrgId, roleLoading, refetchRole }`
 
-- `isAdmin`: user tem role ADMIN na organização
-- `isDriver`: user está cadastrado como motorista
-- `adminOrgId`: ID da organização onde é admin
+- `isAdmin`: user tem role ADMIN em alguma organização (itera `/organizations/me` + `/memberships/me/role/{orgId}` em cada uma)
+- `hasDriverProfile`: user tem perfil de driver criado (`GET /drivers/me` 200). Habilita só `/profile/driver`.
+- `isDriver`: `hasDriverProfile` **E** tem membership ativa de role `DRIVER` em alguma org. Habilita tab "Como motorista" + rotas sob `_driver/`.
+- `adminOrgId`: ID da primeira org onde é admin
+
+> A semântica `hasDriverProfile ≠ isDriver` evita que qualquer user que ativou perfil saia tendo acesso às funcionalidades de motorista — só quem foi vinculado por um admin via `POST /memberships/driver` vê a UI de driver. Chame `refetchRole()` depois de criar/editar driver pra atualizar BottomNav sem reload.
 
 ---
 
@@ -281,6 +294,8 @@ organizationsService.listActive();
 organizationsService.listMine();
 
 // drivers.service.ts
+driversService.createMe({ cnh, cnhCategory, cnhExpiresAt }); // self-service POST /drivers
+driversService.getMe();                                       // GET /drivers/me
 driversService.listByOrgId(orgId);
 driversService.lookup(email, cnh);
 driversService.addToOrg(userEmail, cnh);
@@ -289,9 +304,10 @@ driversService.removeMembership(userId, roleId, orgId);
 // templates.service.ts
 templatesService.listByOrgId(orgId);
 templatesService.getById(id);
-templatesService.create(orgId, data);
+templatesService.create(orgId, data);   // data inclui departureTimeOfDay/arrivalTimeOfDay (UTC HH:mm) + defaultCapacity
 templatesService.update(id, data);
 templatesService.remove(id);
+templatesService.generateInstances(id, daysAhead?); // POST /trip-templates/{id}/generate-instances → { created, skipped, failed }
 
 // vehicles.service.ts
 vehiclesService.listByOrgId(orgId);
@@ -321,14 +337,20 @@ subscriptionsService.list(orgId);
 subscriptionsService.create(orgId, planId);
 subscriptionsService.changePlan(orgId, subscriptionId, planId);
 subscriptionsService.getPlanUsage(orgId);   // GET /organizations/{id}/plan-usage — fonte única do PlanCard
+
+// scheduling.service.ts
+schedulingService.getConfig(orgId);                  // GET /organizations/{id}/scheduling-config
+schedulingService.updateConfig(orgId, patch);        // PATCH parcial (enabled, daysAhead, generationCron, autoCancelCron)
 ```
 
 **Tratamento de erros:** `src/lib/handle-error.ts` exporta:
 
-- `handleApiError(err, fallbackMsg)` — detecta 403 limite-de-plano via `errorCode` estável (`NO_ACTIVE_SUBSCRIPTION_FORBIDDEN`, `*_PLAN_LIMIT_*`) e mostra toast com action "Ver planos" → `/organization`. Plugar nas rotas que fazem mutações sujeitas a limite.
+- `handleApiError(err, fallbackMsg)` — detecta 403 limite-de-plano via `errorCode` estável (`NO_ACTIVE_SUBSCRIPTION_FORBIDDEN`, `*_PLAN_LIMIT_*`) com toast + action "Ver planos" → `/organization`. Também mapeia `errorCode`s de trip-scheduling (`INVALID_TRIP_TIME_OF_DAY_FORMAT`, `INVALID_TRIP_TEMPLATE_MISSING_SCHEDULE`, `INVALID_TRIP_TEMPLATE_MISSING_CAPACITY`, `TRIP_TEMPLATE_NOT_RECURRING_BAD_REQUEST`, etc.) pra mensagens em PT-BR. Plugar nas rotas que fazem mutações sujeitas a limite ou ao contrato de scheduling.
 - `bookingCancelErrorMessage(err)` — mapeia `errorCode` de cancelamento (`BOOKING_CANCEL_WINDOW_CLOSED_BAD_REQUEST`, `BOOKING_TRIP_TERMINAL_BAD_REQUEST`, `BOOKING_ALREADY_INACTIVE_BAD_REQUEST`) pra mensagens em PT-BR.
 
 `ApiError` (em `lib/api.ts`) carrega `status`, `message`, `data` e `errorCode` (campo `error` do payload). Sempre prefira `errorCode` a parsing de `message` — é o contrato estável documentado em `docs/API_FRONTEND.md`.
+
+**Padrão `notFound` em hooks (404 ≠ erro):** quando um recurso pode legitimamente não existir ainda (ex: `GET /drivers/me` retorna 404 pra user sem perfil; `GET /organizations/{id}/scheduling-config` pra orgs legacy), o hook deve separar 404 num flag `notFound: true` sem disparar toast. Ver `useMyDriver` e `useSchedulingConfig`. Se o backend não padroniza 404 e retorna a mensagem dentro de um 400/500, usar heurística defensiva no hook (ver `isDriverNotFound` em `useMyDriver.ts`).
 
 ---
 
@@ -350,10 +372,33 @@ subscriptionsService.getPlanUsage(orgId);   // GET /organizations/{id}/plan-usag
 1. Cadastro → Login
 2. `/_protected/setup` → wizard 4 passos:
    - Passo 1: Criar organização (`POST /auth/setup-organization`)
-   - Passo 2: Criar template de viagem (`POST /trip-templates/organization/{orgId}`)
-   - Passo 3: Criar instância de viagem (`POST /trip-instances/organization/{orgId}`)
+   - Passo 2: Criar template de viagem (`POST /trip-templates/organization/{orgId}`) — campos obrigatórios: `departureTimeOfDay` + `arrivalTimeOfDay` (admin digita em BR, FE converte pra UTC via `brHourToUtc`) + `defaultCapacity`.
+   - Passo 3: Criar instância de viagem (`POST /trip-instances/organization/{orgId}`) — body atual usa **`departureDate` (YYYY-MM-DD)**; o servidor combina com o time-of-day do template. **Não enviar mais `departureTime`/`arrivalEstimate`** (breaking change).
    - Passo 4: Associar motorista (`POST /memberships/driver`) — opcional
 3. Após setup → `/_protected/organizations`
+
+---
+
+## Agendamento automático (Trip Scheduling)
+
+O backend gera `TripInstance`s automaticamente a partir de templates recorrentes via cron por org e cancela viagens de baixa receita.
+
+- **Configuração por org** (`SchedulingConfigCard` em `/organization`): toggle `enabled`, `daysAhead` (1–90), horário de geração diária (BR, FE converte pra cron UTC), frequência de auto-cancel (Select com presets, ex.: "A cada 15 minutos", "A cada 1 hora").
+- **Geração manual** (`GenerateInstancesDialog` em `TemplateCard`): visível só pra templates `isRecurring && status === "ACTIVE"`. Toast mostra `${created} criadas · ${skipped} ignoradas · ${failed} falhas`.
+- **Time-of-day em UTC**: o backend armazena `departureTimeOfDay`/`arrivalTimeOfDay` como UTC HH:mm. Inputs e displays sempre em horário de Brasília (UTC−3, sem DST) — converter via `lib/timezone.ts`. Nunca expor HH:mm UTC literal na UI.
+- **Cron expressions**: nunca expor pro admin como string. Sempre usar widgets amigáveis (time picker pra cron diário, Select de frequência pra cron recorrente). Se o backend tiver um cron "exótico" que não bate com presets, fallback "configurado pelo suporte" em vez de tentar editar.
+
+---
+
+## Driver self-service
+
+`POST /drivers` (JWT) deixa o próprio usuário criar perfil de motorista — mas só admin pode vinculá-lo a uma org via `POST /memberships/driver`. Por isso a UI separa:
+
+- `/profile/driver` (rota nova sob `_protected/`, NÃO sob `_driver/`): ativar perfil (modo create) ou ver/editar próprios dados (modo edit). Em create, exige **alert amarelo + checkbox obrigatório** "Confirmo que vou trabalhar para uma organização cadastrada".
+- `/profile` mostra card condicional: "Trabalhar como motorista" / "Aguardando vínculo com uma empresa" / "Ativo".
+- A tab "Como motorista" na BottomNav e rotas sob `_driver/` só aparecem quando `isDriver === true` (= perfil + membership). User com `hasDriverProfile && !isDriver` só acessa `/profile/driver`.
+
+`PUT /drivers/{id}` ainda é admin-only no backend. A UI já chama o endpoint em modo edit (o erro 403 cai em toast genérico até o backend liberar pra owner).
 
 ---
 
@@ -377,5 +422,8 @@ subscriptionsService.getPlanUsage(orgId);   // GET /organizations/{id}/plan-usag
 - Não adicionar React Query ainda — apesar do `@tanstack/react-query` estar no `package.json`, nenhuma rota o consome. Manter padrão Context + hooks até decisão explícita de migrar (ver ADR-002)
 - Não criar OrganizationContext global — `adminOrgId` do `useRole()` é suficiente
 - Não adicionar plugins ao `vite.config.ts` — o preset `@lovable.dev/vite-tanstack-config` já os inclui
-- Não fazer parsing de `err.message` pra detectar tipo de erro — usar `err.errorCode` (campo estável documentado em `docs/API_FRONTEND.md`)
+- Não fazer parsing de `err.message` pra detectar tipo de erro — usar `err.errorCode` (campo estável documentado em `docs/API_FRONTEND.md`). Exceção: hooks que detectam "recurso não existe ainda" precisam de heurística defensiva quando o backend não padroniza 404 (ver `useMyDriver`).
 - Não buscar `template` separado pra hidratar `TripInstance` — `GET /trip-instances/{id}` e `GET /trip-instances/organization/{id}` já vêm enriquecidos com `template`/`departurePoint`/`destination`/`bookedCount`
+- Não enviar `departureTime`/`arrivalEstimate` ao criar `TripInstance` — o backend agora aceita só `departureDate` (YYYY-MM-DD) e combina com o time-of-day do template. Os campos absolutos voltam na resposta.
+- Não expor cron expressions cruas (`0 2 * * *`, `*/15 * * * *`) nem horários em UTC literal na UI — sempre converter pra BR e usar widgets de frequência/horário amigáveis.
+- Não usar `_driver.tsx` como guard de rotas onde o user ainda não foi vinculado (ex.: `/profile/driver`) — esse layout redireciona quem não tem membership de driver. Rotas que só dependem de `hasDriverProfile` ficam direto sob `_protected/`.
