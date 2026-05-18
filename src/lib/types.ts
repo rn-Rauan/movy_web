@@ -121,6 +121,12 @@ export type TripTemplate = {
   destination: string;
   stops: string[];
   shift: "MORNING" | "AFTERNOON" | "EVENING";
+  /** HH:mm UTC. May be null on legacy templates created before the scheduling feature. */
+  departureTimeOfDay?: string | null;
+  /** HH:mm UTC. May be null on legacy templates. */
+  arrivalTimeOfDay?: string | null;
+  /** Seat count copied into each generated TripInstance. May be null on legacy templates. */
+  defaultCapacity?: number | null;
   priceOneWay?: number;
   priceReturn?: number;
   priceRoundTrip?: number;
@@ -133,6 +139,23 @@ export type TripTemplate = {
   status?: string;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type TripSchedulingConfig = {
+  id: string;
+  organizationId: string;
+  daysAhead: number;
+  generationCron: string;
+  autoCancelCron: string;
+  enabled: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type GenerateInstancesResult = {
+  created: number;
+  skipped: number;
+  failed: number;
 };
 
 export type Paginated<T> = {

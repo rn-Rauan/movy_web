@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { HHMM_REGEX, brHourToUtc } from "@/lib/timezone";
 import type { Organization, Paginated, TripTemplate } from "@/lib/types";
 
 export const Route = createFileRoute("/_protected/setup")({
@@ -46,14 +47,16 @@ const step2Schema = z.object({
     .array(z.string().trim().min(1, "Parada não pode ser vazia"))
     .min(2, "Informe ao menos 2 paradas"),
   shift: z.enum(["MORNING", "AFTERNOON", "EVENING"]),
+  departureTimeOfDay: z.string().regex(HHMM_REGEX, "Use o formato HH:mm (24h)"),
+  arrivalTimeOfDay: z.string().regex(HHMM_REGEX, "Use o formato HH:mm (24h)"),
+  defaultCapacity: z.coerce.number().int().min(1, "Capacidade deve ser ao menos 1"),
   priceOneWay: z.coerce.number().positive("Preço inválido").optional(),
   priceRoundTrip: z.coerce.number().positive("Preço inválido").optional(),
   isPublic: z.boolean(),
 });
 
 const step3Schema = z.object({
-  departureTime: z.string().min(1, "Informe a data/hora de partida"),
-  arrivalEstimate: z.string().min(1, "Informe a estimativa de chegada"),
+  departureDate: z.string().min(1, "Informe a data de partida"),
   totalCapacity: z.coerce.number().int().min(1, "Capacidade deve ser ao menos 1"),
   initialStatus: z.enum(["DRAFT", "SCHEDULED"]),
 });
@@ -62,10 +65,6 @@ const step4Schema = z.object({
   userEmail: z.string().email("E-mail inválido"),
   cnh: z.string().trim().min(9, "CNH deve ter ao menos 9 caracteres"),
 });
-
-function toISO(localStr: string): string {
-  return new Date(localStr).toISOString();
-}
 
 function SetupPage() {
   const { refreshUser } = useAuth();
@@ -98,14 +97,16 @@ function SetupPage() {
     destination: "",
     stops: ["", ""],
     shift: "MORNING" as Shift,
+    departureTimeOfDay: "",
+    arrivalTimeOfDay: "",
+    defaultCapacity: "",
     priceOneWay: "",
     priceRoundTrip: "",
     isPublic: false,
   });
 
   const [form3, setForm3] = useState({
-    departureTime: "",
-    arrivalEstimate: "",
+    departureDate: "",
     totalCapacity: "",
     initialStatus: "DRAFT" as InitialStatus,
   });
@@ -149,6 +150,7 @@ function SetupPage() {
     e.preventDefault();
     const payload = {
       ...form2,
+      defaultCapacity: form2.defaultCapacity !== "" ? Number(form2.defaultCapacity) : undefined,
       priceOneWay: form2.priceOneWay !== "" ? Number(form2.priceOneWay) : undefined,
       priceRoundTrip: form2.priceRoundTrip !== "" ? Number(form2.priceRoundTrip) : undefined,
     };
@@ -157,11 +159,21 @@ function SetupPage() {
       toast.error(parsed.error.issues[0].message);
       return;
     }
+    const departureUtc = brHourToUtc(parsed.data.departureTimeOfDay);
+    const arrivalUtc = brHourToUtc(parsed.data.arrivalTimeOfDay);
+    if (!departureUtc || !arrivalUtc) {
+      toast.error("Use o formato HH:mm (24h) nos horários");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await api<TripTemplate>(`/trip-templates/organization/${orgId}`, {
         method: "POST",
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify({
+          ...parsed.data,
+          departureTimeOfDay: departureUtc,
+          arrivalTimeOfDay: arrivalUtc,
+        }),
       });
       setTemplateId(res.id);
       toast.success("Roteiro criado!");
@@ -186,8 +198,7 @@ function SetupPage() {
         method: "POST",
         body: JSON.stringify({
           tripTemplateId: templateId,
-          departureTime: toISO(parsed.data.departureTime),
-          arrivalEstimate: toISO(parsed.data.arrivalEstimate),
+          departureDate: parsed.data.departureDate,
           totalCapacity: parsed.data.totalCapacity,
           initialStatus: parsed.data.initialStatus,
         }),
@@ -406,6 +417,46 @@ function SetupPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
+                <Label htmlFor="depTimeOfDay">Hora de partida</Label>
+                <Input
+                  id="depTimeOfDay"
+                  type="time"
+                  value={form2.departureTimeOfDay}
+                  onChange={(e) => setForm2((f) => ({ ...f, departureTimeOfDay: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="arrTimeOfDay">Hora estimada de chegada</Label>
+                <Input
+                  id="arrTimeOfDay"
+                  type="time"
+                  value={form2.arrivalTimeOfDay}
+                  onChange={(e) => setForm2((f) => ({ ...f, arrivalTimeOfDay: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground -mt-2">
+              Horário de Brasília. A chegada pode ser antes da partida se cruzar meia-noite.
+            </p>
+
+            <div className="space-y-2">
+              <Label htmlFor="defaultCapacity">Capacidade padrão (assentos)</Label>
+              <Input
+                id="defaultCapacity"
+                type="number"
+                min="1"
+                step="1"
+                value={form2.defaultCapacity}
+                onChange={(e) => setForm2((f) => ({ ...f, defaultCapacity: e.target.value }))}
+                placeholder="Ex: 20"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
                 <Label htmlFor="priceOneWay">Preço ida (R$)</Label>
                 <Input
                   id="priceOneWay"
@@ -453,25 +504,17 @@ function SetupPage() {
             <h2 className="text-lg font-semibold">Criar instância de viagem</h2>
 
             <div className="space-y-2">
-              <Label htmlFor="depTime">Data e hora de partida</Label>
+              <Label htmlFor="depDate">Data de partida</Label>
               <Input
-                id="depTime"
-                type="datetime-local"
-                value={form3.departureTime}
-                onChange={(e) => setForm3((f) => ({ ...f, departureTime: e.target.value }))}
+                id="depDate"
+                type="date"
+                value={form3.departureDate}
+                onChange={(e) => setForm3((f) => ({ ...f, departureDate: e.target.value }))}
                 required
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="arrival">Estimativa de chegada</Label>
-              <Input
-                id="arrival"
-                type="datetime-local"
-                value={form3.arrivalEstimate}
-                onChange={(e) => setForm3((f) => ({ ...f, arrivalEstimate: e.target.value }))}
-                required
-              />
+              <p className="text-xs text-muted-foreground">
+                O horário vem do template criado no passo anterior.
+              </p>
             </div>
 
             <div className="space-y-2">

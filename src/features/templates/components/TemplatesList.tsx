@@ -7,9 +7,10 @@ type Props = {
   onCreate: () => void;
   onEdit: (tpl: TripTemplate) => void;
   onDelete: (tpl: TripTemplate) => void;
+  onGenerate?: (tpl: TripTemplate) => void;
 };
 
-export function TemplatesList({ templates, onCreate, onEdit, onDelete }: Props) {
+export function TemplatesList({ templates, onCreate, onEdit, onDelete, onGenerate }: Props) {
   if (templates.length === 0) {
     return (
       <EmptyState
@@ -23,7 +24,13 @@ export function TemplatesList({ templates, onCreate, onEdit, onDelete }: Props) 
   return (
     <div className="space-y-2">
       {templates.map((tpl) => (
-        <TemplateCard key={tpl.id} template={tpl} onEdit={onEdit} onDelete={onDelete} />
+        <TemplateCard
+          key={tpl.id}
+          template={tpl}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onGenerate={onGenerate}
+        />
       ))}
     </div>
   );

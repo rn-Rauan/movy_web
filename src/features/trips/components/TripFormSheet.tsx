@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/handle-error";
+import { utcHourToBr } from "@/lib/timezone";
 import { tripsService } from "@/services/trips.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,9 +21,6 @@ const tripSchema = z
   .object({
     tripTemplateId: z.string().min(1, "Selecione um template"),
     departureDate: z.string().min(1, "Informe a data de partida"),
-    departureTime: z.string().min(1, "Informe a hora de partida"),
-    arrivalDate: z.string().min(1, "Informe a data de chegada"),
-    arrivalTime: z.string().min(1, "Informe a hora estimada de chegada"),
     totalCapacity: z.coerce.number().int().min(1, "Capacidade deve ser ao menos 1"),
     initialStatus: z.enum(["DRAFT", "SCHEDULED"]),
     driverId: z.string().optional(),
@@ -50,9 +48,6 @@ const tripSchema = z
 type FormState = {
   tripTemplateId: string;
   departureDate: string;
-  departureTime: string;
-  arrivalDate: string;
-  arrivalTime: string;
   totalCapacity: string;
   initialStatus: "DRAFT" | "SCHEDULED";
   driverId: string;
@@ -62,9 +57,6 @@ type FormState = {
 const EMPTY: FormState = {
   tripTemplateId: "",
   departureDate: "",
-  departureTime: "",
-  arrivalDate: "",
-  arrivalTime: "",
   totalCapacity: "",
   initialStatus: "DRAFT",
   driverId: "",
@@ -101,6 +93,22 @@ export function TripFormSheet({
     }
   }, [open]);
 
+  const selectedTemplate = useMemo(
+    () => templates.find((t) => t.id === form.tripTemplateId) ?? null,
+    [templates, form.tripTemplateId],
+  );
+
+  const templateHasSchedule = Boolean(
+    selectedTemplate?.departureTimeOfDay && selectedTemplate?.arrivalTimeOfDay,
+  );
+
+  const previewDepartureBr = selectedTemplate?.departureTimeOfDay
+    ? utcHourToBr(selectedTemplate.departureTimeOfDay)
+    : null;
+  const previewArrivalBr = selectedTemplate?.arrivalTimeOfDay
+    ? utcHourToBr(selectedTemplate.arrivalTimeOfDay)
+    : null;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!orgId) return;
@@ -113,24 +121,21 @@ export function TripFormSheet({
       setFieldErrors(errs);
       return;
     }
+    if (selectedTemplate && !templateHasSchedule) {
+      setFieldErrors({
+        tripTemplateId:
+          "Template sem horário configurado — edite o template antes de criar viagens",
+      });
+      return;
+    }
     setFieldErrors({});
     setSubmitting(true);
     try {
-      const {
-        departureDate,
-        departureTime,
-        arrivalDate,
-        arrivalTime,
-        driverId,
-        vehicleId,
-        ...rest
-      } = parsed.data;
+      const { driverId, vehicleId, ...rest } = parsed.data;
       await tripsService.create(orgId, {
         ...rest,
         driverId: driverId || undefined,
         vehicleId: vehicleId || undefined,
-        departureTime: new Date(`${departureDate}T${departureTime}`).toISOString(),
-        arrivalEstimate: new Date(`${arrivalDate}T${arrivalTime}`).toISOString(),
       });
       toast.success("Viagem criada");
       onOpenChange(false);
@@ -169,6 +174,17 @@ export function TripFormSheet({
             {fieldErrors.tripTemplateId && (
               <p className="text-xs text-destructive">{fieldErrors.tripTemplateId}</p>
             )}
+            {selectedTemplate && templateHasSchedule && (
+              <p className="text-xs text-muted-foreground">
+                Partida prevista: {previewDepartureBr} · Chegada: {previewArrivalBr} (horário de
+                Brasília)
+              </p>
+            )}
+            {selectedTemplate && !templateHasSchedule && (
+              <p className="text-xs text-destructive">
+                Template sem horário configurado — edite o template antes de criar viagens.
+              </p>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -181,42 +197,7 @@ export function TripFormSheet({
             {fieldErrors.departureDate && (
               <p className="text-xs text-destructive">{fieldErrors.departureDate}</p>
             )}
-          </div>
-
-          <div className="space-y-1">
-            <Label>Hora de partida</Label>
-            <Input
-              type="time"
-              value={form.departureTime}
-              onChange={(e) => setForm((f) => ({ ...f, departureTime: e.target.value }))}
-            />
-            {fieldErrors.departureTime && (
-              <p className="text-xs text-destructive">{fieldErrors.departureTime}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <Label>Data estimada de chegada</Label>
-            <Input
-              type="date"
-              value={form.arrivalDate}
-              onChange={(e) => setForm((f) => ({ ...f, arrivalDate: e.target.value }))}
-            />
-            {fieldErrors.arrivalDate && (
-              <p className="text-xs text-destructive">{fieldErrors.arrivalDate}</p>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <Label>Hora estimada de chegada</Label>
-            <Input
-              type="time"
-              value={form.arrivalTime}
-              onChange={(e) => setForm((f) => ({ ...f, arrivalTime: e.target.value }))}
-            />
-            {fieldErrors.arrivalTime && (
-              <p className="text-xs text-destructive">{fieldErrors.arrivalTime}</p>
-            )}
+            <p className="text-xs text-muted-foreground">O horário vem do template selecionado.</p>
           </div>
 
           <div className="space-y-1">

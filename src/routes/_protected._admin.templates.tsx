@@ -10,6 +10,8 @@ import { useTemplates } from "@/features/templates/hooks/useTemplates";
 import { TemplatesList } from "@/features/templates/components/TemplatesList";
 import { TemplateFormSheet } from "@/features/templates/components/TemplateFormSheet";
 import { DeleteTemplateDialog } from "@/features/templates/components/DeleteTemplateDialog";
+import { GenerateInstancesDialog } from "@/features/templates/components/GenerateInstancesDialog";
+import { useSchedulingConfig } from "@/features/scheduling/hooks/useSchedulingConfig";
 import type { TripTemplate } from "@/lib/types";
 
 export const Route = createFileRoute("/_protected/_admin/templates")({
@@ -19,9 +21,11 @@ export const Route = createFileRoute("/_protected/_admin/templates")({
 function TemplatesPage() {
   const { adminOrgId } = useRole();
   const { templates, setTemplates, loading, error } = useTemplates(adminOrgId);
+  const { config: schedulingConfig } = useSchedulingConfig(adminOrgId);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<TripTemplate | null>(null);
   const [deleting, setDeleting] = useState<TripTemplate | null>(null);
+  const [generating, setGenerating] = useState<TripTemplate | null>(null);
 
   const hasTemplates = (templates?.length ?? 0) > 0;
 
@@ -55,6 +59,7 @@ function TemplatesPage() {
           onCreate={openCreate}
           onEdit={openEdit}
           onDelete={setDeleting}
+          onGenerate={setGenerating}
         />
       )}
 
@@ -76,6 +81,12 @@ function TemplatesPage() {
         template={deleting}
         onClose={() => setDeleting(null)}
         onDeleted={(tpl) => setTemplates((prev) => prev?.filter((t) => t.id !== tpl.id) ?? null)}
+      />
+
+      <GenerateInstancesDialog
+        template={generating}
+        defaultDaysAhead={schedulingConfig?.daysAhead}
+        onClose={() => setGenerating(null)}
       />
     </AppShell>
   );

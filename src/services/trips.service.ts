@@ -3,8 +3,8 @@ import type { TripInstance, TripStatus, TripPassenger, Paginated } from "@/lib/t
 
 type TripCreatePayload = {
   tripTemplateId: string;
-  departureTime: string;
-  arrivalEstimate: string;
+  /** Calendar day YYYY-MM-DD. Server combines it with the template's time-of-day (UTC). */
+  departureDate: string;
   totalCapacity: number;
   driverId?: string;
   vehicleId?: string;

@@ -33,6 +33,7 @@ import { subscriptionsService } from "@/services/subscriptions.service";
 import { plansService } from "@/services/plans.service";
 import { ApiError } from "@/lib/api";
 import { useRole } from "@/lib/role-context";
+import { SchedulingConfigCard } from "@/features/scheduling/components/SchedulingConfigCard";
 import type {
   Organization,
   Vehicle,
@@ -229,6 +230,9 @@ function OrganizationPage() {
           if (adminOrgId) loadPlanData(adminOrgId);
         }}
       />
+
+      {/* Scheduling config card */}
+      <SchedulingConfigCard orgId={adminOrgId} />
 
       {/* Org info card */}
       <Card className="p-5 mb-4">

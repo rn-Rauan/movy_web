@@ -3,6 +3,7 @@ import { Plus, X } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/handle-error";
+import { HHMM_REGEX, brHourToUtc, utcHourToBr } from "@/lib/timezone";
 import { templatesService } from "@/services/templates.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,9 @@ const templateSchema = z
       .array(z.string().trim().min(1, "Parada não pode ser vazia"))
       .min(2, "Informe ao menos 2 paradas"),
     shift: z.enum(["MORNING", "AFTERNOON", "EVENING"]),
+    departureTimeOfDay: z.string().regex(HHMM_REGEX, "Use o formato HH:mm (24h)"),
+    arrivalTimeOfDay: z.string().regex(HHMM_REGEX, "Use o formato HH:mm (24h)"),
+    defaultCapacity: z.coerce.number().int().min(1, "Capacidade deve ser ao menos 1"),
     priceOneWay: z.coerce.number().positive("Preço inválido").optional(),
     priceReturn: z.coerce.number().positive("Preço inválido").optional(),
     priceRoundTrip: z.coerce.number().positive("Preço inválido").optional(),
@@ -48,6 +52,15 @@ const templateSchema = z
     autoCancelOffset: z.coerce.number().int().positive("Tempo inválido").optional(),
   })
   .superRefine((data, ctx) => {
+    const hasAnyPrice =
+      data.priceOneWay != null || data.priceReturn != null || data.priceRoundTrip != null;
+    if (!hasAnyPrice) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["priceOneWay"],
+        message: "Informe ao menos um preço (ida, volta ou ida e volta)",
+      });
+    }
     if (data.isRecurring && (!data.frequency || data.frequency.length === 0)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -78,6 +91,11 @@ type FormState = {
   destination: string;
   stops: string[];
   shift: "MORNING" | "AFTERNOON" | "EVENING";
+  /** HH:mm em horário de Brasília. Convertido para UTC no submit. */
+  departureTimeOfDay: string;
+  /** HH:mm em horário de Brasília. */
+  arrivalTimeOfDay: string;
+  defaultCapacity: string;
   priceOneWay: string;
   priceReturn: string;
   priceRoundTrip: string;
@@ -94,6 +112,9 @@ const EMPTY_FORM: FormState = {
   destination: "",
   stops: ["", ""],
   shift: "MORNING",
+  departureTimeOfDay: "",
+  arrivalTimeOfDay: "",
+  defaultCapacity: "",
   priceOneWay: "",
   priceReturn: "",
   priceRoundTrip: "",
@@ -111,6 +132,9 @@ function templateToForm(tpl: TripTemplate): FormState {
     destination: tpl.destination,
     stops: tpl.stops.length >= 2 ? tpl.stops : [...tpl.stops, "", ""].slice(0, 2),
     shift: tpl.shift,
+    departureTimeOfDay: utcHourToBr(tpl.departureTimeOfDay) ?? "",
+    arrivalTimeOfDay: utcHourToBr(tpl.arrivalTimeOfDay) ?? "",
+    defaultCapacity: tpl.defaultCapacity != null ? String(tpl.defaultCapacity) : "",
     priceOneWay: tpl.priceOneWay != null ? String(tpl.priceOneWay) : "",
     priceReturn: tpl.priceReturn != null ? String(tpl.priceReturn) : "",
     priceRoundTrip: tpl.priceRoundTrip != null ? String(tpl.priceRoundTrip) : "",
@@ -155,6 +179,7 @@ export function TemplateFormSheet({
     e.preventDefault();
     const payload = {
       ...form,
+      defaultCapacity: form.defaultCapacity ? Number(form.defaultCapacity) : undefined,
       priceOneWay: form.priceOneWay ? Number(form.priceOneWay) : undefined,
       priceReturn: form.priceReturn ? Number(form.priceReturn) : undefined,
       priceRoundTrip: form.priceRoundTrip ? Number(form.priceRoundTrip) : undefined,
@@ -174,14 +199,26 @@ export function TemplateFormSheet({
     }
     setFieldErrors({});
     setSubmitting(true);
+    const departureUtc = brHourToUtc(parsed.data.departureTimeOfDay);
+    const arrivalUtc = brHourToUtc(parsed.data.arrivalTimeOfDay);
+    if (!departureUtc || !arrivalUtc) {
+      setFieldErrors({ departureTimeOfDay: "Use o formato HH:mm (24h)" });
+      setSubmitting(false);
+      return;
+    }
+    const apiPayload = {
+      ...parsed.data,
+      departureTimeOfDay: departureUtc,
+      arrivalTimeOfDay: arrivalUtc,
+    };
     try {
       if (editing) {
-        const updated = await templatesService.update(editing.id, parsed.data);
+        const updated = await templatesService.update(editing.id, apiPayload);
         onUpdated(updated);
         toast.success("Template atualizado");
       } else {
         if (!orgId) return;
-        const created = await templatesService.create(orgId, parsed.data);
+        const created = await templatesService.create(orgId, apiPayload);
         onCreated(created);
         toast.success("Template criado");
       }
@@ -240,6 +277,53 @@ export function TemplateFormSheet({
                 <SelectItem value="EVENING">Noite</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Hora de partida</Label>
+              <Input
+                type="time"
+                value={form.departureTimeOfDay}
+                onChange={(e) => setForm((f) => ({ ...f, departureTimeOfDay: e.target.value }))}
+              />
+              {fieldErrors.departureTimeOfDay && (
+                <p className="text-xs text-destructive">{fieldErrors.departureTimeOfDay}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label>Hora estimada de chegada</Label>
+              <Input
+                type="time"
+                value={form.arrivalTimeOfDay}
+                onChange={(e) => setForm((f) => ({ ...f, arrivalTimeOfDay: e.target.value }))}
+              />
+              {fieldErrors.arrivalTimeOfDay && (
+                <p className="text-xs text-destructive">{fieldErrors.arrivalTimeOfDay}</p>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Horários em Brasília (UTC−3). A chegada pode ser anterior à partida se a viagem cruza
+            meia-noite.
+          </p>
+
+          <div className="space-y-1">
+            <Label>Capacidade padrão (assentos)</Label>
+            <Input
+              type="number"
+              min="1"
+              step="1"
+              value={form.defaultCapacity}
+              onChange={(e) => setForm((f) => ({ ...f, defaultCapacity: e.target.value }))}
+              placeholder="Ex: 20"
+            />
+            {fieldErrors.defaultCapacity && (
+              <p className="text-xs text-destructive">{fieldErrors.defaultCapacity}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Aplicado às viagens geradas automaticamente a partir deste template.
+            </p>
           </div>
 
           <div className="space-y-2">
