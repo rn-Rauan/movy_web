@@ -1,7 +1,6 @@
 import { useRouter } from "@tanstack/react-router";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { Button } from "@/components/ui/button";
 import { BottomNav } from "./BottomNav";
 
 type Props = {
@@ -9,34 +8,47 @@ type Props = {
   back?: boolean;
   children: React.ReactNode;
   showTabs?: boolean;
+  /** Conteúdo opcional alinhado à direita no header (antes do logout). */
+  action?: React.ReactNode;
 };
 
-export function AppShell({ title, back, children, showTabs = true }: Props) {
+export function AppShell({ title, back, children, showTabs = true, action }: Props) {
   const router = useRouter();
   const { logout, isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-20 bg-card border-b border-border">
-        <div className="mx-auto max-w-md flex items-center gap-2 px-4 h-14">
-          {back ? (
-            <button
-              onClick={() => router.history.back()}
-              aria-label="Voltar"
-              className="p-2 -ml-2 rounded-lg hover:bg-accent"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          ) : null}
-          <h1 className="text-lg font-semibold flex-1 truncate">{title}</h1>
-          {isAuthenticated ? (
-            <Button variant="ghost" size="icon" onClick={logout} aria-label="Sair">
-              <LogOut className="h-5 w-5" />
-            </Button>
-          ) : null}
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="sticky top-0 z-20 border-b border-line bg-surface">
+        <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-[18px]">
+          <div className="flex min-w-0 items-center gap-2.5">
+            {back && (
+              <button
+                onClick={() => router.history.back()}
+                aria-label="Voltar"
+                className="-ml-1 flex h-8 w-8 items-center justify-center rounded-full text-ink transition hover:bg-line-soft"
+              >
+                <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
+              </button>
+            )}
+            <h1 className="truncate text-[19px] font-extrabold tracking-[-0.3px] text-ink">
+              {title}
+            </h1>
+          </div>
+          <div className="flex flex-none items-center gap-1.5">
+            {action}
+            {isAuthenticated && (
+              <button
+                onClick={logout}
+                aria-label="Sair"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-ink-2 transition hover:bg-line-soft"
+              >
+                <LogOut className="h-[18px] w-[18px]" strokeWidth={1.8} />
+              </button>
+            )}
+          </div>
         </div>
       </header>
-      <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-4 pb-24">{children}</main>
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3.5 pb-28">{children}</main>
       {showTabs && <BottomNav />}
     </div>
   );

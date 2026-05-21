@@ -1,8 +1,5 @@
 import { useState } from "react";
-import { Bus, Clock, MapPin, User, Users } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Bus, Pencil, User, Users } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -20,10 +17,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { StatusPill } from "@/components/visual/StatusPill";
+import { Timeline } from "@/components/visual/Timeline";
+import { OccupancyBar } from "@/components/visual/OccupancyBar";
 import { BookingRow } from "@/features/bookings/components/BookingRow";
 import { DriverDisplayName } from "@/features/drivers/components/DriverDisplayName";
 import { driverDisplayString } from "@/features/drivers/lib/driver-display";
-import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
 import type {
   Booking,
   Driver,
@@ -32,6 +31,7 @@ import type {
   TripStatus,
   Vehicle,
 } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const STATUS_TRANSITIONS: Record<TripStatus, TripStatus[]> = {
   DRAFT: ["SCHEDULED", "CANCELED"],
@@ -46,9 +46,9 @@ const DRIVER_ALLOWED_TRANSITIONS = new Set<TripStatus>(["IN_PROGRESS", "FINISHED
 
 const STATUS_ACTION_LABEL: Record<TripStatus, string> = {
   SCHEDULED: "Agendar",
-  CONFIRMED: "Confirmar",
+  CONFIRMED: "Confirmar viagem",
   IN_PROGRESS: "Iniciar viagem",
-  FINISHED: "Finalizar",
+  FINISHED: "Finalizar viagem",
   CANCELED: "Cancelar",
   DRAFT: "",
 };
@@ -59,8 +59,18 @@ const DRIVER_STATUS_LABEL: Record<Driver["driverStatus"], string> = {
   SUSPENDED: "Suspenso",
 };
 
+function pad(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function initialsOf(name?: string | null) {
+  if (!name) return "—";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+  return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
+}
+
 type Props = {
-  /** "admin" shows assignment + full transitions; "driver" shows only IN_PROGRESS/FINISHED and hides admin actions. */
   role: "admin" | "driver";
   trip: TripInstance;
   passengers: TripPassenger[];
@@ -97,6 +107,8 @@ export function AdminTripDetailView({
 }: Props) {
   const [cancelDialog, setCancelDialog] = useState(false);
   const [cancelBooking, setCancelBooking] = useState<Booking | null>(null);
+  const [editingDriver, setEditingDriver] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState(false);
 
   const isAdmin = role === "admin";
   const allTransitions = STATUS_TRANSITIONS[trip.tripStatus] ?? [];
@@ -106,175 +118,229 @@ export function AdminTripDetailView({
   const canEdit = isAdmin && !["FINISHED", "CANCELED"].includes(trip.tripStatus);
   const nonCancelTransitions = transitions.filter((s) => s !== "CANCELED");
   const namesByUserId = new Map(passengers.map((p) => [p.userId, p.name]));
-  const origin = trip.template?.origin ?? trip.departurePoint;
-  const destination = trip.template?.destination ?? trip.destination;
-  const stops = trip.template?.stops ?? [];
+  const origin = trip.template?.origin ?? trip.departurePoint ?? "—";
+  const destination = trip.template?.destination ?? trip.destination ?? "—";
+  const stops = (trip.template?.stops ?? []).map((s) => ({ name: s }));
   const assignedDriver = drivers.find((d) => d.id === trip.driverId) ?? null;
+  const assignedVehicle = vehicles.find((v) => v.id === trip.vehicleId) ?? null;
+
+  const dep = new Date(trip.departureTime);
+  const date = Number.isNaN(dep.getTime())
+    ? "—"
+    : `${pad(dep.getUTCDate())}/${pad(dep.getUTCMonth() + 1)}`;
+  const time = Number.isNaN(dep.getTime())
+    ? ""
+    : `${pad(dep.getUTCHours())}:${pad(dep.getUTCMinutes())}`;
+  const arr = trip.arrivalEstimate ? new Date(trip.arrivalEstimate) : null;
+  const arrival =
+    arr && !Number.isNaN(arr.getTime())
+      ? `${pad(arr.getUTCHours())}:${pad(arr.getUTCMinutes())}`
+      : undefined;
+
+  const hasSticky = transitions.length > 0;
 
   return (
-    <>
-      <Card className="p-4 mb-3">
-        <div className="flex items-start justify-between gap-2 mb-3">
+    <div className={cn("flex flex-col gap-3.5", hasSticky && "pb-24")}>
+      {/* Hero card */}
+      <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <div className="text-sm font-semibold mb-0.5">{formatDateTime(trip.departureTime)}</div>
-            {trip.arrivalEstimate && (
-              <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Chegada: {formatDateTime(trip.arrivalEstimate)}
-              </div>
-            )}
+            <div className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">
+              Partida
+            </div>
+            <div className="mt-1 font-mono text-[36px] font-extrabold leading-none tracking-[-1.5px] text-ink">
+              {time}
+            </div>
+            <div className="mt-1 font-mono text-[13px] font-semibold text-ink-2">{date}</div>
           </div>
-          <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
+          <StatusPill status={trip.tripStatus} />
         </div>
 
-        {(origin || destination) && (
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
-            <MapPin className="h-4 w-4 shrink-0" />
-            {origin ?? "—"} → {destination ?? "—"}
+        {/* Ocupação */}
+        <div className="mt-3 flex items-center gap-2.5 border-t border-line-soft pt-3">
+          <Users className="h-4 w-4 text-muted-foreground" strokeWidth={1.7} />
+          <div className="flex-1">
+            <OccupancyBar booked={trip.bookedCount ?? 0} total={trip.totalCapacity ?? 0} />
           </div>
-        )}
+          <div className="text-[11px] font-semibold text-muted-foreground">vagas</div>
+        </div>
+      </div>
 
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Users className="h-4 w-4" />
-          {trip.bookedCount ?? 0} / {trip.totalCapacity} lugares
+      {/* Timeline (paradas) */}
+      <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.4px] text-muted-foreground">
+          Trajeto
+        </div>
+        <Timeline from={origin} to={destination} departure={time} arrival={arrival} stops={stops} />
+      </div>
+
+      {/* Motorista */}
+      <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.4px] text-muted-foreground">
+            <User className="h-3.5 w-3.5" strokeWidth={1.8} />
+            Motorista
+          </div>
+          {canEdit && !editingDriver && (
+            <button
+              onClick={() => setEditingDriver(true)}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-line-soft text-ink-2 transition hover:bg-line"
+              aria-label="Trocar motorista"
+            >
+              <Pencil className="h-3 w-3" strokeWidth={1.8} />
+            </button>
+          )}
         </div>
 
-        {stops.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-border">
-            <div className="text-xs text-muted-foreground mb-1.5">Paradas</div>
-            <ol className="text-sm space-y-1 list-decimal list-inside">
-              {stops.map((stop, i) => (
-                <li key={i}>{stop}</li>
-              ))}
-            </ol>
-          </div>
-        )}
-      </Card>
-
-      {canEdit && (
-        <Card className="p-4 mb-3">
-          <div className="flex items-center gap-2 mb-3 text-sm font-medium">
-            <User className="h-4 w-4" /> Motorista
-          </div>
-
-          {assignedDriver && (
-            <div className="mb-3 rounded-lg border border-border bg-muted/30 p-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold truncate">
-                    <DriverDisplayName driver={assignedDriver} />
-                  </div>
-                  {assignedDriver.userEmail && assignedDriver.userName && (
-                    <div className="text-xs text-muted-foreground truncate">
-                      {assignedDriver.userEmail}
-                    </div>
-                  )}
+        {assignedDriver && !editingDriver ? (
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-accent-soft text-[13px] font-extrabold text-accent">
+              {initialsOf(assignedDriver.userName)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <div className="truncate text-[14px] font-extrabold text-ink">
+                  <DriverDisplayName driver={assignedDriver} />
                 </div>
-                <Badge
-                  variant={assignedDriver.driverStatus === "ACTIVE" ? "default" : "outline"}
-                  className="text-xs shrink-0"
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                    assignedDriver.driverStatus === "ACTIVE"
+                      ? "bg-success-soft text-success"
+                      : "bg-line-soft text-muted-foreground",
+                  )}
                 >
                   {DRIVER_STATUS_LABEL[assignedDriver.driverStatus]}
-                </Badge>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                <span>CNH {assignedDriver.cnh}</span>
-                <span>·</span>
-                <span>Cat. {assignedDriver.cnhCategories.join(", ")}</span>
-                <span>·</span>
-                <span>
-                  Val. {new Date(assignedDriver.cnhExpiresAt).toLocaleDateString("pt-BR")}
                 </span>
               </div>
+              <div className="mt-1 text-[11px] text-muted-foreground">
+                CNH {assignedDriver.cnh} · Cat. {assignedDriver.cnhCategories.join(", ")} · Val.{" "}
+                {new Date(assignedDriver.cnhExpiresAt).toLocaleDateString("pt-BR")}
+              </div>
             </div>
-          )}
-
-          <Select
-            value={trip.driverId ?? "none"}
-            onValueChange={onAssignDriver}
-            disabled={assigningDriver}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sem motorista" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Sem motorista</SelectItem>
-              {drivers.map((d) => (
-                <SelectItem key={d.id} value={d.id} textValue={driverDisplayString(d)}>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">
-                      <DriverDisplayName driver={d} />
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      CNH {d.cnh} · Cat. {d.cnhCategories.join(", ")}
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Card>
-      )}
-
-      {canEdit && (
-        <Card className="p-4 mb-3">
-          <div className="flex items-center gap-2 mb-2 text-sm font-medium">
-            <Bus className="h-4 w-4" /> Veículo
           </div>
-          <Select
-            value={trip.vehicleId ?? "none"}
-            onValueChange={onAssignVehicle}
-            disabled={assigningVehicle}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sem veículo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Sem veículo</SelectItem>
-              {vehicles.map((v) => (
-                <SelectItem key={v.id} value={v.id}>
-                  {v.model} — {v.plate}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Card>
-      )}
+        ) : canEdit ? (
+          <div className="space-y-2">
+            <Select
+              value={trip.driverId ?? "none"}
+              onValueChange={(v) => {
+                onAssignDriver(v);
+                setEditingDriver(false);
+              }}
+              disabled={assigningDriver}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sem motorista" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem motorista</SelectItem>
+                {drivers.map((d) => (
+                  <SelectItem key={d.id} value={d.id} textValue={driverDisplayString(d)}>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        <DriverDisplayName driver={d} />
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        CNH {d.cnh} · Cat. {d.cnhCategories.join(", ")}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {assignedDriver && (
+              <button
+                onClick={() => setEditingDriver(false)}
+                className="text-[11px] font-semibold text-muted-foreground hover:text-ink"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="text-[12px] text-muted-foreground">Sem motorista atribuído.</div>
+        )}
+      </div>
 
-      {transitions.length > 0 && (
-        <div className="space-y-2 mb-3">
-          {nonCancelTransitions.map((next) => (
-            <Button
-              key={next}
-              className="w-full"
-              onClick={() => onTransition(next)}
-              disabled={transitioning}
+      {/* Veículo */}
+      <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.4px] text-muted-foreground">
+            <Bus className="h-3.5 w-3.5" strokeWidth={1.8} />
+            Veículo
+          </div>
+          {canEdit && !editingVehicle && (
+            <button
+              onClick={() => setEditingVehicle(true)}
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-line-soft text-ink-2 transition hover:bg-line"
+              aria-label="Trocar veículo"
             >
-              {transitioning ? "Atualizando..." : STATUS_ACTION_LABEL[next]}
-            </Button>
-          ))}
-          {transitions.includes("CANCELED") && (
-            <Button
-              variant="outline"
-              className="w-full text-destructive border-destructive hover:bg-destructive/10"
-              onClick={() => setCancelDialog(true)}
-              disabled={transitioning}
-            >
-              Cancelar viagem
-            </Button>
+              <Pencil className="h-3 w-3" strokeWidth={1.8} />
+            </button>
           )}
         </div>
-      )}
 
-      <Card className="p-4">
-        <div className="flex items-center gap-2 mb-3 text-sm font-medium">
-          <Users className="h-4 w-4" />
+        {assignedVehicle && !editingVehicle ? (
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-info-soft text-info">
+              <Bus className="h-[20px] w-[20px]" strokeWidth={1.7} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[14px] font-extrabold text-ink">{assignedVehicle.model}</div>
+              <div className="mt-0.5 font-mono text-[12px] font-semibold tracking-[0.3px] text-ink-2">
+                {assignedVehicle.plate}
+              </div>
+              <div className="mt-1 text-[11px] text-muted-foreground">
+                {assignedVehicle.type} · {assignedVehicle.maxCapacity} lugares
+              </div>
+            </div>
+          </div>
+        ) : canEdit ? (
+          <div className="space-y-2">
+            <Select
+              value={trip.vehicleId ?? "none"}
+              onValueChange={(v) => {
+                onAssignVehicle(v);
+                setEditingVehicle(false);
+              }}
+              disabled={assigningVehicle}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sem veículo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sem veículo</SelectItem>
+                {vehicles.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.model} — {v.plate}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {assignedVehicle && (
+              <button
+                onClick={() => setEditingVehicle(false)}
+                className="text-[11px] font-semibold text-muted-foreground hover:text-ink"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="text-[12px] text-muted-foreground">Sem veículo atribuído.</div>
+        )}
+      </div>
+
+      {/* Inscrições */}
+      <div className="rounded-2xl border border-line bg-surface p-4">
+        <div className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.4px] text-muted-foreground">
+          <Users className="h-3.5 w-3.5" strokeWidth={1.8} />
           Inscrições ({bookings.length})
         </div>
         {bookings.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-2">
+          <div className="py-3 text-center text-[12px] text-muted-foreground">
             Nenhum passageiro inscrito.
-          </p>
+          </div>
         ) : (
           <div className="space-y-2">
             {bookings.map((b) => (
@@ -292,7 +358,34 @@ export function AdminTripDetailView({
             ))}
           </div>
         )}
-      </Card>
+      </div>
+
+      {/* Sticky action bar */}
+      {hasSticky && (
+        <div className="fixed inset-x-0 bottom-[76px] z-10 border-t border-line bg-surface/95 px-4 py-3 backdrop-blur">
+          <div className="mx-auto flex max-w-2xl gap-2">
+            {transitions.includes("CANCELED") && (
+              <button
+                onClick={() => setCancelDialog(true)}
+                disabled={transitioning}
+                className="flex-none rounded-xl border border-danger-soft bg-surface px-4 py-3 text-[13px] font-bold text-danger transition hover:bg-danger-soft disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+            )}
+            {nonCancelTransitions.map((next) => (
+              <button
+                key={next}
+                onClick={() => onTransition(next)}
+                disabled={transitioning}
+                className="flex-1 rounded-xl bg-ink px-4 py-3 text-[13px] font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+              >
+                {transitioning ? "Atualizando..." : STATUS_ACTION_LABEL[next]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={cancelDialog} onOpenChange={setCancelDialog}>
         <AlertDialogContent>
@@ -345,6 +438,6 @@ export function AdminTripDetailView({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

@@ -40,6 +40,7 @@ import { Route as ProtectedAdminTripsRouteImport } from './routes/_protected._ad
 import { Route as ProtectedAdminTemplatesRouteImport } from './routes/_protected._admin.templates'
 import { Route as ProtectedAdminPaymentsRouteImport } from './routes/_protected._admin.payments'
 import { Route as ProtectedAdminOrganizationRouteImport } from './routes/_protected._admin.organization'
+import { Route as ProtectedAdminFinancialRouteImport } from './routes/_protected._admin.financial'
 import { Route as ProtectedAdminDriversRouteImport } from './routes/_protected._admin.drivers'
 import { Route as ProtectedAdminDashboardRouteImport } from './routes/_protected._admin.dashboard'
 import { Route as ProtectedTripsOrgIdTripIdBookRouteImport } from './routes/_protected.trips.$orgId.$tripId.book'
@@ -200,6 +201,11 @@ const ProtectedAdminOrganizationRoute =
     path: '/organization',
     getParentRoute: () => ProtectedAdminRoute,
   } as any)
+const ProtectedAdminFinancialRoute = ProtectedAdminFinancialRouteImport.update({
+  id: '/financial',
+  path: '/financial',
+  getParentRoute: () => ProtectedAdminRoute,
+} as any)
 const ProtectedAdminDriversRoute = ProtectedAdminDriversRouteImport.update({
   id: '/drivers',
   path: '/drivers',
@@ -234,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/signup/': typeof SignupIndexRoute
   '/dashboard': typeof ProtectedAdminDashboardRoute
   '/drivers': typeof ProtectedAdminDriversRoute
+  '/financial': typeof ProtectedAdminFinancialRoute
   '/organization': typeof ProtectedAdminOrganizationRoute
   '/payments': typeof ProtectedAdminPaymentsRoute
   '/templates': typeof ProtectedAdminTemplatesRoute
@@ -265,6 +272,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupIndexRoute
   '/dashboard': typeof ProtectedAdminDashboardRoute
   '/drivers': typeof ProtectedAdminDriversRoute
+  '/financial': typeof ProtectedAdminFinancialRoute
   '/organization': typeof ProtectedAdminOrganizationRoute
   '/payments': typeof ProtectedAdminPaymentsRoute
   '/templates': typeof ProtectedAdminTemplatesRoute
@@ -302,6 +310,7 @@ export interface FileRoutesById {
   '/signup/': typeof SignupIndexRoute
   '/_protected/_admin/dashboard': typeof ProtectedAdminDashboardRoute
   '/_protected/_admin/drivers': typeof ProtectedAdminDriversRoute
+  '/_protected/_admin/financial': typeof ProtectedAdminFinancialRoute
   '/_protected/_admin/organization': typeof ProtectedAdminOrganizationRoute
   '/_protected/_admin/payments': typeof ProtectedAdminPaymentsRoute
   '/_protected/_admin/templates': typeof ProtectedAdminTemplatesRoute
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/signup/'
     | '/dashboard'
     | '/drivers'
+    | '/financial'
     | '/organization'
     | '/payments'
     | '/templates'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard'
     | '/drivers'
+    | '/financial'
     | '/organization'
     | '/payments'
     | '/templates'
@@ -404,6 +415,7 @@ export interface FileRouteTypes {
     | '/signup/'
     | '/_protected/_admin/dashboard'
     | '/_protected/_admin/drivers'
+    | '/_protected/_admin/financial'
     | '/_protected/_admin/organization'
     | '/_protected/_admin/payments'
     | '/_protected/_admin/templates'
@@ -653,6 +665,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedAdminOrganizationRouteImport
       parentRoute: typeof ProtectedAdminRoute
     }
+    '/_protected/_admin/financial': {
+      id: '/_protected/_admin/financial'
+      path: '/financial'
+      fullPath: '/financial'
+      preLoaderRoute: typeof ProtectedAdminFinancialRouteImport
+      parentRoute: typeof ProtectedAdminRoute
+    }
     '/_protected/_admin/drivers': {
       id: '/_protected/_admin/drivers'
       path: '/drivers'
@@ -680,6 +699,7 @@ declare module '@tanstack/react-router' {
 interface ProtectedAdminRouteChildren {
   ProtectedAdminDashboardRoute: typeof ProtectedAdminDashboardRoute
   ProtectedAdminDriversRoute: typeof ProtectedAdminDriversRoute
+  ProtectedAdminFinancialRoute: typeof ProtectedAdminFinancialRoute
   ProtectedAdminOrganizationRoute: typeof ProtectedAdminOrganizationRoute
   ProtectedAdminPaymentsRoute: typeof ProtectedAdminPaymentsRoute
   ProtectedAdminTemplatesRoute: typeof ProtectedAdminTemplatesRoute
@@ -690,6 +710,7 @@ interface ProtectedAdminRouteChildren {
 const ProtectedAdminRouteChildren: ProtectedAdminRouteChildren = {
   ProtectedAdminDashboardRoute: ProtectedAdminDashboardRoute,
   ProtectedAdminDriversRoute: ProtectedAdminDriversRoute,
+  ProtectedAdminFinancialRoute: ProtectedAdminFinancialRoute,
   ProtectedAdminOrganizationRoute: ProtectedAdminOrganizationRoute,
   ProtectedAdminPaymentsRoute: ProtectedAdminPaymentsRoute,
   ProtectedAdminTemplatesRoute: ProtectedAdminTemplatesRoute,

@@ -14,6 +14,7 @@ import { TripStatusFilters } from "@/features/trips/components/TripStatusFilters
 import { TripFormSheet } from "@/features/trips/components/TripFormSheet";
 import { DATE_RANGE_OPTIONS, isInDateRange, type DateRange } from "@/lib/date-filters";
 import type { TripStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_protected/_admin/trips")({
   component: AdminTripsPage,
@@ -28,10 +29,28 @@ function AdminTripsPage() {
   const [search, setSearch] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    const list = trips ?? [];
+  // Counts por status para o filtro (respeita search + dateRange, ignora statusFilter atual)
+  const counts = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return list.filter((t) => {
+    const base = (trips ?? []).filter((t) => {
+      if (!isInDateRange(t.departureTime, dateRange)) return false;
+      if (q) {
+        const m =
+          t.departurePoint?.toLowerCase().includes(q) || t.destination?.toLowerCase().includes(q);
+        if (!m) return false;
+      }
+      return true;
+    });
+    const c: Partial<Record<TripStatus | "ALL", number>> = { ALL: base.length };
+    for (const t of base) {
+      c[t.tripStatus] = (c[t.tripStatus] ?? 0) + 1;
+    }
+    return c;
+  }, [trips, search, dateRange]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (trips ?? []).filter((t) => {
       if (statusFilter !== "ALL" && t.tripStatus !== statusFilter) return false;
       if (!isInDateRange(t.departureTime, dateRange)) return false;
       if (q) {
@@ -47,56 +66,71 @@ function AdminTripsPage() {
   const hasActiveFilters = search.trim() !== "" || statusFilter !== "ALL" || dateRange !== "ANY";
 
   return (
-    <AppShell title="Viagens" back>
-      {hasTrips && (
-        <div className="flex justify-end mb-3">
-          <Button size="sm" onClick={() => setSheetOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Nova viagem
-          </Button>
-        </div>
-      )}
-
+    <AppShell
+      title="Viagens"
+      back
+      action={
+        hasTrips ? (
+          <button
+            onClick={() => setSheetOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[12px] font-bold text-white transition hover:opacity-90"
+          >
+            <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+            Nova
+          </button>
+        ) : null
+      }
+    >
       {hasTrips && (
         <>
+          {/* Search */}
           <div className="relative mb-3">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              strokeWidth={1.8}
+            />
             <Input
               placeholder="Buscar por origem ou destino"
-              className="pl-9 h-11"
+              className="h-11 rounded-xl border-line bg-surface pl-9 text-[14px]"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
 
-          <div className="-mx-4 px-4 mb-2 overflow-x-auto">
-            <div className="flex gap-2 pb-1 w-max">
-              {DATE_RANGE_OPTIONS.map((d) => (
-                <button
-                  key={d.value}
-                  type="button"
-                  onClick={() => setDateRange(d.value)}
-                  className={`text-xs whitespace-nowrap px-3 py-1.5 rounded-full border transition-colors ${
-                    dateRange === d.value
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card border-border text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
+          {/* Date filter segmented */}
+          <div className="-mx-4 mb-3 overflow-x-auto px-4">
+            <div className="flex w-max gap-1.5 pb-1">
+              {DATE_RANGE_OPTIONS.map((d) => {
+                const active = dateRange === d.value;
+                return (
+                  <button
+                    key={d.value}
+                    type="button"
+                    onClick={() => setDateRange(d.value)}
+                    className={cn(
+                      "whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors",
+                      active
+                        ? "bg-accent text-white"
+                        : "border border-line bg-surface text-ink-2 hover:bg-surface-2",
+                    )}
+                  >
+                    {d.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </>
       )}
 
-      <TripStatusFilters value={statusFilter} onChange={setStatusFilter} />
+      <TripStatusFilters value={statusFilter} onChange={setStatusFilter} counts={counts} />
 
       {loading ? (
         <LoadingList count={3} height="h-24" />
       ) : error ? (
         <ErrorCard message={error} />
       ) : hasActiveFilters && filtered.length === 0 ? (
-        <div className="text-center py-10 text-sm text-muted-foreground">
+        <div className="rounded-2xl border border-line bg-surface px-4 py-10 text-center text-sm text-muted-foreground">
           <p className="mb-3">Nenhuma viagem encontrada com os filtros atuais.</p>
           <Button
             variant="outline"

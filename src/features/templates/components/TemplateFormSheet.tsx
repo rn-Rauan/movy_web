@@ -7,7 +7,6 @@ import { HHMM_REGEX, brHourToUtc, utcHourToBr } from "@/lib/timezone";
 import { templatesService } from "@/services/templates.service";
 import { driversService } from "@/services/drivers.service";
 import { vehiclesService } from "@/services/vehicles.service";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,9 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { BottomSheet, BottomSheetContent } from "@/components/visual/BottomSheet";
 import { DriverDisplayName } from "@/features/drivers/components/DriverDisplayName";
 import { driverDisplayString } from "@/features/drivers/lib/driver-display";
+import { cn } from "@/lib/utils";
 import type { Driver, TripTemplate, Vehicle, Weekday } from "@/lib/types";
 
 const WEEKDAYS: { value: Weekday; label: string }[] = [
@@ -31,6 +31,12 @@ const WEEKDAYS: { value: Weekday; label: string }[] = [
   { value: "FRIDAY", label: "Sex" },
   { value: "SATURDAY", label: "Sáb" },
 ];
+
+const SHIFTS = [
+  { value: "MORNING", label: "Manhã" },
+  { value: "AFTERNOON", label: "Tarde" },
+  { value: "EVENING", label: "Noite" },
+] as const;
 
 const templateSchema = z
   .object({
@@ -97,12 +103,9 @@ type FormState = {
   destination: string;
   stops: string[];
   shift: "MORNING" | "AFTERNOON" | "EVENING";
-  /** HH:mm em horário de Brasília. Convertido para UTC no submit. */
   departureTimeOfDay: string;
-  /** HH:mm em horário de Brasília. */
   arrivalTimeOfDay: string;
   defaultCapacity: string;
-  /** "" representa "Nenhum" — convertido para null no submit. */
   defaultDriverId: string;
   defaultVehicleId: string;
   priceOneWay: string;
@@ -268,85 +271,86 @@ export function TemplateFormSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90dvh] overflow-y-auto">
-        <SheetHeader className="mb-4">
-          <SheetTitle>{editing ? "Editar template" : "Novo template"}</SheetTitle>
-        </SheetHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pb-8">
+    <BottomSheet open={open} onOpenChange={onOpenChange}>
+      <BottomSheetContent
+        title={editing ? "Editar template" : "Novo template"}
+        description="Rota recorrente que gera viagens automaticamente"
+        footer={
+          <button
+            type="submit"
+            form="template-form"
+            disabled={submitting}
+            className="inline-flex w-full items-center justify-center rounded-xl bg-ink px-4 py-3 text-[14px] font-extrabold tracking-[-0.2px] text-white transition hover:opacity-90 disabled:opacity-50"
+          >
+            {submitting ? "Salvando..." : editing ? "Salvar alterações" : "Criar template"}
+          </button>
+        }
+      >
+        <form id="template-form" onSubmit={handleSubmit} className="space-y-4">
+          {/* Origem / destino */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Origem</Label>
+            <FormField label="Origem" error={fieldErrors.departurePoint}>
               <Input
                 value={form.departurePoint}
                 onChange={(e) => setForm((f) => ({ ...f, departurePoint: e.target.value }))}
                 placeholder="Ex: Terminal"
               />
-              {fieldErrors.departurePoint && (
-                <p className="text-xs text-destructive">{fieldErrors.departurePoint}</p>
-              )}
-            </div>
-            <div className="space-y-1">
-              <Label>Destino</Label>
+            </FormField>
+            <FormField label="Destino" error={fieldErrors.destination}>
               <Input
                 value={form.destination}
                 onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))}
                 placeholder="Ex: Universidade"
               />
-              {fieldErrors.destination && (
-                <p className="text-xs text-destructive">{fieldErrors.destination}</p>
-              )}
+            </FormField>
+          </div>
+
+          {/* Turno segmented */}
+          <FormField label="Turno">
+            <div className="grid grid-cols-3 gap-1.5 rounded-xl bg-line-soft p-1">
+              {SHIFTS.map((s) => (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, shift: s.value }))}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-[12px] font-bold transition",
+                    form.shift === s.value
+                      ? "bg-surface text-ink shadow-sm"
+                      : "text-muted-foreground hover:text-ink",
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
             </div>
-          </div>
+          </FormField>
 
-          <div className="space-y-1">
-            <Label>Turno</Label>
-            <Select
-              value={form.shift}
-              onValueChange={(v) => setForm((f) => ({ ...f, shift: v as typeof f.shift }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MORNING">Manhã</SelectItem>
-                <SelectItem value="AFTERNOON">Tarde</SelectItem>
-                <SelectItem value="EVENING">Noite</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
+          {/* Horários */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Hora de partida</Label>
+            <FormField label="Partida" error={fieldErrors.departureTimeOfDay}>
               <Input
                 type="time"
+                className="font-mono"
                 value={form.departureTimeOfDay}
                 onChange={(e) => setForm((f) => ({ ...f, departureTimeOfDay: e.target.value }))}
               />
-              {fieldErrors.departureTimeOfDay && (
-                <p className="text-xs text-destructive">{fieldErrors.departureTimeOfDay}</p>
-              )}
-            </div>
-            <div className="space-y-1">
-              <Label>Hora estimada de chegada</Label>
+            </FormField>
+            <FormField label="Chegada" error={fieldErrors.arrivalTimeOfDay}>
               <Input
                 type="time"
+                className="font-mono"
                 value={form.arrivalTimeOfDay}
                 onChange={(e) => setForm((f) => ({ ...f, arrivalTimeOfDay: e.target.value }))}
               />
-              {fieldErrors.arrivalTimeOfDay && (
-                <p className="text-xs text-destructive">{fieldErrors.arrivalTimeOfDay}</p>
-              )}
-            </div>
+            </FormField>
           </div>
-          <p className="text-xs text-muted-foreground -mt-2">
-            Horários em Brasília (UTC−3). A chegada pode ser anterior à partida se a viagem cruza
-            meia-noite.
+          <p className="-mt-2 text-[11px] text-muted-foreground">
+            Horários em Brasília (UTC−3). Chegada pode ser anterior à partida se cruza meia-noite.
           </p>
 
-          <div className="space-y-1">
-            <Label>Capacidade padrão (assentos)</Label>
+          {/* Capacidade */}
+          <FormField label="Capacidade padrão" error={fieldErrors.defaultCapacity}>
             <Input
               type="number"
               min="1"
@@ -355,17 +359,14 @@ export function TemplateFormSheet({
               onChange={(e) => setForm((f) => ({ ...f, defaultCapacity: e.target.value }))}
               placeholder="Ex: 20"
             />
-            {fieldErrors.defaultCapacity && (
-              <p className="text-xs text-destructive">{fieldErrors.defaultCapacity}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Aplicado às viagens geradas automaticamente a partir deste template.
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Aplicado às viagens geradas a partir deste template.
             </p>
-          </div>
+          </FormField>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Motorista padrão</Label>
+          {/* Motorista + veículo padrão */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormField label="Motorista padrão">
               <Select
                 value={form.defaultDriverId || NONE}
                 onValueChange={(v) =>
@@ -384,9 +385,9 @@ export function TemplateFormSheet({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Veículo padrão</Label>
+            </FormField>
+
+            <FormField label="Veículo padrão">
               <Select
                 value={form.defaultVehicleId || NONE}
                 onValueChange={(v) =>
@@ -405,134 +406,111 @@ export function TemplateFormSheet({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </div>
           {form.defaultDriverId && form.defaultVehicleId ? (
-            <p className="text-xs text-muted-foreground -mt-2">
+            <div className="-mt-2 rounded-lg bg-success-soft px-3 py-2 text-[11px] font-medium text-success">
               Com motorista e veículo padrão, viagens geradas são publicadas direto como agendadas.
-            </p>
+            </div>
           ) : (
-            <p className="text-xs text-muted-foreground -mt-2">
+            <p className="-mt-2 text-[11px] text-muted-foreground">
               Defina os dois para publicar viagens geradas automaticamente sem revisão.
             </p>
           )}
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Paradas (mín. 2)</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setForm((f) => ({ ...f, stops: [...f.stops, ""] }))}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
-              </Button>
-            </div>
-            {form.stops.map((stop, i) => (
-              <div key={i} className="flex gap-2">
-                <Input
-                  value={stop}
-                  onChange={(e) =>
-                    setForm((f) => {
-                      const stops = [...f.stops];
-                      stops[i] = e.target.value;
-                      return { ...f, stops };
-                    })
-                  }
-                  placeholder={`Parada ${i + 1}`}
-                />
-                {form.stops.length > 2 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="px-2"
-                    onClick={() =>
-                      setForm((f) => ({
-                        ...f,
-                        stops: f.stops.filter((_, idx) => idx !== i),
-                      }))
-                    }
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-            {fieldErrors.stops && <p className="text-xs text-destructive">{fieldErrors.stops}</p>}
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <Label>Preço ida (R$)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.priceOneWay}
-                onChange={(e) => setForm((f) => ({ ...f, priceOneWay: e.target.value }))}
-                placeholder="0,00"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Preço volta (R$)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.priceReturn}
-                onChange={(e) => setForm((f) => ({ ...f, priceReturn: e.target.value }))}
-                placeholder="0,00"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>Ida e volta (R$)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.priceRoundTrip}
-                onChange={(e) => setForm((f) => ({ ...f, priceRoundTrip: e.target.value }))}
-                placeholder="0,00"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.isPublic}
-                onChange={(e) => setForm((f) => ({ ...f, isPublic: e.target.checked }))}
-                className="rounded"
-              />
-              Visível no marketplace
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.isRecurring}
-                onChange={(e) => setForm((f) => ({ ...f, isRecurring: e.target.checked }))}
-                className="rounded"
-              />
-              Recorrente
-            </label>
-          </div>
-
-          {form.isRecurring && (
+          {/* Paradas */}
+          <FormField label={`Paradas (mín. 2)`} error={fieldErrors.stops}>
             <div className="space-y-2">
-              <Label>Dias da semana</Label>
+              {form.stops.map((stop, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-line-soft font-mono text-[11px] font-bold text-ink-2">
+                    {i + 1}
+                  </div>
+                  <Input
+                    value={stop}
+                    onChange={(e) =>
+                      setForm((f) => {
+                        const stops = [...f.stops];
+                        stops[i] = e.target.value;
+                        return { ...f, stops };
+                      })
+                    }
+                    placeholder={`Parada ${i + 1}`}
+                  />
+                  {form.stops.length > 2 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          stops: f.stops.filter((_, idx) => idx !== i),
+                        }))
+                      }
+                      className="flex h-7 w-7 flex-none items-center justify-center rounded-full text-muted-foreground transition hover:bg-line-soft hover:text-danger"
+                      aria-label="Remover parada"
+                    >
+                      <X className="h-3.5 w-3.5" strokeWidth={1.8} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, stops: [...f.stops, ""] }))}
+                className="inline-flex items-center gap-1 text-[12px] font-bold text-accent transition hover:opacity-80"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2} />
+                Adicionar parada
+              </button>
+            </div>
+          </FormField>
+
+          {/* Preços 3 colunas */}
+          <FormField label="Preços (R$)" error={fieldErrors.priceOneWay}>
+            <div className="grid grid-cols-3 gap-2">
+              <PriceInput
+                label="Ida"
+                value={form.priceOneWay}
+                onChange={(v) => setForm((f) => ({ ...f, priceOneWay: v }))}
+              />
+              <PriceInput
+                label="Volta"
+                value={form.priceReturn}
+                onChange={(v) => setForm((f) => ({ ...f, priceReturn: v }))}
+              />
+              <PriceInput
+                label="Ida+volta"
+                value={form.priceRoundTrip}
+                onChange={(v) => setForm((f) => ({ ...f, priceRoundTrip: v }))}
+                accent
+              />
+            </div>
+          </FormField>
+
+          {/* Checkboxes */}
+          <div className="space-y-2">
+            <CheckRow
+              label="Visível no marketplace"
+              checked={form.isPublic}
+              onChange={(c) => setForm((f) => ({ ...f, isPublic: c }))}
+            />
+            <CheckRow
+              label="Recorrente"
+              checked={form.isRecurring}
+              onChange={(c) => setForm((f) => ({ ...f, isRecurring: c }))}
+            />
+          </div>
+
+          {/* Frequency */}
+          {form.isRecurring && (
+            <FormField label="Dias da semana" error={fieldErrors.frequency}>
               <div className="flex flex-wrap gap-1.5">
                 {WEEKDAYS.map((d) => {
                   const active = form.frequency.includes(d.value);
                   return (
-                    <Button
+                    <button
                       key={d.value}
                       type="button"
-                      variant={active ? "default" : "outline"}
-                      size="sm"
-                      className="h-8 px-3"
                       onClick={() =>
                         setForm((f) => ({
                           ...f,
@@ -541,33 +519,31 @@ export function TemplateFormSheet({
                             : [...f.frequency, d.value],
                         }))
                       }
+                      className={cn(
+                        "rounded-full px-3 py-1.5 text-[12px] font-bold transition",
+                        active
+                          ? "bg-ink text-white"
+                          : "border border-line bg-surface text-ink-2 hover:bg-surface-2",
+                      )}
                     >
                       {d.label}
-                    </Button>
+                    </button>
                   );
                 })}
               </div>
-              {fieldErrors.frequency && (
-                <p className="text-xs text-destructive">{fieldErrors.frequency}</p>
-              )}
-            </div>
+            </FormField>
           )}
 
-          <div className="space-y-3 rounded-lg border border-border p-3">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.autoCancelEnabled}
-                onChange={(e) => setForm((f) => ({ ...f, autoCancelEnabled: e.target.checked }))}
-                className="rounded"
-              />
-              Auto-cancelar se receita mínima não atingida
-            </label>
-
+          {/* Auto-cancel */}
+          <div className="rounded-xl border border-line bg-surface-2 p-3.5">
+            <CheckRow
+              label="Auto-cancelar se receita mínima não atingida"
+              checked={form.autoCancelEnabled}
+              onChange={(c) => setForm((f) => ({ ...f, autoCancelEnabled: c }))}
+            />
             {form.autoCancelEnabled && (
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div className="space-y-1">
-                  <Label>Receita mínima (R$)</Label>
+              <div className="mt-3 grid grid-cols-2 gap-3 border-t border-line-soft pt-3">
+                <FormField label="Receita mínima" error={fieldErrors.minRevenue}>
                   <Input
                     type="number"
                     min="0"
@@ -576,12 +552,8 @@ export function TemplateFormSheet({
                     onChange={(e) => setForm((f) => ({ ...f, minRevenue: e.target.value }))}
                     placeholder="0,00"
                   />
-                  {fieldErrors.minRevenue && (
-                    <p className="text-xs text-destructive">{fieldErrors.minRevenue}</p>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <Label>Cancelar quantos minutos antes?</Label>
+                </FormField>
+                <FormField label="Minutos antes" error={fieldErrors.autoCancelOffset}>
                   <Input
                     type="number"
                     min="1"
@@ -590,19 +562,91 @@ export function TemplateFormSheet({
                     onChange={(e) => setForm((f) => ({ ...f, autoCancelOffset: e.target.value }))}
                     placeholder="60"
                   />
-                  {fieldErrors.autoCancelOffset && (
-                    <p className="text-xs text-destructive">{fieldErrors.autoCancelOffset}</p>
-                  )}
-                </div>
+                </FormField>
               </div>
             )}
           </div>
-
-          <Button type="submit" className="w-full" disabled={submitting}>
-            {submitting ? "Salvando..." : editing ? "Salvar alterações" : "Criar template"}
-          </Button>
         </form>
-      </SheetContent>
-    </Sheet>
+      </BottomSheetContent>
+    </BottomSheet>
+  );
+}
+
+function FormField({
+  label,
+  required,
+  error,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1">
+      <Label className="flex items-center gap-0.5 text-[12px] font-bold uppercase tracking-[0.3px] text-ink-2">
+        {label}
+        {required && <span className="text-danger">*</span>}
+      </Label>
+      {children}
+      {error && <p className="text-[11px] font-medium text-danger">{error}</p>}
+    </div>
+  );
+}
+
+function PriceInput({
+  label,
+  value,
+  onChange,
+  accent,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  accent?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span
+        className={cn(
+          "text-[10px] font-bold uppercase tracking-[0.3px]",
+          accent ? "text-accent" : "text-muted-foreground",
+        )}
+      >
+        {label}
+      </span>
+      <Input
+        type="number"
+        min="0"
+        step="0.01"
+        className="font-mono"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="0,00"
+      />
+    </div>
+  );
+}
+
+function CheckRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (c: boolean) => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2.5">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 cursor-pointer rounded border-line accent-accent"
+      />
+      <span className="text-[13px] font-semibold text-ink">{label}</span>
+    </label>
   );
 }

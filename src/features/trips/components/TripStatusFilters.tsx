@@ -1,4 +1,5 @@
 import type { TripStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const FILTERS: { label: string; value: TripStatus | "ALL" }[] = [
   { label: "Todas", value: "ALL" },
@@ -12,24 +13,43 @@ const FILTERS: { label: string; value: TripStatus | "ALL" }[] = [
 type Props = {
   value: TripStatus | "ALL";
   onChange: (v: TripStatus | "ALL") => void;
+  /** Contagens opcionais por status para mostrar badge. */
+  counts?: Partial<Record<TripStatus | "ALL", number>>;
 };
 
-export function TripStatusFilters({ value, onChange }: Props) {
+export function TripStatusFilters({ value, onChange, counts }: Props) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1">
-      {FILTERS.map((f) => (
-        <button
-          key={f.value}
-          onClick={() => onChange(f.value)}
-          className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
-            value === f.value
-              ? "bg-primary text-primary-foreground border-primary"
-              : "bg-card text-muted-foreground border-border hover:text-foreground"
-          }`}
-        >
-          {f.label}
-        </button>
-      ))}
+    <div className="-mx-4 mb-3 overflow-x-auto px-4">
+      <div className="flex w-max gap-1.5 pb-1">
+        {FILTERS.map((f) => {
+          const active = value === f.value;
+          const count = counts?.[f.value];
+          return (
+            <button
+              key={f.value}
+              onClick={() => onChange(f.value)}
+              className={cn(
+                "flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-bold transition-colors",
+                active
+                  ? "bg-ink text-white"
+                  : "border border-line bg-surface text-ink-2 hover:bg-surface-2",
+              )}
+            >
+              {f.label}
+              {count !== undefined && (
+                <span
+                  className={cn(
+                    "flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 font-mono text-[10px] font-bold",
+                    active ? "bg-white/20 text-white" : "bg-line-soft text-muted-foreground",
+                  )}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
