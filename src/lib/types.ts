@@ -2,6 +2,9 @@ export type AuthUser = {
   id: string;
   name: string;
   email: string;
+  telephone?: string;
+  /** ISO-8601 timestamp once the user has verified their email; `null` otherwise. */
+  emailVerifiedAt?: string | null;
 };
 
 export type Organization = {
@@ -127,6 +130,13 @@ export type TripTemplate = {
   arrivalTimeOfDay?: string | null;
   /** Seat count copied into each generated TripInstance. May be null on legacy templates. */
   defaultCapacity?: number | null;
+  /**
+   * Default driver assigned to instances generated from this template.
+   * When BOTH `defaultDriverId` and `defaultVehicleId` are set, generated instances skip DRAFT and are created as SCHEDULED.
+   */
+  defaultDriverId?: string | null;
+  /** See {@link defaultDriverId}. */
+  defaultVehicleId?: string | null;
   priceOneWay?: number;
   priceReturn?: number;
   priceRoundTrip?: number;
@@ -166,11 +176,13 @@ export type Paginated<T> = {
   totalPages?: number;
 };
 
+export type CnhCategory = "A" | "B" | "C" | "D" | "E";
+
 export type Driver = {
   id: string;
   userId: string;
   cnh: string;
-  cnhCategory: "A" | "B" | "C" | "D" | "E";
+  cnhCategories: CnhCategory[];
   cnhExpiresAt: string;
   driverStatus: "ACTIVE" | "INACTIVE" | "SUSPENDED";
   userName?: string;

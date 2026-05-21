@@ -21,7 +21,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { BookingRow } from "@/features/bookings/components/BookingRow";
-import { useDriverName } from "@/features/drivers/hooks/useDriverName";
+import { DriverDisplayName } from "@/features/drivers/components/DriverDisplayName";
+import { driverDisplayString } from "@/features/drivers/lib/driver-display";
 import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
 import type {
   Booking,
@@ -41,6 +42,8 @@ const STATUS_TRANSITIONS: Record<TripStatus, TripStatus[]> = {
   CANCELED: [],
 };
 
+const DRIVER_ALLOWED_TRANSITIONS = new Set<TripStatus>(["IN_PROGRESS", "FINISHED"]);
+
 const STATUS_ACTION_LABEL: Record<TripStatus, string> = {
   SCHEDULED: "Agendar",
   CONFIRMED: "Confirmar",
@@ -56,17 +59,9 @@ const DRIVER_STATUS_LABEL: Record<Driver["driverStatus"], string> = {
   SUSPENDED: "Suspenso",
 };
 
-function DriverLabel({ driver }: { driver: Driver }) {
-  const inline = driver.userName?.trim() || driver.userEmail?.trim();
-  const { name: fetched, loading } = useDriverName(inline ? null : driver.id);
-  return <>{inline || fetched || (loading ? "Carregando..." : "Motorista")}</>;
-}
-
-function driverTextValue(d: Driver): string {
-  return d.userName?.trim() || d.userEmail?.trim() || "Motorista";
-}
-
 type Props = {
+  /** "admin" shows assignment + full transitions; "driver" shows only IN_PROGRESS/FINISHED and hides admin actions. */
+  role: "admin" | "driver";
   trip: TripInstance;
   passengers: TripPassenger[];
   bookings: Booking[];
@@ -84,6 +79,7 @@ type Props = {
 };
 
 export function AdminTripDetailView({
+  role,
   trip,
   passengers,
   bookings,
@@ -102,8 +98,12 @@ export function AdminTripDetailView({
   const [cancelDialog, setCancelDialog] = useState(false);
   const [cancelBooking, setCancelBooking] = useState<Booking | null>(null);
 
-  const transitions = STATUS_TRANSITIONS[trip.tripStatus] ?? [];
-  const canEdit = !["FINISHED", "CANCELED"].includes(trip.tripStatus);
+  const isAdmin = role === "admin";
+  const allTransitions = STATUS_TRANSITIONS[trip.tripStatus] ?? [];
+  const transitions = isAdmin
+    ? allTransitions
+    : allTransitions.filter((s) => DRIVER_ALLOWED_TRANSITIONS.has(s));
+  const canEdit = isAdmin && !["FINISHED", "CANCELED"].includes(trip.tripStatus);
   const nonCancelTransitions = transitions.filter((s) => s !== "CANCELED");
   const namesByUserId = new Map(passengers.map((p) => [p.userId, p.name]));
   const origin = trip.template?.origin ?? trip.departurePoint;
@@ -162,7 +162,7 @@ export function AdminTripDetailView({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold truncate">
-                    <DriverLabel driver={assignedDriver} />
+                    <DriverDisplayName driver={assignedDriver} />
                   </div>
                   {assignedDriver.userEmail && assignedDriver.userName && (
                     <div className="text-xs text-muted-foreground truncate">
@@ -180,7 +180,7 @@ export function AdminTripDetailView({
               <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                 <span>CNH {assignedDriver.cnh}</span>
                 <span>·</span>
-                <span>Cat. {assignedDriver.cnhCategory}</span>
+                <span>Cat. {assignedDriver.cnhCategories.join(", ")}</span>
                 <span>·</span>
                 <span>
                   Val. {new Date(assignedDriver.cnhExpiresAt).toLocaleDateString("pt-BR")}
@@ -200,13 +200,13 @@ export function AdminTripDetailView({
             <SelectContent>
               <SelectItem value="none">Sem motorista</SelectItem>
               {drivers.map((d) => (
-                <SelectItem key={d.id} value={d.id} textValue={driverTextValue(d)}>
+                <SelectItem key={d.id} value={d.id} textValue={driverDisplayString(d)}>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium">
-                      <DriverLabel driver={d} />
+                      <DriverDisplayName driver={d} />
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      CNH {d.cnh} · Cat. {d.cnhCategory}
+                      CNH {d.cnh} · Cat. {d.cnhCategories.join(", ")}
                     </span>
                   </div>
                 </SelectItem>

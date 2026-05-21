@@ -101,6 +101,12 @@ const driverTabs: NavItem[] = [
     label: "Inscrições",
     match: "/my-bookings",
   },
+  {
+    to: "/profile",
+    icon: <User className="h-5 w-5" />,
+    label: "Perfil",
+    match: "/profile",
+  },
 ];
 
 export function BottomNav() {

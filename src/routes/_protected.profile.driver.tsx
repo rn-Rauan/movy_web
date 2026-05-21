@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Info, ExternalLink } from "lucide-react";
+import { Info, ExternalLink, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
@@ -12,19 +12,22 @@ import {
   DriverProfileForm,
   type DriverFormPayload,
 } from "@/features/drivers/components/DriverProfileForm";
+import { EditMyDriverDialog } from "@/features/drivers/components/EditMyDriverDialog";
 import { useMyDriver } from "@/features/drivers/hooks/useMyDriver";
 import { useRole } from "@/lib/role-context";
 import { driversService } from "@/services/drivers.service";
 import { handleApiError } from "@/lib/handle-error";
+import type { Driver } from "@/lib/types";
 
 export const Route = createFileRoute("/_protected/profile/driver")({
   component: DriverProfilePage,
 });
 
 function DriverProfilePage() {
-  const { driver, setDriver, loading, notFound, error, refetch } = useMyDriver();
+  const { driver, setDriver, loading, notFound, error } = useMyDriver();
   const { isDriver, refetchRole } = useRole();
   const [submitting, setSubmitting] = useState(false);
+  const [editing, setEditing] = useState<Driver | null>(null);
 
   async function handleCreate(payload: DriverFormPayload) {
     setSubmitting(true);
@@ -33,23 +36,8 @@ function DriverProfilePage() {
       setDriver(created);
       refetchRole();
       toast.success("Perfil de motorista ativado");
-      refetch();
     } catch (err) {
       handleApiError(err, "Erro ao ativar perfil de motorista");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleUpdate(payload: DriverFormPayload) {
-    if (!driver) return;
-    setSubmitting(true);
-    try {
-      const updated = await driversService.update(driver.id, payload);
-      setDriver(updated);
-      toast.success("Dados atualizados");
-    } catch (err) {
-      handleApiError(err, "Erro ao atualizar perfil");
     } finally {
       setSubmitting(false);
     }
@@ -73,18 +61,49 @@ function DriverProfilePage() {
       ) : driver ? (
         <>
           <Card className="p-5 mb-4">
-            <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-start justify-between gap-2 mb-4">
               <div>
                 <h2 className="text-base font-semibold">Seus dados</h2>
                 <p className="text-xs text-muted-foreground">
-                  CNH e categoria registradas no sistema.
+                  CNH e categorias registradas no sistema.
                 </p>
               </div>
-              <StatusBadge status={driver.driverStatus} />
+              <div className="flex items-center gap-2 shrink-0">
+                <StatusBadge status={driver.driverStatus} />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setEditing(driver)}
+                  aria-label="Editar dados"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
+            <dl className="space-y-3 text-sm mb-4">
+              <Row label="CNH" value={driver.cnh} />
+              <Row
+                label="Categorias"
+                value={
+                  <div className="flex flex-wrap gap-1">
+                    {driver.cnhCategories.map((c) => (
+                      <Badge key={c} variant="outline" className="font-mono">
+                        {c}
+                      </Badge>
+                    ))}
+                  </div>
+                }
+              />
+              <Row
+                label="Validade"
+                value={new Date(driver.cnhExpiresAt).toLocaleDateString("pt-BR")}
+              />
+            </dl>
+
             {!isDriver ? (
-              <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 p-3 mb-4">
+              <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 p-3">
                 <div className="flex items-start gap-2">
                   <Info className="h-4 w-4 mt-0.5 text-blue-600 shrink-0" />
                   <p className="text-xs text-blue-900 dark:text-blue-200 leading-relaxed">
@@ -95,24 +114,34 @@ function DriverProfilePage() {
                 </div>
               </div>
             ) : (
-              <Button asChild variant="outline" size="sm" className="mb-4 w-full">
+              <Button asChild variant="outline" size="sm" className="w-full">
                 <Link to="/my-trips">
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Ver minhas viagens como motorista
                 </Link>
               </Button>
             )}
-
-            <DriverProfileForm
-              mode="edit"
-              initialData={driver}
-              submitting={submitting}
-              onSubmit={handleUpdate}
-            />
           </Card>
+
+          <EditMyDriverDialog
+            driver={editing}
+            onClose={() => setEditing(null)}
+            onUpdated={(updated) => setDriver({ ...driver, ...updated })}
+          />
         </>
       ) : null}
     </AppShell>
+  );
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <dt className="text-xs uppercase tracking-wide text-muted-foreground shrink-0 pt-0.5">
+        {label}
+      </dt>
+      <dd className="text-sm font-medium text-right">{value}</dd>
+    </div>
   );
 }
 

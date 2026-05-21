@@ -17,7 +17,17 @@ import type {
   Vehicle,
 } from "@/lib/types";
 
-export function useAdminTripDetail(tripId: string, orgId: string | null | undefined) {
+type Options = {
+  /** "admin" loads drivers/vehicles for assignment; "driver" skips those lists. */
+  role?: "admin" | "driver" | null;
+};
+
+export function useAdminTripDetail(
+  tripId: string,
+  orgId: string | null | undefined,
+  options: Options = {},
+) {
+  const { role = "admin" } = options;
   const navigate = useNavigate();
   const [trip, setTrip] = useState<TripInstance | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +63,7 @@ export function useAdminTripDetail(tripId: string, orgId: string | null | undefi
   }, [tripId, trip]);
 
   useEffect(() => {
-    if (!orgId) return;
+    if (!orgId || role !== "admin") return;
     driversService
       .listByOrgId(orgId)
       .then((res) => setDrivers(Array.isArray(res) ? res : (res.data ?? [])))
@@ -62,7 +72,7 @@ export function useAdminTripDetail(tripId: string, orgId: string | null | undefi
       .listByOrgId(orgId)
       .then((res) => setVehicles(Array.isArray(res) ? res : (res.data ?? [])))
       .catch(() => {});
-  }, [orgId]);
+  }, [orgId, role]);
 
   async function transitionStatus(newStatus: TripStatus) {
     if (!trip) return;

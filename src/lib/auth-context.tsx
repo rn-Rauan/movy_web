@@ -2,6 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { api, tokenStorage } from "./api";
 import type { AuthUser } from "./types";
 
+export type AuthResponse = {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+};
+
 type AuthContextValue = {
   user: AuthUser | null;
   isAuthenticated: boolean;
@@ -13,17 +19,13 @@ type AuthContextValue = {
     password: string;
     telephone: string;
   }) => Promise<void>;
+  /** Persist a TokenResponse + activate the user (used by password-reset auto-login). */
+  setSession: (res: AuthResponse) => void;
   logout: () => void;
   refreshUser: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-type AuthResponse = {
-  accessToken: string;
-  refreshToken: string;
-  user: AuthUser;
-};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -57,6 +59,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const setSession = useCallback((res: AuthResponse) => {
+    tokenStorage.set(res);
+    setUser(res.user);
+  }, []);
+
   const refreshUser = useCallback(() => {
     setUser(tokenStorage.user);
   }, []);
@@ -83,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         login,
         signup,
+        setSession,
         logout,
         refreshUser,
       }}

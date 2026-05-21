@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { handleApiError } from "@/lib/handle-error";
 import { HHMM_REGEX, brHourToUtc, utcHourToBr } from "@/lib/timezone";
 import { templatesService } from "@/services/templates.service";
+import { driversService } from "@/services/drivers.service";
+import { vehiclesService } from "@/services/vehicles.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +18,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import type { TripTemplate, Weekday } from "@/lib/types";
+import { DriverDisplayName } from "@/features/drivers/components/DriverDisplayName";
+import { driverDisplayString } from "@/features/drivers/lib/driver-display";
+import type { Driver, TripTemplate, Vehicle, Weekday } from "@/lib/types";
 
 const WEEKDAYS: { value: Weekday; label: string }[] = [
   { value: "SUNDAY", label: "Dom" },
@@ -39,6 +43,8 @@ const templateSchema = z
     departureTimeOfDay: z.string().regex(HHMM_REGEX, "Use o formato HH:mm (24h)"),
     arrivalTimeOfDay: z.string().regex(HHMM_REGEX, "Use o formato HH:mm (24h)"),
     defaultCapacity: z.coerce.number().int().min(1, "Capacidade deve ser ao menos 1"),
+    defaultDriverId: z.string().uuid().nullable().optional(),
+    defaultVehicleId: z.string().uuid().nullable().optional(),
     priceOneWay: z.coerce.number().positive("Preço inválido").optional(),
     priceReturn: z.coerce.number().positive("Preço inválido").optional(),
     priceRoundTrip: z.coerce.number().positive("Preço inválido").optional(),
@@ -96,6 +102,9 @@ type FormState = {
   /** HH:mm em horário de Brasília. */
   arrivalTimeOfDay: string;
   defaultCapacity: string;
+  /** "" representa "Nenhum" — convertido para null no submit. */
+  defaultDriverId: string;
+  defaultVehicleId: string;
   priceOneWay: string;
   priceReturn: string;
   priceRoundTrip: string;
@@ -107,6 +116,8 @@ type FormState = {
   autoCancelOffset: string;
 };
 
+const NONE = "__none__";
+
 const EMPTY_FORM: FormState = {
   departurePoint: "",
   destination: "",
@@ -115,6 +126,8 @@ const EMPTY_FORM: FormState = {
   departureTimeOfDay: "",
   arrivalTimeOfDay: "",
   defaultCapacity: "",
+  defaultDriverId: "",
+  defaultVehicleId: "",
   priceOneWay: "",
   priceReturn: "",
   priceRoundTrip: "",
@@ -135,6 +148,8 @@ function templateToForm(tpl: TripTemplate): FormState {
     departureTimeOfDay: utcHourToBr(tpl.departureTimeOfDay) ?? "",
     arrivalTimeOfDay: utcHourToBr(tpl.arrivalTimeOfDay) ?? "",
     defaultCapacity: tpl.defaultCapacity != null ? String(tpl.defaultCapacity) : "",
+    defaultDriverId: tpl.defaultDriverId ?? "",
+    defaultVehicleId: tpl.defaultVehicleId ?? "",
     priceOneWay: tpl.priceOneWay != null ? String(tpl.priceOneWay) : "",
     priceReturn: tpl.priceReturn != null ? String(tpl.priceReturn) : "",
     priceRoundTrip: tpl.priceRoundTrip != null ? String(tpl.priceRoundTrip) : "",
@@ -167,6 +182,8 @@ export function TemplateFormSheet({
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   useEffect(() => {
     if (open) {
@@ -175,11 +192,31 @@ export function TemplateFormSheet({
     }
   }, [open, editing]);
 
+  useEffect(() => {
+    if (!open || !orgId) return;
+    driversService
+      .listByOrgId(orgId)
+      .then((res) => {
+        const list = Array.isArray(res) ? res : (res.data ?? []);
+        setDrivers(list.filter((d) => d.driverStatus === "ACTIVE"));
+      })
+      .catch(() => {});
+    vehiclesService
+      .listByOrgId(orgId)
+      .then((res) => {
+        const list = Array.isArray(res) ? res : (res.data ?? []);
+        setVehicles(list.filter((v) => v.status === "ACTIVE"));
+      })
+      .catch(() => {});
+  }, [open, orgId]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const payload = {
       ...form,
       defaultCapacity: form.defaultCapacity ? Number(form.defaultCapacity) : undefined,
+      defaultDriverId: form.defaultDriverId ? form.defaultDriverId : null,
+      defaultVehicleId: form.defaultVehicleId ? form.defaultVehicleId : null,
       priceOneWay: form.priceOneWay ? Number(form.priceOneWay) : undefined,
       priceReturn: form.priceReturn ? Number(form.priceReturn) : undefined,
       priceRoundTrip: form.priceRoundTrip ? Number(form.priceRoundTrip) : undefined,
@@ -325,6 +362,60 @@ export function TemplateFormSheet({
               Aplicado às viagens geradas automaticamente a partir deste template.
             </p>
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Motorista padrão</Label>
+              <Select
+                value={form.defaultDriverId || NONE}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, defaultDriverId: v === NONE ? "" : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Nenhum</SelectItem>
+                  {drivers.map((d) => (
+                    <SelectItem key={d.id} value={d.id} textValue={driverDisplayString(d)}>
+                      <DriverDisplayName driver={d} />
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Veículo padrão</Label>
+              <Select
+                value={form.defaultVehicleId || NONE}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, defaultVehicleId: v === NONE ? "" : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Nenhum</SelectItem>
+                  {vehicles.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.model} — {v.plate}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {form.defaultDriverId && form.defaultVehicleId ? (
+            <p className="text-xs text-muted-foreground -mt-2">
+              Com motorista e veículo padrão, viagens geradas são publicadas direto como agendadas.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground -mt-2">
+              Defina os dois para publicar viagens geradas automaticamente sem revisão.
+            </p>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">

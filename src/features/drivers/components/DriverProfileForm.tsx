@@ -5,41 +5,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { Driver } from "@/lib/types";
+import { CnhCategoriesField } from "./CnhCategoriesField";
+import type { CnhCategory, Driver } from "@/lib/types";
 
-const driverSchema = z
-  .object({
-    cnh: z
-      .string()
-      .trim()
-      .min(9, "CNH deve ter entre 9 e 12 caracteres")
-      .max(12, "CNH deve ter entre 9 e 12 caracteres"),
-    cnhCategory: z.enum(["A", "B", "C", "D", "E"], {
-      errorMap: () => ({ message: "Selecione a categoria" }),
-    }),
-    cnhExpiresAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida (AAAA-MM-DD)"),
-  })
-  .superRefine((data, ctx) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const expires = new Date(`${data.cnhExpiresAt}T00:00:00`);
-    if (Number.isNaN(expires.getTime()) || expires <= today) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["cnhExpiresAt"],
-        message: "Validade deve ser uma data futura",
-      });
-    }
-  });
+/**
+ * Em modo edit, se o user não mexeu na data de validade, não exigimos que ela esteja no futuro —
+ * driver com CNH já vencida precisa poder editar só as categorias sem renovar a data.
+ * Já se o user mudou a data, ela precisa ser futura.
+ */
+function makeDriverSchema(initialExpiresAt?: string) {
+  const initial = initialExpiresAt?.slice(0, 10);
+  return z
+    .object({
+      cnh: z
+        .string()
+        .trim()
+        .min(9, "CNH deve ter entre 9 e 12 caracteres")
+        .max(12, "CNH deve ter entre 9 e 12 caracteres"),
+      cnhCategories: z
+        .array(z.enum(["A", "B", "C", "D", "E"]))
+        .min(1, "Selecione ao menos uma categoria")
+        .max(5),
+      cnhExpiresAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida (AAAA-MM-DD)"),
+    })
+    .superRefine((data, ctx) => {
+      if (initial && data.cnhExpiresAt === initial) return;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const expires = new Date(`${data.cnhExpiresAt}T00:00:00`);
+      if (Number.isNaN(expires.getTime()) || expires <= today) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["cnhExpiresAt"],
+          message: "Validade deve ser uma data futura",
+        });
+      }
+    });
+}
 
-export type DriverFormPayload = z.infer<typeof driverSchema>;
+export type DriverFormPayload = z.infer<ReturnType<typeof makeDriverSchema>>;
 
 type Props = {
   mode: "create" | "edit";
@@ -48,12 +52,12 @@ type Props = {
   onSubmit: (payload: DriverFormPayload) => void;
 };
 
-const EMPTY = { cnh: "", cnhCategory: "", cnhExpiresAt: "" };
+type FormState = { cnh: string; cnhCategories: CnhCategory[]; cnhExpiresAt: string };
+
+const EMPTY: FormState = { cnh: "", cnhCategories: [], cnhExpiresAt: "" };
 
 export function DriverProfileForm({ mode, initialData, submitting, onSubmit }: Props) {
-  const [form, setForm] = useState<{ cnh: string; cnhCategory: string; cnhExpiresAt: string }>(
-    EMPTY,
-  );
+  const [form, setForm] = useState<FormState>(EMPTY);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirmed, setConfirmed] = useState(false);
 
@@ -61,7 +65,7 @@ export function DriverProfileForm({ mode, initialData, submitting, onSubmit }: P
     if (initialData) {
       setForm({
         cnh: initialData.cnh ?? "",
-        cnhCategory: initialData.cnhCategory ?? "",
+        cnhCategories: initialData.cnhCategories ?? [],
         cnhExpiresAt: initialData.cnhExpiresAt ? initialData.cnhExpiresAt.slice(0, 10) : "",
       });
     }
@@ -69,7 +73,8 @@ export function DriverProfileForm({ mode, initialData, submitting, onSubmit }: P
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = driverSchema.safeParse(form);
+    const schema = makeDriverSchema(initialData?.cnhExpiresAt);
+    const parsed = schema.safeParse(form);
     if (!parsed.success) {
       const errs: Record<string, string> = {};
       parsed.error.errors.forEach((err) => {
@@ -83,6 +88,7 @@ export function DriverProfileForm({ mode, initialData, submitting, onSubmit }: P
   }
 
   const saveDisabled = submitting || (mode === "create" && !confirmed);
+  const cnhReadOnly = mode === "edit";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -106,29 +112,22 @@ export function DriverProfileForm({ mode, initialData, submitting, onSubmit }: P
           onChange={(e) => setForm((f) => ({ ...f, cnh: e.target.value }))}
           placeholder="9 a 12 dígitos"
           maxLength={12}
+          readOnly={cnhReadOnly}
+          disabled={cnhReadOnly}
         />
+        {cnhReadOnly && (
+          <p className="text-xs text-muted-foreground">
+            Para trocar o número da CNH, fale com um administrador.
+          </p>
+        )}
         {errors.cnh && <p className="text-xs text-destructive">{errors.cnh}</p>}
       </div>
 
-      <div className="space-y-1">
-        <Label>Categoria</Label>
-        <Select
-          value={form.cnhCategory}
-          onValueChange={(v) => setForm((f) => ({ ...f, cnhCategory: v }))}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a categoria" />
-          </SelectTrigger>
-          <SelectContent>
-            {(["A", "B", "C", "D", "E"] as const).map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.cnhCategory && <p className="text-xs text-destructive">{errors.cnhCategory}</p>}
-      </div>
+      <CnhCategoriesField
+        value={form.cnhCategories}
+        onChange={(cats) => setForm((f) => ({ ...f, cnhCategories: cats }))}
+        error={errors.cnhCategories}
+      />
 
       <div className="space-y-1">
         <Label>Validade da CNH</Label>

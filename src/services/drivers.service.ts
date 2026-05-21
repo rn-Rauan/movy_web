@@ -1,28 +1,34 @@
 import { api } from "@/lib/api";
-import type { Driver, Paginated } from "@/lib/types";
+import type { CnhCategory, Driver, Paginated } from "@/lib/types";
 
 type DriverLookup = {
   driverId: string;
   userId: string;
   userName: string;
   userEmail: string;
-  cnhCategory: string;
+  cnhCategories: CnhCategory[];
   cnhExpiresAt: string;
   driverStatus: string;
 };
 
 export const driversService = {
-  createMe: (payload: {
-    cnh: string;
-    cnhCategory: "A" | "B" | "C" | "D" | "E";
-    cnhExpiresAt: string;
-  }) =>
+  createMe: (payload: { cnh: string; cnhCategories: CnhCategory[]; cnhExpiresAt: string }) =>
     api<Driver>("/drivers", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
 
   getMe: () => api<Driver>("/drivers/me"),
+
+  /**
+   * Self-service driver update (PATCH /drivers/me).
+   * Only `cnhExpiresAt` and `cnhCategories` are editable here — `cnh` and `driverStatus` remain admin-only via PUT /drivers/{id}.
+   */
+  updateMe: (data: Partial<{ cnhExpiresAt: string; cnhCategories: CnhCategory[] }>) =>
+    api<Driver>("/drivers/me", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
 
   listByOrgId: (orgId: string) =>
     api<Driver[] | Paginated<Driver>>(`/drivers/organization/${orgId}`),
@@ -48,11 +54,16 @@ export const driversService = {
       method: "PATCH",
     }),
 
+  /**
+   * Admin-only update (PUT /drivers/{id}).
+   * To change the CNH, send `cnh` + `cnhCategories` + `cnhExpiresAt` together (all-or-nothing) — partial CNH update returns `INVALID_PARTIAL_CNH_UPDATE_BAD_REQUEST`.
+   * `status` is independent.
+   */
   update: (
     id: string,
     data: Partial<{
       cnh: string;
-      cnhCategory: "A" | "B" | "C" | "D" | "E";
+      cnhCategories: CnhCategory[];
       cnhExpiresAt: string;
       status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
     }>,

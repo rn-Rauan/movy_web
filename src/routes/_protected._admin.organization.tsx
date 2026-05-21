@@ -43,7 +43,7 @@ import type {
   PlanUsage,
   Subscription,
 } from "@/lib/types";
-import { formatDateTime, formatPrice } from "@/lib/format";
+import { formatDateTime, formatPrice, isUnlimitedPlanLimit } from "@/lib/format";
 
 export const Route = createFileRoute("/_protected/_admin/organization")({
   component: OrganizationPage,
@@ -451,17 +451,18 @@ function PlanCard({
 }
 
 function UsageRow({ label, used, max }: { label: string; used: number; max: number }) {
-  const pct = max > 0 ? Math.min(100, (used / max) * 100) : 0;
-  const over = used >= max;
+  const unlimited = isUnlimitedPlanLimit(max);
+  const pct = unlimited ? 0 : max > 0 ? Math.min(100, (used / max) * 100) : 0;
+  const over = !unlimited && used >= max;
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1">
         <span className="text-muted-foreground">{label}</span>
         <span className={over ? "text-destructive font-medium" : "font-medium"}>
-          {used} / {max}
+          {unlimited ? `${used} (ilimitado)` : `${used} / ${max}`}
         </span>
       </div>
-      <Progress value={pct} />
+      {unlimited ? null : <Progress value={pct} />}
     </div>
   );
 }
@@ -559,7 +560,10 @@ function UpgradePlanDialog({
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {formatPrice(p.price)}/mês · {p.maxVehicles} veículos · {p.maxDrivers}{" "}
-                        motoristas · {p.maxMonthlyTrips} viagens/mês
+                        motoristas ·{" "}
+                        {isUnlimitedPlanLimit(p.maxMonthlyTrips)
+                          ? "viagens ilimitadas/mês"
+                          : `${p.maxMonthlyTrips} viagens/mês`}
                       </div>
                     </div>
                   </Label>

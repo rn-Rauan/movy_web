@@ -9,8 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignupIndexRouteImport } from './routes/signup.index'
@@ -27,6 +30,7 @@ import { Route as PublicTripInstancesIndexRouteImport } from './routes/public.tr
 import { Route as PublicTripInstancesIdRouteImport } from './routes/public.trip-instances.$id'
 import { Route as PublicOrganizationsSlugRouteImport } from './routes/public.organizations.$slug'
 import { Route as ProtectedTripsOrgIdRouteImport } from './routes/_protected.trips.$orgId'
+import { Route as ProtectedTripTripIdRouteImport } from './routes/_protected.trip.$tripId'
 import { Route as ProtectedProfileDriverRouteImport } from './routes/_protected.profile.driver'
 import { Route as ProtectedMyBookingsBookingIdRouteImport } from './routes/_protected.my-bookings.$bookingId'
 import { Route as ProtectedBookingsSuccessBookingIdRouteImport } from './routes/_protected.bookings-success.$bookingId'
@@ -38,17 +42,31 @@ import { Route as ProtectedAdminPaymentsRouteImport } from './routes/_protected.
 import { Route as ProtectedAdminOrganizationRouteImport } from './routes/_protected._admin.organization'
 import { Route as ProtectedAdminDriversRouteImport } from './routes/_protected._admin.drivers'
 import { Route as ProtectedAdminDashboardRouteImport } from './routes/_protected._admin.dashboard'
-import { Route as ProtectedAdminTripTripIdRouteImport } from './routes/_protected._admin.trip.$tripId'
 import { Route as ProtectedTripsOrgIdTripIdBookRouteImport } from './routes/_protected.trips.$orgId.$tripId.book'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProtectedRoute = ProtectedRouteImport.update({
@@ -129,6 +147,11 @@ const ProtectedTripsOrgIdRoute = ProtectedTripsOrgIdRouteImport.update({
   path: '/trips/$orgId',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedTripTripIdRoute = ProtectedTripTripIdRouteImport.update({
+  id: '/trip/$tripId',
+  path: '/trip/$tripId',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedProfileDriverRoute = ProtectedProfileDriverRouteImport.update({
   id: '/driver',
   path: '/driver',
@@ -187,12 +210,6 @@ const ProtectedAdminDashboardRoute = ProtectedAdminDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => ProtectedAdminRoute,
 } as any)
-const ProtectedAdminTripTripIdRoute =
-  ProtectedAdminTripTripIdRouteImport.update({
-    id: '/trip/$tripId',
-    path: '/trip/$tripId',
-    getParentRoute: () => ProtectedAdminRoute,
-  } as any)
 const ProtectedTripsOrgIdTripIdBookRoute =
   ProtectedTripsOrgIdTripIdBookRouteImport.update({
     id: '/$tripId/book',
@@ -202,8 +219,11 @@ const ProtectedTripsOrgIdTripIdBookRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRouteWithChildren
+  '/verify-email': typeof VerifyEmailRoute
   '/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
   '/organizations': typeof ProtectedOrganizationsRoute
   '/profile': typeof ProtectedProfileRouteWithChildren
@@ -223,16 +243,19 @@ export interface FileRoutesByFullPath {
   '/bookings-success/$bookingId': typeof ProtectedBookingsSuccessBookingIdRoute
   '/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
   '/profile/driver': typeof ProtectedProfileDriverRoute
+  '/trip/$tripId': typeof ProtectedTripTripIdRoute
   '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
   '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
-  '/trip/$tripId': typeof ProtectedAdminTripTripIdRoute
   '/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
   '/organizations': typeof ProtectedOrganizationsRoute
   '/profile': typeof ProtectedProfileRouteWithChildren
@@ -251,19 +274,22 @@ export interface FileRoutesByTo {
   '/bookings-success/$bookingId': typeof ProtectedBookingsSuccessBookingIdRoute
   '/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
   '/profile/driver': typeof ProtectedProfileDriverRoute
+  '/trip/$tripId': typeof ProtectedTripTripIdRoute
   '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
   '/public/trip-instances': typeof PublicTripInstancesIndexRoute
-  '/trip/$tripId': typeof ProtectedAdminTripTripIdRoute
   '/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_protected': typeof ProtectedRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRouteWithChildren
+  '/verify-email': typeof VerifyEmailRoute
   '/_protected/_admin': typeof ProtectedAdminRouteWithChildren
   '/_protected/_driver': typeof ProtectedDriverRouteWithChildren
   '/_protected/my-bookings': typeof ProtectedMyBookingsRouteWithChildren
@@ -285,19 +311,22 @@ export interface FileRoutesById {
   '/_protected/bookings-success/$bookingId': typeof ProtectedBookingsSuccessBookingIdRoute
   '/_protected/my-bookings/$bookingId': typeof ProtectedMyBookingsBookingIdRoute
   '/_protected/profile/driver': typeof ProtectedProfileDriverRoute
+  '/_protected/trip/$tripId': typeof ProtectedTripTripIdRoute
   '/_protected/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
   '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
-  '/_protected/_admin/trip/$tripId': typeof ProtectedAdminTripTripIdRoute
   '/_protected/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
     | '/login'
+    | '/reset-password'
     | '/signup'
+    | '/verify-email'
     | '/my-bookings'
     | '/organizations'
     | '/profile'
@@ -317,16 +346,19 @@ export interface FileRouteTypes {
     | '/bookings-success/$bookingId'
     | '/my-bookings/$bookingId'
     | '/profile/driver'
+    | '/trip/$tripId'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
     | '/public/trip-instances/'
-    | '/trip/$tripId'
     | '/trips/$orgId/$tripId/book'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/forgot-password'
     | '/login'
+    | '/reset-password'
+    | '/verify-email'
     | '/my-bookings'
     | '/organizations'
     | '/profile'
@@ -345,18 +377,21 @@ export interface FileRouteTypes {
     | '/bookings-success/$bookingId'
     | '/my-bookings/$bookingId'
     | '/profile/driver'
+    | '/trip/$tripId'
     | '/trips/$orgId'
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
     | '/public/trip-instances'
-    | '/trip/$tripId'
     | '/trips/$orgId/$tripId/book'
   id:
     | '__root__'
     | '/'
     | '/_protected'
+    | '/forgot-password'
     | '/login'
+    | '/reset-password'
     | '/signup'
+    | '/verify-email'
     | '/_protected/_admin'
     | '/_protected/_driver'
     | '/_protected/my-bookings'
@@ -378,19 +413,22 @@ export interface FileRouteTypes {
     | '/_protected/bookings-success/$bookingId'
     | '/_protected/my-bookings/$bookingId'
     | '/_protected/profile/driver'
+    | '/_protected/trip/$tripId'
     | '/_protected/trips/$orgId'
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
     | '/public/trip-instances/'
-    | '/_protected/_admin/trip/$tripId'
     | '/_protected/trips/$orgId/$tripId/book'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ProtectedRoute: typeof ProtectedRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRouteWithChildren
+  VerifyEmailRoute: typeof VerifyEmailRoute
   PublicPlansRoute: typeof PublicPlansRoute
   PublicTripInstancesRoute: typeof PublicTripInstancesRouteWithChildren
   PublicOrganizationsSlugRoute: typeof PublicOrganizationsSlugRoute
@@ -398,6 +436,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -405,11 +450,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_protected': {
@@ -524,6 +583,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedTripsOrgIdRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/trip/$tripId': {
+      id: '/_protected/trip/$tripId'
+      path: '/trip/$tripId'
+      fullPath: '/trip/$tripId'
+      preLoaderRoute: typeof ProtectedTripTripIdRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/profile/driver': {
       id: '/_protected/profile/driver'
       path: '/driver'
@@ -601,13 +667,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedAdminDashboardRouteImport
       parentRoute: typeof ProtectedAdminRoute
     }
-    '/_protected/_admin/trip/$tripId': {
-      id: '/_protected/_admin/trip/$tripId'
-      path: '/trip/$tripId'
-      fullPath: '/trip/$tripId'
-      preLoaderRoute: typeof ProtectedAdminTripTripIdRouteImport
-      parentRoute: typeof ProtectedAdminRoute
-    }
     '/_protected/trips/$orgId/$tripId/book': {
       id: '/_protected/trips/$orgId/$tripId/book'
       path: '/$tripId/book'
@@ -626,7 +685,6 @@ interface ProtectedAdminRouteChildren {
   ProtectedAdminTemplatesRoute: typeof ProtectedAdminTemplatesRoute
   ProtectedAdminTripsRoute: typeof ProtectedAdminTripsRoute
   ProtectedAdminVehiclesRoute: typeof ProtectedAdminVehiclesRoute
-  ProtectedAdminTripTripIdRoute: typeof ProtectedAdminTripTripIdRoute
 }
 
 const ProtectedAdminRouteChildren: ProtectedAdminRouteChildren = {
@@ -637,7 +695,6 @@ const ProtectedAdminRouteChildren: ProtectedAdminRouteChildren = {
   ProtectedAdminTemplatesRoute: ProtectedAdminTemplatesRoute,
   ProtectedAdminTripsRoute: ProtectedAdminTripsRoute,
   ProtectedAdminVehiclesRoute: ProtectedAdminVehiclesRoute,
-  ProtectedAdminTripTripIdRoute: ProtectedAdminTripTripIdRoute,
 }
 
 const ProtectedAdminRouteWithChildren = ProtectedAdminRoute._addFileChildren(
@@ -697,6 +754,7 @@ interface ProtectedRouteChildren {
   ProtectedProfileRoute: typeof ProtectedProfileRouteWithChildren
   ProtectedSetupRoute: typeof ProtectedSetupRoute
   ProtectedBookingsSuccessBookingIdRoute: typeof ProtectedBookingsSuccessBookingIdRoute
+  ProtectedTripTripIdRoute: typeof ProtectedTripTripIdRoute
   ProtectedTripsOrgIdRoute: typeof ProtectedTripsOrgIdRouteWithChildren
 }
 
@@ -709,6 +767,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedSetupRoute: ProtectedSetupRoute,
   ProtectedBookingsSuccessBookingIdRoute:
     ProtectedBookingsSuccessBookingIdRoute,
+  ProtectedTripTripIdRoute: ProtectedTripTripIdRoute,
   ProtectedTripsOrgIdRoute: ProtectedTripsOrgIdRouteWithChildren,
 }
 
@@ -745,8 +804,11 @@ const PublicTripInstancesRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProtectedRoute: ProtectedRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRouteWithChildren,
+  VerifyEmailRoute: VerifyEmailRoute,
   PublicPlansRoute: PublicPlansRoute,
   PublicTripInstancesRoute: PublicTripInstancesRouteWithChildren,
   PublicOrganizationsSlugRoute: PublicOrganizationsSlugRoute,

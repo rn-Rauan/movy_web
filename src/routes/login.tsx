@@ -85,6 +85,14 @@ function LoginPage() {
               className="h-12 text-base"
               required
             />
+            <div className="flex justify-end">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-muted-foreground hover:text-primary"
+              >
+                Esqueci a senha
+              </Link>
+            </div>
           </div>
           <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
             {submitting ? "Entrando..." : "Entrar"}

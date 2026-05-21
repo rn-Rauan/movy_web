@@ -11,6 +11,9 @@ type TemplateCreatePayload = {
   /** HH:mm UTC */
   arrivalTimeOfDay: string;
   defaultCapacity: number;
+  /** When BOTH defaults are set, generated instances are created as SCHEDULED (skip DRAFT). */
+  defaultDriverId?: string | null;
+  defaultVehicleId?: string | null;
   priceOneWay?: number;
   priceReturn?: number;
   priceRoundTrip?: number;

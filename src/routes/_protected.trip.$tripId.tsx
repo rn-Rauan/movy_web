@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
@@ -6,13 +6,17 @@ import { useRole } from "@/lib/role-context";
 import { useAdminTripDetail } from "@/features/trips/hooks/useAdminTripDetail";
 import { AdminTripDetailView } from "@/features/trips/components/AdminTripDetailView";
 
-export const Route = createFileRoute("/_protected/_admin/trip/$tripId")({
-  component: AdminTripDetailPage,
+export const Route = createFileRoute("/_protected/trip/$tripId")({
+  component: TripDetailPage,
 });
 
-function AdminTripDetailPage() {
+function TripDetailPage() {
   const { tripId } = Route.useParams();
-  const { adminOrgId } = useRole();
+  const { isAdmin, isDriver, adminOrgId, roleLoading } = useRole();
+
+  const orgId = isAdmin ? adminOrgId : null;
+  const role = isAdmin ? "admin" : isDriver ? "driver" : null;
+
   const {
     trip,
     error,
@@ -29,16 +33,21 @@ function AdminTripDetailPage() {
     assignVehicle,
     confirmPresence,
     cancelBooking,
-  } = useAdminTripDetail(tripId, adminOrgId);
+  } = useAdminTripDetail(tripId, orgId, { role });
+
+  if (!roleLoading && !isAdmin && !isDriver) {
+    return <Navigate to="/" />;
+  }
 
   return (
     <AppShell title="Detalhe da viagem" back>
       {error ? (
         <ErrorCard message={error} />
-      ) : !trip ? (
+      ) : !trip || !role ? (
         <LoadingList count={3} height="h-24" />
       ) : (
         <AdminTripDetailView
+          role={role}
           trip={trip}
           passengers={passengers}
           bookings={bookings}

@@ -33,11 +33,18 @@ export function TemplateCard({ template: tpl, onEdit, onDelete, onGenerate }: Pr
           <MapPin className="h-4 w-4 text-primary" />
           {tpl.departurePoint} → {tpl.destination}
         </div>
-        {tpl.isPublic ? (
-          <Badge variant="default">Público</Badge>
-        ) : (
-          <Badge variant="outline">Privado</Badge>
-        )}
+        <div className="flex items-center gap-1 shrink-0">
+          {tpl.defaultDriverId && tpl.defaultVehicleId && (
+            <Badge variant="default" title="Viagens geradas são publicadas automaticamente">
+              Auto-publica
+            </Badge>
+          )}
+          {tpl.isPublic ? (
+            <Badge variant="default">Público</Badge>
+          ) : (
+            <Badge variant="outline">Privado</Badge>
+          )}
+        </div>
       </div>
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>

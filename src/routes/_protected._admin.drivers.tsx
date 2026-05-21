@@ -9,7 +9,6 @@ import { useRole } from "@/lib/role-context";
 import { useDrivers } from "@/features/drivers/hooks/useDrivers";
 import { DriversList } from "@/features/drivers/components/DriversList";
 import { AddDriverDialog } from "@/features/drivers/components/AddDriverDialog";
-import { EditDriverDialog } from "@/features/drivers/components/EditDriverDialog";
 import { RemoveDriverDialog } from "@/features/drivers/components/RemoveDriverDialog";
 import type { Driver } from "@/lib/types";
 
@@ -21,7 +20,6 @@ function DriversPage() {
   const { adminOrgId } = useRole();
   const { drivers, setDrivers, loading, error, refetch } = useDrivers(adminOrgId);
   const [addOpen, setAddOpen] = useState(false);
-  const [editing, setEditing] = useState<Driver | null>(null);
   const [removing, setRemoving] = useState<Driver | null>(null);
 
   const hasDrivers = (drivers?.length ?? 0) > 0;
@@ -44,19 +42,11 @@ function DriversPage() {
         <DriversList
           drivers={drivers ?? []}
           onAdd={() => setAddOpen(true)}
-          onEdit={setEditing}
           onRemove={setRemoving}
         />
       )}
 
       <AddDriverDialog open={addOpen} onOpenChange={setAddOpen} onAdded={refetch} />
-      <EditDriverDialog
-        driver={editing}
-        onClose={() => setEditing(null)}
-        onUpdated={(updated) =>
-          setDrivers((prev) => prev?.map((d) => (d.id === updated.id ? updated : d)) ?? null)
-        }
-      />
       <RemoveDriverDialog
         driver={removing}
         orgId={adminOrgId}

@@ -18,6 +18,16 @@ export const tripsService = {
   listByOrgId: (orgId: string) =>
     api<TripInstance[] | Paginated<TripInstance>>(`/trip-instances/organization/${orgId}`),
 
+  /**
+   * Self-service driver listing. Returns the caller's trips scoped to their current org.
+   * Empty array if the user has no driver profile or is INACTIVE/SUSPENDED — never a 403/404.
+   */
+  listForDriver: (page = 1, limit = 20, status?: TripStatus) => {
+    const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (status) qs.set("status", status);
+    return api<Paginated<TripInstance>>(`/trip-instances/driver/me?${qs.toString()}`);
+  },
+
   listBySlug: (slug: string) =>
     api<TripInstance[] | Paginated<TripInstance>>(`/public/trip-instances/org/${slug}`, {
       auth: false,

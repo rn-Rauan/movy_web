@@ -151,7 +151,7 @@ Request a password-reset email. **Always returns `204`**, even if the email is n
 
 If the email maps to an `ACTIVE` user, a reset token is emailed (TTL **1 hour**). The user then submits the token to `POST /auth/reset-password`.
 
-> **In dev mode**, the email goes to the in-memory mock (see [`GET /dev/emails/latest`](#get-devemailslatest--dev)). Dev users can puxar o token de lá para auto-preencher a tela de reset.
+> **In dev mode**, the email goes to the in-memory mock (see [`GET /dev/emails/latest`](#get-devemailslatest--dev)). Dev users can pull the token from there to auto-fill the reset screen.
 
 **Body**
 | Field | Type | Required |
@@ -368,7 +368,7 @@ Register a driver profile for the current user. The user must be a member of the
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `cnh` | string | ✅ | 9–12 chars |
-| `cnhCategory` | `"A"` \| `"B"` \| `"C"` \| `"D"` \| `"E"` | ✅ | |
+| `cnhCategories` | `("A" \| "B" \| "C" \| "D" \| "E")[]` | ✅ | At least one entry; up to 5. Drivers may legally hold multiple categories simultaneously (e.g. `["A", "B"]`). Case-insensitive and deduplicated on the server. |
 | `cnhExpiresAt` | string (YYYY-MM-DD) | ✅ | |
 
 **Response `201`** → [DriverResponse](#driverresponse)
@@ -383,13 +383,45 @@ Get the current user's driver profile.
 
 ---
 
+### `PATCH /drivers/me` 🔒 JWT
+
+Self-service update of the authenticated driver's own profile. Use this from the `/profile/driver` edit screen — the admin-only `PUT /drivers/{id}` is for tenant admins managing other drivers and rejects the driver themselves with `403`.
+
+**Allowed fields** (both optional, partial update — send only what changed):
+
+- `cnhExpiresAt` — refresh the CNH expiry date when the driver renews the document.
+- `cnhCategories` — replacement set of held categories. Use this when the driver gains or loses a category (e.g. adds `D` after a course). The list **replaces** the stored set, not merges — to add `D` to an existing `["A", "B"]`, send `["A", "B", "D"]`.
+
+**What is NOT changeable here** (still admin-only via `PUT /drivers/{id}`):
+
+- `cnh` — the license number is identity-grade and requires admin review of the new document.
+- `driverStatus` — activation/suspension is an administrative decision.
+
+**Important behaviour:**
+
+- Resolves the driver profile linked to the authenticated `userId`. If the user has no driver profile yet, returns `404` with `DRIVER_PROFILE_NOT_FOUND` — the FE should redirect to the driver-onboarding flow.
+- Drivers in `INACTIVE` or `SUSPENDED` state get `403` with `DRIVER_INACTIVE_FORBIDDEN`. An admin must reactivate the profile first.
+- An **empty payload is a no-op** — returns the current driver state with `200`. The FE doesn't need to short-circuit empty forms.
+
+**Body** (both optional)
+| Field | Type | Notes |
+|---|---|---|
+| `cnhExpiresAt` | string (YYYY-MM-DD) | Must be a valid ISO date |
+| `cnhCategories` | `("A" \| "B" \| "C" \| "D" \| "E")[]` | 1..5 entries. Replaces the stored set |
+
+**Response `200`** → [DriverResponse](#driverresponse)
+**`403`** → `DRIVER_INACTIVE_FORBIDDEN` (driver is `INACTIVE`/`SUSPENDED`)
+**`404`** → `DRIVER_PROFILE_NOT_FOUND` (authenticated user has no driver profile)
+
+---
+
 ### `GET /drivers/lookup` 🛡️ ADMIN
 
 Look up a driver by email + CNH (to get their `userId` before creating a membership).
 
 **Query:** `?email=joao@email.com&cnh=123456789`
 
-**Response `200`** → `{ driverId, userId, userName, userEmail, cnhCategory, cnhExpiresAt, driverStatus }`
+**Response `200`** → `{ driverId, userId, userName, userEmail, cnhCategories, cnhExpiresAt, driverStatus }`
 
 ---
 
@@ -409,19 +441,20 @@ Get a driver by ID.
 
 ---
 
-### `PUT /drivers/{id}` �️ ADMIN
+### `PUT /drivers/{id}` 🛡️ ADMIN
 
-Update a driver profile. All fields optional.
+Update a driver profile (admin-only — for the driver editing their own profile, use [`PATCH /drivers/me`](#patch-driversme--jwt)). All fields optional, but the three CNH fields follow an **all-or-nothing** rule: to change the license you must send `cnh`, `cnhCategories`, and `cnhExpiresAt` together. Sending only some of them returns `400` with `INVALID_PARTIAL_CNH_UPDATE_BAD_REQUEST`.
 
 **Body**
 | Field | Type | Notes |
 |---|---|---|
-| `cnh` | string | |
-| `cnhCategory` | `"A"`\|`"B"`\|`"C"`\|`"D"`\|`"E"` | |
-| `cnhExpiresAt` | string (YYYY-MM-DD) | |
-| `status` | `"ACTIVE"`\|`"INACTIVE"`\|`"SUSPENDED"` | |
+| `cnh` | string | 9–12 chars. Send together with `cnhCategories` + `cnhExpiresAt` |
+| `cnhCategories` | `("A" \| "B" \| "C" \| "D" \| "E")[]` | 1..5 entries. Send together with `cnh` + `cnhExpiresAt` |
+| `cnhExpiresAt` | string (YYYY-MM-DD) | Send together with `cnh` + `cnhCategories` |
+| `status` | `"ACTIVE"` \| `"INACTIVE"` \| `"SUSPENDED"` | Independent of the CNH fields |
 
 **Response `200`** → [DriverResponse](#driverresponse)
+**`400`** → `INVALID_PARTIAL_CNH_UPDATE_BAD_REQUEST` (only some CNH fields provided)
 
 ---
 
@@ -716,12 +749,19 @@ Get a trip instance by ID. **Enriched response** — joins the parent template (
 
 ---
 
-### `PATCH /trip-instances/{id}/status` 🛡️ ADMIN
+### `PATCH /trip-instances/{id}/status` 🛡️ ADMIN | 🚗 DRIVER
 
 Transition a trip instance to a new lifecycle status.
 
-**Status flow:** `DRAFT → SCHEDULED → CONFIRMED → IN_PROGRESS → FINISHED`  
+**Status flow:** `DRAFT → SCHEDULED → CONFIRMED → IN_PROGRESS → FINISHED`
 Can also go to `CANCELED` from `DRAFT`, `SCHEDULED`, or `CONFIRMED`.
+
+**Authorization:**
+
+- **ADMIN** of the tenant: any valid state transition (subject to the standard state machine + prerequisite checks).
+- **DRIVER** of the tenant: may transition **only trips assigned to themselves**, and **only to** `IN_PROGRESS` (boarding) or `FINISHED` (arrival). Use this from the driver-app flow when the driver departs the origin or arrives at the destination. All other targets (`SCHEDULED`, `CONFIRMED`, `CANCELED`, …) remain admin-only.
+
+The driver's own profile must be `ACTIVE` — `INACTIVE`/`SUSPENDED` drivers are rejected with the same `TRIP_NOT_ASSIGNED_TO_DRIVER_FORBIDDEN` error to avoid leaking driver state to the caller.
 
 **Body**
 | Field | Type | Required |
@@ -729,6 +769,9 @@ Can also go to `CANCELED` from `DRAFT`, `SCHEDULED`, or `CONFIRMED`.
 | `newStatus` | `"DRAFT"`\|`"SCHEDULED"`\|`"CONFIRMED"`\|`"IN_PROGRESS"`\|`"FINISHED"`\|`"CANCELED"` | ✅ |
 
 **Response `200`** → [TripInstanceResponse](#tripinstanceresponse)
+**`400`** → `TRIP_INSTANCE_STATUS_TRANSITION_BAD_REQUEST` (invalid state-machine transition) or `TRIP_INSTANCE_REQUIRED_FIELD_BAD_REQUEST` (driver/vehicle missing for `SCHEDULED`)
+**`403`** → `TRIP_NOT_ASSIGNED_TO_DRIVER_FORBIDDEN` (DRIVER caller is not the assigned driver / has no active profile) or `DRIVER_TRIP_STATUS_TRANSITION_FORBIDDEN` (DRIVER caller targeted a status other than `IN_PROGRESS` / `FINISHED`)
+**`404`** → `TRIP_INSTANCE_NOT_FOUND`
 
 ---
 
@@ -1065,7 +1108,7 @@ Read the in-memory log of emails "sent" by the mock `EmailService`. The backend 
 
 Typical flow: user clicks "Forgot password" → FE polls or fetches this endpoint with `?to=<email>` → grabs the raw token from the latest entry's `metadata.token` → auto-fills the reset-password form.
 
-> **In production**, the backend swaps `ConsoleEmailService` for a real SMTP/Resend adapter. This endpoint will likely return an empty array (the prod implementation won't write to the in-memory log). Treat the FE "puxar do mock" UX as **dev-only** and gate it behind a build flag.
+> **In production**, the backend swaps `ConsoleEmailService` for a real SMTP/Resend adapter. This endpoint will likely return an empty array (the prod implementation won't write to the in-memory log). Treat the FE "pull from mock" UX as **dev-only** and gate it behind a build flag.
 
 **Query**
 | Param | Type | Notes |
@@ -1151,13 +1194,15 @@ Typical flow: user clicks "Forgot password" → FE polls or fetches this endpoin
   "id": "uuid",
   "userId": "uuid",
   "cnh": "123456789",
-  "cnhCategory": "B",
+  "cnhCategories": ["A", "B"],
   "cnhExpiresAt": "2028-12-31T00:00:00.000Z",
   "driverStatus": "ACTIVE",
   "createdAt": "...",
   "updatedAt": "..."
 }
 ```
+
+> `cnhCategories` is always an array, even if the driver holds a single category (`["B"]`). The list is server-normalised: deduplicated, upper-cased, and sorted alphabetically. The legacy `cnhCategory: string` field was removed on 19 May 2026 (Phase 5).
 
 ### VehicleResponse
 
@@ -1478,6 +1523,25 @@ Returned by `PATCH /organizations/{orgId}/payments/{id}/confirm` and `.../fail` 
 | `error`                                    | HTTP | Meaning                                                                                                                                                                                                                             |
 | ------------------------------------------ | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `PAYMENT_NOT_ASSIGNED_TO_DRIVER_FORBIDDEN` | 403  | The calling driver is not assigned to the TripInstance of this payment, OR their driver profile is `INACTIVE`/`SUSPENDED`, OR the TripInstance has no driver assigned yet. ADMINs of the same tenant are not subject to this check. |
+
+### Trip Status — Driver Authorization Error Codes
+
+Returned by `PATCH /trip-instances/{id}/status` when called by a DRIVER. ADMINs of the tenant are not subject to either check.
+
+| `error`                                   | HTTP | Meaning                                                                                                                                                                                                                       | Suggested copy                                            |
+| ----------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `TRIP_NOT_ASSIGNED_TO_DRIVER_FORBIDDEN`   | 403  | The calling driver is not the assigned driver of this trip, OR their driver profile is `INACTIVE`/`SUSPENDED`, OR the trip has no driver assigned yet. Three sub-cases collapse into one error to avoid leaking driver state. | "You can only update trips assigned to you."              |
+| `DRIVER_TRIP_STATUS_TRANSITION_FORBIDDEN` | 403  | The calling driver targeted a status outside the allowed `IN_PROGRESS` / `FINISHED` whitelist (e.g. tried to `CANCEL`). Cancellations and earlier-stage transitions remain admin-only.                                        | "Drivers can only mark trips as in-progress or finished." |
+
+### Driver Self-Update Error Codes
+
+Returned by `PATCH /drivers/me`.
+
+| `error`                              | HTTP | Meaning                                                                    | Suggested copy                                                               |
+| ------------------------------------ | ---- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `DRIVER_PROFILE_NOT_FOUND`           | 404  | The authenticated user has no driver profile yet                           | "You don't have a driver profile yet. Complete the driver onboarding first." |
+| `DRIVER_INACTIVE_FORBIDDEN`          | 403  | The driver profile is `INACTIVE` or `SUSPENDED` and cannot be self-updated | "Your driver profile is inactive. Contact an administrator."                 |
+| `INVALID_CNH_CATEGORIES_BAD_REQUEST` | 400  | The `cnhCategories` array is empty or contains an unknown category         | "Provide at least one valid CNH category (A, B, C, D, or E)."                |
 
 ### Trip Scheduling Error Codes
 

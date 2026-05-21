@@ -82,7 +82,10 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
 
 ```
 / → landing page (não-autenticado) ou redirect inteligente por role
-/login → autenticação
+/login → autenticação (com link "Esqueci a senha")
+/forgot-password → solicita link de recuperação (anti-enumeração — sempre mesma confirmação)
+/reset-password?token=… → redefine senha, auto-login via setSession + redirect /
+/verify-email?token=… → verifica email, refresh JWT, redirect /
 /signup/ → cadastro de usuário comum (B2C)
 /signup/empresa → cadastro empresa + admin em uma chamada (B2B)
 
@@ -101,12 +104,13 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
   profile/                    → perfil e senha do usuário autenticado
   setup/                      → wizard de criação de organização (admin)
 
-  profile/driver/             → opt-in self-service de perfil de motorista (CNH + categoria + validade)
+  profile/driver/             → opt-in self-service de perfil de motorista (CNH + categorias múltiplas + validade)
+
+  trip/$tripId/               → detalhe da viagem — compartilhada admin+driver via prop `role` (admin: assignment + todas transições; driver: só IN_PROGRESS/FINISHED, sem edit)
 
   _admin/ (guard: isAdmin)
     dashboard/                → métricas (ativas/próximos 7 dias/passageiros/ocupação%) + receita prevista + próximas viagens
     trips/                    → CRUD de instâncias de viagem
-    trip/$tripId/             → detalhe + passageiros + ações de status (singular "trip" — não "trips")
     templates/                → CRUD de templates de rota + dialog de geração manual de instâncias
     drivers/                  → gestão de motoristas da organização
     vehicles/                 → CRUD de veículos da organização
@@ -114,7 +118,7 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
     payments/                 → histórico de pagamentos da subscription (paginado)
 
   _driver/ (guard: isDriver)
-    my-trips/                 → viagens do motorista logado
+    my-trips/                 → lista de viagens atribuídas ao motorista (GET /trip-instances/driver/me)
 ```
 
 **Nota sobre rotas-pai com filho:** quando uma rota como `profile.tsx` ganha uma filha (`profile.driver.tsx`), o TanStack passa a tratar `profile.tsx` como layout. Pra evitar que o conteúdo do pai engula a filha, o componente precisa retornar `<Outlet />` quando `location.pathname` é da filha — ver `_protected.trips.$orgId.tsx:14-22` e `_protected.profile.tsx`.
@@ -166,7 +170,21 @@ src/
 │   │       ├── OrgCard.tsx
 │   │       └── OrgsList.tsx         Lista com links para trips
 │   │
-│   ├── drivers/                Gestão admin + self-service (useMyDriver, DriverProfileForm)
+│   ├── drivers/                Self-service (useMyDriver, DriverProfileForm, EditMyDriverDialog) + admin (DriverCard sem edit — só remove)
+│   │   ├── components/
+│   │   │   ├── DriverProfileForm.tsx   Form usado em create e edit (schema factory makeDriverSchema com initialExpiresAt)
+│   │   │   ├── EditMyDriverDialog.tsx  Wrapper Dialog do form modo edit (chama PATCH /drivers/me)
+│   │   │   ├── CnhCategoriesField.tsx  Grid de checkboxes A–E (multi-categoria)
+│   │   │   ├── DriverDisplayName.tsx   Renderiza nome via useDriverName (cache global); fallback "Motorista"
+│   │   │   ├── DriverCard.tsx          Card admin com badge de status + botão remover (sem pencil — admin não edita CNH)
+│   │   │   ├── AddDriverDialog.tsx     Lookup por email+CNH (POST /memberships/driver)
+│   │   │   └── RemoveDriverDialog.tsx  Soft-remove via DELETE /memberships
+│   │   ├── hooks/
+│   │   │   ├── useMyDriver.ts          GET /drivers/me com notFound flag (404 ≠ erro)
+│   │   │   ├── useDriverName.ts        Cache global + dedup inflight pra /drivers/{id}/name
+│   │   │   └── useDrivers.ts           Lista por org
+│   │   └── lib/
+│   │       └── driver-display.ts       driverDisplayString(d) — versão string-only (pra textValue de SelectItem)
 │   ├── templates/              CRUD admin de templates de rota + GenerateInstancesDialog
 │   ├── vehicles/               CRUD admin de veículos (hooks/ + components/)
 │   ├── scheduling/             SchedulingConfigCard + useSchedulingConfig (cron de geração/auto-cancel)
@@ -188,7 +206,7 @@ src/
 │   ├── ui/                  shadcn/ui — não modificar diretamente
 │   ├── layout/
 │   │   ├── AppShell.tsx     Layout base (header + BottomNav)
-│   │   └── BottomNav.tsx    Tabs por role (passenger / admin)
+│   │   └── BottomNav.tsx    Tabs por role (passenger / driver / admin) — tab "Perfil" em todos
 │   ├── feedback/
 │   │   ├── LoadingList.tsx  Skeletons de lista
 │   │   ├── ErrorCard.tsx    Card de erro
@@ -241,7 +259,9 @@ function TripsPage() {
 
 **Auto-refresh:** `api.ts` intercepta 401 e renova token automaticamente (com deduplicação).
 
-**useAuth()** → `{ user, isAuthenticated, loading, login, signup, logout, refreshUser }`
+**useAuth()** → `{ user, isAuthenticated, loading, login, signup, setSession, logout, refreshUser }`
+
+`setSession(authResponse)` persiste o `TokenResponse` (de `/auth/reset-password` ou `/auth/refresh`) e ativa o user no contexto — use em fluxos de auto-login (reset de senha, verify-email).
 
 **useRole()** → `{ isAdmin, isDriver, hasDriverProfile, adminOrgId, roleLoading, refetchRole }`
 
@@ -258,9 +278,9 @@ function TripsPage() {
 
 `BottomNav.tsx` mostra tabs diferentes por role (precedência: admin > driver > passenger):
 
-- **Passenger:** Explorar · Empresas · Inscrições
-- **Driver:** Explorar · Como motorista · Inscrições
-- **Admin:** Explorar · Viagens · Configurar
+- **Passenger:** Explorar · Empresas · Inscrições · Perfil
+- **Driver:** Explorar · Como motorista · Inscrições · Perfil
+- **Admin:** Dashboard · Viagens · Templates · Empresa · Perfil
 
 `index.tsx` redireciona:
 
@@ -281,6 +301,7 @@ tripsService.listByOrgId(orgId);
 tripsService.listBySlug(slug); // público, sem auth
 tripsService.getPublicById(id);
 tripsService.listPassengers(tripId);
+tripsService.listForDriver(page?, limit?, status?); // GET /trip-instances/driver/me — driver self-service, retorna [] se sem perfil/inactive
 
 // bookings.service.ts
 bookingsService.listForUser();
@@ -294,8 +315,9 @@ organizationsService.listActive();
 organizationsService.listMine();
 
 // drivers.service.ts
-driversService.createMe({ cnh, cnhCategory, cnhExpiresAt }); // self-service POST /drivers
-driversService.getMe();                                       // GET /drivers/me
+driversService.createMe({ cnh, cnhCategories, cnhExpiresAt }); // self-service POST /drivers (cnhCategories: ("A"|"B"|"C"|"D"|"E")[])
+driversService.getMe();                                        // GET /drivers/me
+driversService.updateMe({ cnhCategories?, cnhExpiresAt? });    // self-service PATCH /drivers/me (cnh e status são admin-only)
 driversService.listByOrgId(orgId);
 driversService.lookup(email, cnh);
 driversService.addToOrg(userEmail, cnh);
@@ -304,8 +326,8 @@ driversService.removeMembership(userId, roleId, orgId);
 // templates.service.ts
 templatesService.listByOrgId(orgId);
 templatesService.getById(id);
-templatesService.create(orgId, data);   // data inclui departureTimeOfDay/arrivalTimeOfDay (UTC HH:mm) + defaultCapacity
-templatesService.update(id, data);
+templatesService.create(orgId, data);   // departureTimeOfDay/arrivalTimeOfDay (UTC HH:mm), defaultCapacity, opcionalmente defaultDriverId + defaultVehicleId (UUID|null)
+templatesService.update(id, data);      // PUT — passe defaultDriverId/defaultVehicleId = null pra limpar
 templatesService.remove(id);
 templatesService.generateInstances(id, daysAhead?); // POST /trip-templates/{id}/generate-instances → { created, skipped, failed }
 
@@ -315,8 +337,8 @@ vehiclesService.create(orgId, data);
 vehiclesService.update(id, data);
 vehiclesService.deactivate(id);
 
-// drivers.service.ts (continuação — adicionados em W2)
-driversService.update(id, { cnh?, cnhCategory?, cnhExpiresAt?, status? });
+// drivers.service.ts (admin-only — endpoint ainda exposto no service, mas SEM UI que chame; admin não edita mais dados de driver)
+// driversService.update(id, { cnh?, cnhCategories?, cnhExpiresAt?, status? }); // disponível mas não usado pela UI
 driversService.restoreMembership(userId, roleId, orgId);
 
 // bookings.service.ts (continuação — adicionados em W2)
@@ -324,8 +346,14 @@ bookingsService.listByTripInstance(tripId);
 bookingsService.confirmPresence(bookingId);
 
 // plans.service.ts
-plansService.list();
-plansService.getById(id);
+plansService.list();      // GET /public/plans — anônimo, paginado
+plansService.getById(id); // GET /plans/{id} — JWT
+
+// auth.service.ts
+authService.forgotPassword(email);          // POST /auth/forgot-password — sempre 204 (anti-enumeração)
+authService.resetPassword(token, newPassword); // POST /auth/reset-password — retorna TokenResponse (passe pro AuthContext.setSession)
+authService.verifyEmail(token);             // POST /auth/verify-email — 204; chame authService.refresh depois pra atualizar emailVerifiedAt no JWT
+authService.refresh(refreshToken);          // POST /auth/refresh
 
 // payments.service.ts
 paymentsService.list(orgId, page?, size?);
@@ -345,7 +373,7 @@ schedulingService.updateConfig(orgId, patch);        // PATCH parcial (enabled, 
 
 **Tratamento de erros:** `src/lib/handle-error.ts` exporta:
 
-- `handleApiError(err, fallbackMsg)` — detecta 403 limite-de-plano via `errorCode` estável (`NO_ACTIVE_SUBSCRIPTION_FORBIDDEN`, `*_PLAN_LIMIT_*`) com toast + action "Ver planos" → `/organization`. Também mapeia `errorCode`s de trip-scheduling (`INVALID_TRIP_TIME_OF_DAY_FORMAT`, `INVALID_TRIP_TEMPLATE_MISSING_SCHEDULE`, `INVALID_TRIP_TEMPLATE_MISSING_CAPACITY`, `TRIP_TEMPLATE_NOT_RECURRING_BAD_REQUEST`, etc.) pra mensagens em PT-BR. Plugar nas rotas que fazem mutações sujeitas a limite ou ao contrato de scheduling.
+- `handleApiError(err, fallbackMsg)` — detecta 403 limite-de-plano via `errorCode` estável (`NO_ACTIVE_SUBSCRIPTION_FORBIDDEN`, `*_PLAN_LIMIT_*`) com toast + action "Ver planos" → `/organization`. Também mapeia `errorCode`s de trip-scheduling (`INVALID_TRIP_TIME_OF_DAY_FORMAT`, `INVALID_TRIP_TEMPLATE_MISSING_SCHEDULE`, etc.) e o mapa `DRIVER_AND_AUTH_MESSAGES` (driver/vehicle access, CNH validation, payment driver, reset/verify token expirado) pra mensagens em PT-BR. Plugar nas rotas que fazem mutações sujeitas a limite ou ao contrato de scheduling/driver.
 - `bookingCancelErrorMessage(err)` — mapeia `errorCode` de cancelamento (`BOOKING_CANCEL_WINDOW_CLOSED_BAD_REQUEST`, `BOOKING_TRIP_TERMINAL_BAD_REQUEST`, `BOOKING_ALREADY_INACTIVE_BAD_REQUEST`) pra mensagens em PT-BR.
 
 `ApiError` (em `lib/api.ts`) carrega `status`, `message`, `data` e `errorCode` (campo `error` do payload). Sempre prefira `errorCode` a parsing de `message` — é o contrato estável documentado em `docs/API_FRONTEND.md`.
@@ -394,11 +422,21 @@ O backend gera `TripInstance`s automaticamente a partir de templates recorrentes
 
 `POST /drivers` (JWT) deixa o próprio usuário criar perfil de motorista — mas só admin pode vinculá-lo a uma org via `POST /memberships/driver`. Por isso a UI separa:
 
-- `/profile/driver` (rota nova sob `_protected/`, NÃO sob `_driver/`): ativar perfil (modo create) ou ver/editar próprios dados (modo edit). Em create, exige **alert amarelo + checkbox obrigatório** "Confirmo que vou trabalhar para uma organização cadastrada".
+- `/profile/driver` (rota sob `_protected/`, NÃO sob `_driver/`):
+  - **Modo create** (sem perfil): form com alert amarelo + checkbox obrigatório "Confirmo que vou trabalhar para uma organização cadastrada".
+  - **Modo view** (perfil existente): Card read-only com CNH, categorias como Badges, validade. Botão pencil no header abre `EditMyDriverDialog` — padrão consistente com `/profile`, `/organization` e admin `/drivers`.
+  - **Modo edit** (dentro do Dialog): `DriverProfileForm` com `cnh` readonly + checkbox group de categorias. Schema (`makeDriverSchema(initialExpiresAt)`) só exige `cnhExpiresAt` ser data **futura se o user mudou o valor** — driver com CNH vencida ainda consegue salvar mudanças em categorias deixando a data intacta.
 - `/profile` mostra card condicional: "Trabalhar como motorista" / "Aguardando vínculo com uma empresa" / "Ativo".
 - A tab "Como motorista" na BottomNav e rotas sob `_driver/` só aparecem quando `isDriver === true` (= perfil + membership). User com `hasDriverProfile && !isDriver` só acessa `/profile/driver`.
 
-`PUT /drivers/{id}` ainda é admin-only no backend. A UI já chama o endpoint em modo edit (o erro 403 cai em toast genérico até o backend liberar pra owner).
+Self-edit usa `PATCH /drivers/me` (campos permitidos: `cnhCategories`, `cnhExpiresAt`). `cnh` e `driverStatus` são admin-only via `PUT /drivers/{id}` — mas a UI atual **não expõe edição de driver pra admin**: admin só consegue **remover** o motorista da org (soft-remove via `DELETE /memberships/{userId}/{roleId}/{orgId}`, reversível via `restoreMembership` ou re-adicionando). Mudanças de dados de driver (CNH, validade, categorias) ficam sob responsabilidade do próprio motorista. Isso preserva integridade cross-org — admin de Org X não muda status global de driver que pode pertencer a outras orgs.
+
+### Renderização de nome do motorista
+
+O backend não inclui `userName`/`userEmail` no payload de `Driver` da maioria dos endpoints (só vem em casos específicos). Pra evitar mostrar "CNH 12345…" como label em Selects/Cards:
+
+- `<DriverDisplayName driver={d} />` — renderiza nome legível, usando `userName`/`userEmail` inline se disponível, ou caindo pra `useDriverName(d.id)` (cache global + dedup). Use em qualquer lugar que renderize um nome de motorista visualmente.
+- `driverDisplayString(d)` (em `features/drivers/lib/driver-display.ts`) — versão síncrona/string-only. Use em props que exigem texto puro: `textValue` de `<SelectItem>`, `aria-label`, etc. Sem busca async — só inline.
 
 ---
 
@@ -427,3 +465,9 @@ O backend gera `TripInstance`s automaticamente a partir de templates recorrentes
 - Não enviar `departureTime`/`arrivalEstimate` ao criar `TripInstance` — o backend agora aceita só `departureDate` (YYYY-MM-DD) e combina com o time-of-day do template. Os campos absolutos voltam na resposta.
 - Não expor cron expressions cruas (`0 2 * * *`, `*/15 * * * *`) nem horários em UTC literal na UI — sempre converter pra BR e usar widgets de frequência/horário amigáveis.
 - Não usar `_driver.tsx` como guard de rotas onde o user ainda não foi vinculado (ex.: `/profile/driver`) — esse layout redireciona quem não tem membership de driver. Rotas que só dependem de `hasDriverProfile` ficam direto sob `_protected/`.
+- Não tratar `cnhCategory` como string única — backend trocou para `cnhCategories: ("A"|"B"|"C"|"D"|"E")[]` (Phase 5, 19/05/2026). Para listar use `cnhCategories.join(", ")`; para forms use o `<CnhCategoriesField>` em `features/drivers/components/`.
+- Não chamar `PUT /drivers/{id}` em fluxo de self-service — admin-only. Use `driversService.updateMe` (PATCH /drivers/me) com `cnhCategories`/`cnhExpiresAt` apenas.
+- Não duplicar tela de detalhe de viagem para driver — `/_protected/trip/$tripId` é compartilhada admin+driver via prop `role` no `AdminTripDetailView`. Driver vê só transições `IN_PROGRESS`/`FINISHED` e sem assignment de driver/veículo.
+- Não expor edição de dados de driver pro admin (CNH, categorias, validade, status) — admin só remove via `removeMembership`. Mudanças nos dados do driver são self-service via `PATCH /drivers/me`. Esse trade-off preserva integridade cross-org.
+- Não mostrar "CNH 12345…" como nome principal de motorista em listas/Selects — use `<DriverDisplayName>` (busca via cache) ou `driverDisplayString` (string puro pra textValue). CNH é OK como linha secundária do item, não como label principal.
+- Não tratar limites altos de plano (`maxMonthlyTrips >= 1000`) como número literal — use `isUnlimitedPlanLimit(max)` de `lib/format.ts` pra renderizar "ilimitado" e omitir barra de progresso. Premium plans usam valores sentinela tipo 9999 que ninguém atinge em uso legítimo.

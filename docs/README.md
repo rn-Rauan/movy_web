@@ -6,6 +6,16 @@ Bem-vindo à documentação do projeto **movy_web**, um SaaS de transporte — s
 
 ## Índice
 
+### 📘 Comece por aqui
+
+| Documento                            | Descrição                                                                                                |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **[FRONTEND.md](./FRONTEND.md)**     | **Doc técnica abrangente do frontend — fonte canônica pra v1.0.** Stack, fluxos, padrões, anti-patterns. |
+| [E2E_MANUAL.md](./E2E_MANUAL.md)     | 97 cenários de teste manuais pré-deploy (happy paths + cross-flows + edge cases).                        |
+| [API_FRONTEND.md](./API_FRONTEND.md) | Contrato completo da API backend (endpoints, schemas, errorCodes).                                       |
+
+### 🔍 Deep-dives por área (legacy — podem ter trechos desatualizados)
+
 | Documento                                        | Descrição                                                                        |
 | ------------------------------------------------ | -------------------------------------------------------------------------------- |
 | [architecture.md](./architecture.md)             | Stack, estrutura de diretórios, feature modules, guard de auth e deploy          |
@@ -16,7 +26,16 @@ Bem-vindo à documentação do projeto **movy_web**, um SaaS de transporte — s
 | [auth.md](./auth.md)                             | Fluxo de autenticação, AuthProvider, RoleProvider, tokenStorage e guard          |
 | [types.md](./types.md)                           | Tipos TypeScript do domínio e utilitários de formatação                          |
 | [FRONTEND_ENDPOINTS.md](./FRONTEND_ENDPOINTS.md) | Mapeamento de endpoints por rota (com arquivo e acesso)                          |
-| [API_FRONTEND.md](./API_FRONTEND.md)             | Referência completa da API backend (todos os endpoints)                          |
+
+### 📋 Operacional
+
+| Documento                      | Descrição                                                  |
+| ------------------------------ | ---------------------------------------------------------- |
+| [HANDOFF.md](./HANDOFF.md)     | Snapshot "pegue aqui e continue" — estado atual da sessão. |
+| [PROGRESS.md](./PROGRESS.md)   | Andamento detalhado por área.                              |
+| [BACKLOG.md](./BACKLOG.md)     | Próxima ação concreta.                                     |
+| [ROADMAP.md](./ROADMAP.md)     | Visão de longo prazo.                                      |
+| [DECISIONS.md](./DECISIONS.md) | ADRs — registros de decisões arquiteturais (por quê).      |
 
 ---
 

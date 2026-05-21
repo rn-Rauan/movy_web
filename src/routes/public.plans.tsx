@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { plansService } from "@/services/plans.service";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, isUnlimitedPlanLimit } from "@/lib/format";
 import type { Plan, Paginated } from "@/lib/types";
 
 export const Route = createFileRoute("/public/plans")({
@@ -117,7 +117,15 @@ function PlanCard({ plan, highlighted }: { plan: Plan; highlighted?: boolean }) 
           {plan.maxDrivers === 1 ? "motorista" : "motoristas"}
         </Feature>
         <Feature icon={<Calendar className="h-4 w-4" />}>
-          Até <strong>{plan.maxMonthlyTrips}</strong> viagens por mês
+          {isUnlimitedPlanLimit(plan.maxMonthlyTrips) ? (
+            <>
+              <strong>Viagens ilimitadas</strong> por mês
+            </>
+          ) : (
+            <>
+              Até <strong>{plan.maxMonthlyTrips}</strong> viagens por mês
+            </>
+          )}
         </Feature>
         <Feature icon={<MapPin className="h-4 w-4" />}>Templates de rota ilimitados</Feature>
         <Feature icon={<Check className="h-4 w-4" />}>Página pública para divulgar viagens</Feature>

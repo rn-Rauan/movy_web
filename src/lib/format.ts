@@ -108,6 +108,14 @@ export function formatPrice(value: number | null | undefined): string {
   }).format(value);
 }
 
+/**
+ * Limites de plano que ultrapassam este valor são tratados como "ilimitado" na UI —
+ * planos premium usam valores sentinela (ex.: 9999) que ninguém atinge em uso legítimo.
+ */
+export function isUnlimitedPlanLimit(max: number | null | undefined): boolean {
+  return max != null && max >= 1000;
+}
+
 /** Compute price from a public trip + chosen enrollment type. */
 export function tripPriceFor(
   trip: { priceOneWay?: number; priceReturn?: number; priceRoundTrip?: number },

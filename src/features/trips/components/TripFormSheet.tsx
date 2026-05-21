@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { DriverDisplayName } from "@/features/drivers/components/DriverDisplayName";
+import { driverDisplayString } from "@/features/drivers/lib/driver-display";
 import type { Driver, TripTemplate, Vehicle } from "@/lib/types";
 
 const tripSchema = z
@@ -248,19 +250,18 @@ export function TripFormSheet({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Sem motorista</SelectItem>
-                {drivers.map((d) => {
-                  const label = d.userName?.trim() || d.userEmail?.trim() || `CNH ${d.cnh}`;
-                  return (
-                    <SelectItem key={d.id} value={d.id} textValue={label}>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{label}</span>
-                        <span className="text-xs text-muted-foreground">
-                          CNH {d.cnh} · Cat. {d.cnhCategory}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
+                {drivers.map((d) => (
+                  <SelectItem key={d.id} value={d.id} textValue={driverDisplayString(d)}>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        <DriverDisplayName driver={d} />
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        CNH {d.cnh} · Cat. {d.cnhCategories.join(", ")}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             {fieldErrors.driverId && (

@@ -5,11 +5,10 @@ import type { Driver } from "@/lib/types";
 type Props = {
   drivers: Driver[];
   onAdd: () => void;
-  onEdit: (d: Driver) => void;
   onRemove: (d: Driver) => void;
 };
 
-export function DriversList({ drivers, onAdd, onEdit, onRemove }: Props) {
+export function DriversList({ drivers, onAdd, onRemove }: Props) {
   if (drivers.length === 0) {
     return (
       <EmptyState
@@ -23,7 +22,7 @@ export function DriversList({ drivers, onAdd, onEdit, onRemove }: Props) {
   return (
     <div className="space-y-2">
       {drivers.map((d) => (
-        <DriverCard key={d.id} driver={d} onEdit={onEdit} onRemove={onRemove} />
+        <DriverCard key={d.id} driver={d} onRemove={onRemove} />
       ))}
     </div>
   );
