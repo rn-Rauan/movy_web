@@ -7,4 +7,8 @@ export const paymentsService = {
       `/organizations/${orgId}/payments?page=${page}&size=${size}`,
     ),
   getById: (orgId: string, id: string) => api<Payment>(`/organizations/${orgId}/payments/${id}`),
+  confirm: (orgId: string, paymentId: string) =>
+    api<Payment>(`/organizations/${orgId}/payments/${paymentId}/confirm`, { method: "PATCH" }),
+  fail: (orgId: string, paymentId: string) =>
+    api<Payment>(`/organizations/${orgId}/payments/${paymentId}/fail`, { method: "PATCH" }),
 };

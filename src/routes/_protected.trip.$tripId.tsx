@@ -24,6 +24,7 @@ function TripDetailPage() {
     bookings,
     drivers,
     vehicles,
+    paymentsByBookingId,
     transitioning,
     assigningDriver,
     assigningVehicle,
@@ -32,6 +33,7 @@ function TripDetailPage() {
     assignDriver,
     assignVehicle,
     confirmPresence,
+    confirmPayment,
     cancelBooking,
   } = useAdminTripDetail(tripId, orgId, { role });
 
@@ -53,6 +55,7 @@ function TripDetailPage() {
           bookings={bookings}
           drivers={drivers}
           vehicles={vehicles}
+          paymentsByBookingId={paymentsByBookingId}
           transitioning={transitioning}
           assigningDriver={assigningDriver}
           assigningVehicle={assigningVehicle}
@@ -61,6 +64,7 @@ function TripDetailPage() {
           onAssignDriver={assignDriver}
           onAssignVehicle={assignVehicle}
           onConfirmPresence={confirmPresence}
+          onConfirmPayment={confirmPayment}
           onCancelBooking={cancelBooking}
         />
       )}

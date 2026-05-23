@@ -1,14 +1,16 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, X, ChevronRight } from "lucide-react";
-import type { Booking } from "@/lib/types";
+import { Check, X, ChevronRight, CircleDollarSign } from "lucide-react";
+import type { Booking, Payment } from "@/lib/types";
 import { bookingStatusLabel, enrollmentTypeLabel, paymentMethodLabel } from "@/lib/format";
 
 interface BookingRowProps {
   booking: Booking;
   passengerName?: string;
+  payment?: Payment | null;
   onConfirmPresence?: (id: string) => void;
+  onConfirmPayment?: (paymentId: string) => void;
   onCancel?: (id: string) => void;
   busy?: boolean;
 }
@@ -16,12 +18,15 @@ interface BookingRowProps {
 export function BookingRow({
   booking,
   passengerName,
+  payment,
   onConfirmPresence,
+  onConfirmPayment,
   onCancel,
   busy,
 }: BookingRowProps) {
   const isActive = booking.status === "ACTIVE";
   const showPresence = isActive && !booking.presenceConfirmed && !!onConfirmPresence;
+  const showPayment = isActive && payment?.status === "PENDING" && !!onConfirmPayment;
   const showCancel = isActive && !!onCancel;
 
   return (
@@ -45,6 +50,25 @@ export function BookingRow({
               Presente
             </Badge>
           )}
+          {payment?.status === "COMPLETED" && (
+            <Badge className="bg-success-soft text-success hover:bg-success-soft text-xs">
+              <CircleDollarSign className="h-3 w-3 mr-0.5" />
+              Pago
+            </Badge>
+          )}
+          {payment?.status === "PENDING" && (
+            <Badge
+              variant="outline"
+              className="text-xs border-amber-500/40 text-amber-700 dark:text-amber-300"
+            >
+              Pgto. pendente
+            </Badge>
+          )}
+          {payment?.status === "FAILED" && (
+            <Badge variant="destructive" className="text-xs">
+              Pgto. falhou
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -66,13 +90,13 @@ export function BookingRow({
         )}
       </div>
 
-      {(showPresence || showCancel) && (
-        <div className="flex gap-2 pt-1">
+      {(showPresence || showPayment || showCancel) && (
+        <div className="flex flex-wrap gap-2 pt-1">
           {showPresence && (
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs flex-1"
+              className="h-8 text-xs flex-1 min-w-[120px]"
               onClick={() => onConfirmPresence?.(booking.id)}
               disabled={busy}
             >
@@ -80,11 +104,22 @@ export function BookingRow({
               Marcar presença
             </Button>
           )}
+          {showPayment && payment && (
+            <Button
+              size="sm"
+              className="h-8 text-xs flex-1 min-w-[120px] bg-success text-white hover:bg-success/90"
+              onClick={() => onConfirmPayment?.(payment.id)}
+              disabled={busy}
+            >
+              <CircleDollarSign className="h-3.5 w-3.5 mr-1" />
+              Confirmar pagamento
+            </Button>
+          )}
           {showCancel && (
             <Button
               size="sm"
               variant="outline"
-              className="h-8 text-xs text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive flex-1"
+              className="h-8 text-xs text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive flex-1 min-w-[100px]"
               onClick={() => onCancel?.(booking.id)}
               disabled={busy}
             >

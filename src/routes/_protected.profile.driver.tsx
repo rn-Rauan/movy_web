@@ -17,6 +17,7 @@ import { useMyDriver } from "@/features/drivers/hooks/useMyDriver";
 import { useRole } from "@/lib/role-context";
 import { driversService } from "@/services/drivers.service";
 import { handleApiError } from "@/lib/handle-error";
+import { formatDateOnly } from "@/lib/format";
 import type { Driver } from "@/lib/types";
 
 export const Route = createFileRoute("/_protected/profile/driver")({
@@ -96,10 +97,7 @@ function DriverProfilePage() {
                   </div>
                 }
               />
-              <Row
-                label="Validade"
-                value={new Date(driver.cnhExpiresAt).toLocaleDateString("pt-BR")}
-              />
+              <Row label="Validade" value={formatDateOnly(driver.cnhExpiresAt)} />
             </dl>
 
             {!isDriver ? (

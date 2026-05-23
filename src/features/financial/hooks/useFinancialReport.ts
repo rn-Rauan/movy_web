@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
 import { paymentsService } from "@/services/payments.service";
 import { tripsService } from "@/services/trips.service";
+import { paymentBucketDate } from "@/lib/format";
+import {
+  addBrMonths,
+  brDayOfWeek,
+  getBrDayOfMonth,
+  getBrMonth,
+  getBrYear,
+  startOfBrMonth,
+} from "@/lib/timezone";
 import type { Payment, TripInstance, Paginated } from "@/lib/types";
 
 export type FinancialReport = {
-  /** Mês de referência (1º dia 00:00 UTC). */
+  /** Mês de referência (1º dia 00:00 BR ≡ 03:00 UTC). */
   monthStart: Date;
   /** Receita total = confirmed + pending (perdida fica de fora pra não inflar). */
   revTotal: number;
@@ -46,14 +55,6 @@ export type FinancialReport = {
   }[];
 };
 
-function startOfMonthUtc(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
-}
-
-function addMonthsUtc(d: Date, n: number): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, 1));
-}
-
 function inRange(iso: string, start: Date, end: Date): boolean {
   const t = new Date(iso).getTime();
   return t >= start.getTime() && t < end.getTime();
@@ -75,40 +76,47 @@ async function fetchAllPayments(orgId: string): Promise<Payment[]> {
 }
 
 function aggregate(payments: Payment[], trips: TripInstance[], monthStart: Date): FinancialReport {
-  const monthEnd = addMonthsUtc(monthStart, 1);
-  const prevStart = addMonthsUtc(monthStart, -1);
+  const monthEnd = addBrMonths(monthStart, 1);
+  const prevStart = addBrMonths(monthStart, -1);
 
-  const paymentsInMonth = payments.filter(
-    (p) => p.createdAt && inRange(p.createdAt, monthStart, monthEnd),
-  );
-  const paymentsPrevMonth = payments.filter(
-    (p) => p.createdAt && inRange(p.createdAt, prevStart, monthStart),
-  );
+  // Bucketing por dia da viagem (tripDepartureTime) com fallback pra createdAt
+  // enquanto o backend ainda não enriquece o PaymentResponse com esse campo.
+  const paymentsInMonth = payments.filter((p) => {
+    const iso = paymentBucketDate(p);
+    return iso && inRange(iso, monthStart, monthEnd);
+  });
+  const paymentsPrevMonth = payments.filter((p) => {
+    const iso = paymentBucketDate(p);
+    return iso && inRange(iso, prevStart, monthStart);
+  });
 
   let revConfirmed = 0;
   let revPending = 0;
   let revLost = 0;
   for (const p of paymentsInMonth) {
-    if (p.status === "CONFIRMED") revConfirmed += p.amount;
+    if (p.status === "COMPLETED") revConfirmed += p.amount;
     else if (p.status === "PENDING") revPending += p.amount;
     else if (p.status === "FAILED") revLost += p.amount;
   }
   const prevRevConfirmed = paymentsPrevMonth
-    .filter((p) => p.status === "CONFIRMED")
+    .filter((p) => p.status === "COMPLETED")
     .reduce((s, p) => s + p.amount, 0);
   const deltaPct =
     prevRevConfirmed > 0 ? ((revConfirmed - prevRevConfirmed) / prevRevConfirmed) * 100 : null;
 
   // ── Buckets por semana ───────────────────────────────────────────────────
-  // Bucket = floor((dayOfMonth - 1) / 7). Mês pode ter 4 ou 5 buckets.
-  const daysInMonth = new Date(
-    Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 0),
-  ).getUTCDate();
+  // Bucket = floor((dayOfMonth BR - 1) / 7). Mês pode ter 4 ou 5 buckets.
+  const monthYear = getBrYear(monthStart);
+  const monthNum = getBrMonth(monthStart); // 1-12
+  // Last day of the month (calendar-only, independent of timezone).
+  const daysInMonth = new Date(Date.UTC(monthYear, monthNum, 0)).getUTCDate();
   const weekCount = Math.ceil(daysInMonth / 7);
   const weeks = new Array<number>(weekCount).fill(0);
   for (const p of paymentsInMonth) {
-    if (p.status !== "CONFIRMED" || !p.createdAt) continue;
-    const day = new Date(p.createdAt).getUTCDate();
+    if (p.status !== "COMPLETED") continue;
+    const iso = paymentBucketDate(p);
+    if (!iso) continue;
+    const day = getBrDayOfMonth(iso);
     const bucket = Math.min(weekCount - 1, Math.floor((day - 1) / 7));
     weeks[bucket]! += p.amount;
   }
@@ -117,11 +125,12 @@ function aggregate(payments: Payment[], trips: TripInstance[], monthStart: Date)
   // ── Heatmap semana × dia da semana ───────────────────────────────────────
   const daysGrid: number[][] = Array.from({ length: weekCount }, () => new Array(7).fill(0));
   for (const p of paymentsInMonth) {
-    if (p.status !== "CONFIRMED" || !p.createdAt) continue;
-    const d = new Date(p.createdAt);
-    const day = d.getUTCDate();
+    if (p.status !== "COMPLETED") continue;
+    const iso = paymentBucketDate(p);
+    if (!iso) continue;
+    const day = getBrDayOfMonth(iso);
     const bucket = Math.min(weekCount - 1, Math.floor((day - 1) / 7));
-    const dayOfWeek = d.getUTCDay(); // 0 = Dom
+    const dayOfWeek = brDayOfWeek(iso); // 0 = Dom
     daysGrid[bucket]![dayOfWeek]! += p.amount;
   }
 
@@ -206,11 +215,12 @@ function aggregate(payments: Payment[], trips: TripInstance[], monthStart: Date)
 
 export function useFinancialReport(
   orgId: string | null | undefined,
-  monthStart: Date = startOfMonthUtc(new Date()),
+  monthStart: Date = startOfBrMonth(),
 ) {
   const [report, setReport] = useState<FinancialReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Discrimina re-fetch só quando o orgId ou o início de mês mudam (ISO da data)
   const monthIso = monthStart.toISOString();
@@ -239,7 +249,24 @@ export function useFinancialReport(
     return () => {
       cancelled = true;
     };
-  }, [orgId, monthIso]);
+  }, [orgId, monthIso, refreshKey]);
 
-  return { report, loading, error };
+  // Re-busca quando a aba volta a ficar visível (admin confirmou pagamento em outra
+  // tela e voltou pra cá sem navegar — visibility é o gatilho mais confiável).
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === "visible") {
+        setRefreshKey((k) => k + 1);
+      }
+    }
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
+  return {
+    report,
+    loading,
+    error,
+    refetch: () => setRefreshKey((k) => k + 1),
+  };
 }

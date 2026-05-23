@@ -4,6 +4,7 @@ import { RouteVisual } from "@/components/visual/RouteVisual";
 import { OccupancyBar } from "@/components/visual/OccupancyBar";
 import { StatusPill } from "@/components/visual/StatusPill";
 import { useDriverName } from "@/features/drivers/hooks/useDriverName";
+import { getBrDayOfMonth, getBrHour, getBrMinute, getBrMonth } from "@/lib/timezone";
 import type { TripInstance } from "@/lib/types";
 
 function initialsOf(name?: string | null) {
@@ -19,10 +20,10 @@ export function AdminTripCard({ trip: t }: { trip: TripInstance }) {
   const dep = new Date(t.departureTime);
   const date = Number.isNaN(dep.getTime())
     ? "—"
-    : `${String(dep.getUTCDate()).padStart(2, "0")}/${String(dep.getUTCMonth() + 1).padStart(2, "0")}`;
+    : `${String(getBrDayOfMonth(dep)).padStart(2, "0")}/${String(getBrMonth(dep)).padStart(2, "0")}`;
   const time = Number.isNaN(dep.getTime())
     ? ""
-    : `${String(dep.getUTCHours()).padStart(2, "0")}:${String(dep.getUTCMinutes()).padStart(2, "0")}`;
+    : `${String(getBrHour(dep)).padStart(2, "0")}:${String(getBrMinute(dep)).padStart(2, "0")}`;
 
   const from = t.template?.origin ?? t.departurePoint ?? "—";
   const to = t.template?.destination ?? t.destination ?? "—";

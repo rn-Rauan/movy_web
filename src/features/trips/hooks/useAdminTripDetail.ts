@@ -1,16 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { tripsService } from "@/services/trips.service";
 import { bookingsService } from "@/services/bookings.service";
 import { driversService } from "@/services/drivers.service";
 import { vehiclesService } from "@/services/vehicles.service";
+import { paymentsService } from "@/services/payments.service";
+import { ApiError } from "@/lib/api";
 import { handleApiError, bookingCancelErrorMessage } from "@/lib/handle-error";
 import { statusLabel } from "@/lib/format";
 import type {
   Booking,
   Driver,
   Paginated,
+  Payment,
   TripInstance,
   TripPassenger,
   TripStatus,
@@ -35,6 +38,7 @@ export function useAdminTripDetail(
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
 
   const [transitioning, setTransitioning] = useState(false);
   const [assigningDriver, setAssigningDriver] = useState(false);
@@ -73,6 +77,54 @@ export function useAdminTripDetail(
       .then((res) => setVehicles(Array.isArray(res) ? res : (res.data ?? [])))
       .catch(() => {});
   }, [orgId, role]);
+
+  // Carrega payments da org da própria trip (funciona pra admin e — quando o
+  // backend liberar — pra driver). Silenciosamente ignora 403/404 enquanto a
+  // permissão de driver ainda não estiver ativa.
+  useEffect(() => {
+    if (!trip?.organizationId || bookings.length === 0) return;
+    let cancelled = false;
+    const bookingIds = new Set(bookings.map((b) => b.id));
+
+    (async () => {
+      const out: Payment[] = [];
+      const size = 100;
+      try {
+        for (let page = 1; page <= 20; page++) {
+          const res = await paymentsService.list(trip.organizationId, page, size);
+          const list = Array.isArray(res) ? res : (res.data ?? []);
+          out.push(...list);
+          const meta = !Array.isArray(res) ? (res as Paginated<Payment>) : null;
+          if (!meta || list.length < size || (meta.totalPages && page >= meta.totalPages)) break;
+        }
+        if (cancelled) return;
+        setPayments(out.filter((p) => p.enrollmentId && bookingIds.has(p.enrollmentId)));
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof ApiError && (err.status === 403 || err.status === 404)) {
+          setPayments([]);
+          return;
+        }
+        // Outros erros — silencioso (a tela não depende criticamente disso)
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [trip?.organizationId, bookings]);
+
+  const paymentsByBookingId = useMemo(() => {
+    const m = new Map<string, Payment>();
+    for (const p of payments) {
+      if (!p.enrollmentId) continue;
+      const existing = m.get(p.enrollmentId);
+      // Mais recente vence se houver múltiplos (compara updatedAt ?? createdAt)
+      const ts = (x: Payment) => new Date(x.updatedAt ?? x.createdAt).getTime();
+      if (!existing || ts(p) > ts(existing)) m.set(p.enrollmentId, p);
+    }
+    return m;
+  }, [payments]);
 
   async function transitionStatus(newStatus: TripStatus) {
     if (!trip) return;
@@ -136,6 +188,28 @@ export function useAdminTripDetail(
     }
   }
 
+  async function confirmPayment(paymentId: string) {
+    if (!trip?.organizationId) return;
+    const targetBookingId = payments.find((p) => p.id === paymentId)?.enrollmentId ?? null;
+    if (targetBookingId) setBusyBookingId(targetBookingId);
+    try {
+      await paymentsService.confirm(trip.organizationId, paymentId);
+      // Busca o payment fresh do backend pra garantir status consistente (defensivo
+      // contra o caso raro de o /confirm retornar 200 mas o status ainda vir PENDING).
+      const fresh = await paymentsService.getById(trip.organizationId, paymentId);
+      setPayments((prev) => prev.map((p) => (p.id === paymentId ? fresh : p)));
+      if (fresh.status === "COMPLETED") {
+        toast.success("Pagamento confirmado");
+      } else {
+        toast.warning(`Pagamento ainda está como ${fresh.status} — verifique o relatório.`);
+      }
+    } catch (err) {
+      handleApiError(err, "Erro ao confirmar pagamento");
+    } finally {
+      setBusyBookingId(null);
+    }
+  }
+
   async function cancelBooking(bookingId: string) {
     setBusyBookingId(bookingId);
     try {
@@ -162,6 +236,7 @@ export function useAdminTripDetail(
     bookings,
     drivers,
     vehicles,
+    paymentsByBookingId,
     transitioning,
     assigningDriver,
     assigningVehicle,
@@ -170,6 +245,7 @@ export function useAdminTripDetail(
     assignDriver,
     assignVehicle,
     confirmPresence,
+    confirmPayment,
     cancelBooking,
   };
 }

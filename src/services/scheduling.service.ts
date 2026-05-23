@@ -3,8 +3,6 @@ import type { TripSchedulingConfig } from "@/lib/types";
 
 type SchedulingConfigPatch = Partial<{
   daysAhead: number;
-  generationCron: string;
-  autoCancelCron: string;
   enabled: boolean;
 }>;
 

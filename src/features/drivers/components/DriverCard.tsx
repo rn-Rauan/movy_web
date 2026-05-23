@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DriverDisplayName } from "./DriverDisplayName";
+import { formatDateOnly } from "@/lib/format";
 import type { Driver } from "@/lib/types";
 
 type Props = {
@@ -26,7 +27,7 @@ export function DriverCard({ driver: d, onRemove }: Props) {
             <span>·</span>
             <span>Cat. {d.cnhCategories.join(", ")}</span>
             <span>·</span>
-            <span>Val. {new Date(d.cnhExpiresAt).toLocaleDateString("pt-BR")}</span>
+            <span>Val. {formatDateOnly(d.cnhExpiresAt)}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">

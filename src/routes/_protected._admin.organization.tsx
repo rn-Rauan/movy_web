@@ -129,11 +129,15 @@ function OrganizationPage() {
   }
 
   useEffect(() => {
+    if (!adminOrgId) return;
     let cancelled = false;
     organizationsService
       .listMine()
       .then((res) => {
-        if (!cancelled) setOrg(res.data?.[0] ?? null);
+        if (cancelled) return;
+        const list = res.data ?? [];
+        const match = list.find((o) => o.id === adminOrgId) ?? list[0] ?? null;
+        setOrg(match);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -145,7 +149,7 @@ function OrganizationPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [adminOrgId]);
 
   useEffect(() => {
     if (!adminOrgId) return;

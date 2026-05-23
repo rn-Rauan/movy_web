@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CnhCategoriesField } from "./CnhCategoriesField";
+import { brYmdToUtcDate, startOfBrDay } from "@/lib/timezone";
 import type { CnhCategory, Driver } from "@/lib/types";
 
 /**
@@ -30,9 +31,8 @@ function makeDriverSchema(initialExpiresAt?: string) {
     })
     .superRefine((data, ctx) => {
       if (initial && data.cnhExpiresAt === initial) return;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const expires = new Date(`${data.cnhExpiresAt}T00:00:00`);
+      const today = startOfBrDay();
+      const expires = brYmdToUtcDate(data.cnhExpiresAt);
       if (Number.isNaN(expires.getTime()) || expires <= today) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

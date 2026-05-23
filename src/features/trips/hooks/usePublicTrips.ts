@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { tripsService } from "@/services/trips.service";
 import { isInDateRange, type DateRange } from "@/lib/date-filters";
+import { getBrHour } from "@/lib/timezone";
 import type { TripInstance, Paginated } from "@/lib/types";
 
 type PublicTrip = TripInstance & { organizationName?: string; organizationSlug?: string };
@@ -11,7 +12,7 @@ export type SortBy = "DEPARTURE_ASC" | "DEPARTURE_DESC" | "PRICE_ASC" | "PRICE_D
 export type { DateRange };
 
 function shiftOf(iso: string): Exclude<Shift, "ALL"> {
-  const h = new Date(iso).getHours();
+  const h = getBrHour(iso);
   if (h < 12) return "MORNING";
   if (h < 18) return "AFTERNOON";
   return "EVENING";

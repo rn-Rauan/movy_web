@@ -155,8 +155,6 @@ export type TripSchedulingConfig = {
   id: string;
   organizationId: string;
   daysAhead: number;
-  generationCron: string;
-  autoCancelCron: string;
   enabled: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -240,12 +238,16 @@ export type PlanUsage = {
   monthlyTrips: { used: number; max: number };
 };
 
-export type PaymentStatus = "PENDING" | "CONFIRMED" | "FAILED";
+export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED";
 
 export type Payment = {
   id: string;
   organizationId: string;
   enrollmentId?: string;
+  /** ID da TripInstance associada ao booking deste payment. Enriquecido pelo backend. */
+  tripInstanceId?: string;
+  /** Data/hora de partida (ISO UTC) da viagem associada. Usado pra agrupar receita pelo dia da viagem (e não pelo dia da inscrição). */
+  tripDepartureTime?: string;
   method: PaymentMethod;
   amount: number;
   status: PaymentStatus;

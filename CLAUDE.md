@@ -116,6 +116,7 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
     vehicles/                 → CRUD de veículos da organização
     organization/             → configurações + card de plano (uso vs. limite) + SchedulingConfigCard
     payments/                 → histórico de pagamentos da subscription (paginado)
+    financial/                → relatório mensal (receita confirmada/pendente/perdida, viagens por status, top rotas, export CSV) — acessado via link no dashboard
 
   _driver/ (guard: isDriver)
     my-trips/                 → lista de viagens atribuídas ao motorista (GET /trip-instances/driver/me)
@@ -187,8 +188,9 @@ src/
 │   │       └── driver-display.ts       driverDisplayString(d) — versão string-only (pra textValue de SelectItem)
 │   ├── templates/              CRUD admin de templates de rota + GenerateInstancesDialog
 │   ├── vehicles/               CRUD admin de veículos (hooks/ + components/)
-│   ├── scheduling/             SchedulingConfigCard + useSchedulingConfig (cron de geração/auto-cancel)
-│   └── payments/               Histórico de pagamentos da subscription (hooks/ + components/)
+│   ├── scheduling/             SchedulingConfigCard + useSchedulingConfig (toggle + daysAhead — cron é global no backend)
+│   ├── payments/               Histórico de pagamentos da subscription (hooks/ + components/)
+│   └── financial/              Relatório financeiro admin — `useFinancialReport(orgId, monthStart)` agrega payments + trip-instances no client (sem endpoint dedicado no backend)
 │
 ├── services/                Abstração de chamadas de API (repository pattern)
 │   ├── trips.service.ts
@@ -368,7 +370,7 @@ subscriptionsService.getPlanUsage(orgId);   // GET /organizations/{id}/plan-usag
 
 // scheduling.service.ts
 schedulingService.getConfig(orgId);                  // GET /organizations/{id}/scheduling-config
-schedulingService.updateConfig(orgId, patch);        // PATCH parcial (enabled, daysAhead, generationCron, autoCancelCron)
+schedulingService.updateConfig(orgId, patch);        // PATCH parcial (enabled, daysAhead) — cron expressions removidos do contrato em 22/05/2026
 ```
 
 **Tratamento de erros:** `src/lib/handle-error.ts` exporta:
@@ -409,12 +411,18 @@ schedulingService.updateConfig(orgId, patch);        // PATCH parcial (enabled, 
 
 ## Agendamento automático (Trip Scheduling)
 
-O backend gera `TripInstance`s automaticamente a partir de templates recorrentes via cron por org e cancela viagens de baixa receita.
+O backend gera `TripInstance`s automaticamente a partir de templates recorrentes e cancela viagens de baixa receita. O cron é **global** (NestJS `@Cron()` resolve em module load — não dá pra ter expressões por org):
 
-- **Configuração por org** (`SchedulingConfigCard` em `/organization`): toggle `enabled`, `daysAhead` (1–90), horário de geração diária (BR, FE converte pra cron UTC), frequência de auto-cancel (Select com presets, ex.: "A cada 15 minutos", "A cada 1 hora").
+- **Geração:** `0 2 * * *` UTC = **23:00 BR** todo dia.
+- **Auto-cancel:** a cada **15 minutos UTC**.
+
+A única configuração por org é `enabled` (master switch dos dois jobs) e `daysAhead` (1–90 — quantos dias à frente a geração cria instâncias por execução). `generationCron`/`autoCancelCron` foram removidos do contrato em 22/05/2026.
+
+- **Configuração por org** (`SchedulingConfigCard` em `/organization`): toggle `enabled` + `daysAhead`. O card mostra os horários fixos como info, sem inputs editáveis.
 - **Geração manual** (`GenerateInstancesDialog` em `TemplateCard`): visível só pra templates `isRecurring && status === "ACTIVE"`. Toast mostra `${created} criadas · ${skipped} ignoradas · ${failed} falhas`.
-- **Time-of-day em UTC**: o backend armazena `departureTimeOfDay`/`arrivalTimeOfDay` como UTC HH:mm. Inputs e displays sempre em horário de Brasília (UTC−3, sem DST) — converter via `lib/timezone.ts`. Nunca expor HH:mm UTC literal na UI.
-- **Cron expressions**: nunca expor pro admin como string. Sempre usar widgets amigáveis (time picker pra cron diário, Select de frequência pra cron recorrente). Se o backend tiver um cron "exótico" que não bate com presets, fallback "configurado pelo suporte" em vez de tentar editar.
+- **Time-of-day em UTC**: o backend armazena `departureTimeOfDay`/`arrivalTimeOfDay` como UTC HH:mm. Inputs e displays sempre em horário de Brasília — converter via `brHourToUtc`/`utcHourToBr` em `lib/timezone.ts`. Nunca expor HH:mm UTC literal na UI.
+- **Display de ISO timestamps:** `formatDateTime`/`formatFullDate` em `lib/format.ts` usam `timeZone: BR_TZ` (America/Sao_Paulo) — qualquer `Date.toLocaleString()` ad-hoc deve seguir o mesmo padrão ou passar pelo helper.
+- **Datas calendário** (ex.: `cnhExpiresAt`, `departureDate`): usar `formatDateOnly(input)` em `lib/format.ts` — parseia "YYYY-MM-DD" sem aplicar timezone, evitando off-by-one.
 
 ---
 
@@ -463,7 +471,9 @@ O backend não inclui `userName`/`userEmail` no payload de `Driver` da maioria d
 - Não fazer parsing de `err.message` pra detectar tipo de erro — usar `err.errorCode` (campo estável documentado em `docs/API_FRONTEND.md`). Exceção: hooks que detectam "recurso não existe ainda" precisam de heurística defensiva quando o backend não padroniza 404 (ver `useMyDriver`).
 - Não buscar `template` separado pra hidratar `TripInstance` — `GET /trip-instances/{id}` e `GET /trip-instances/organization/{id}` já vêm enriquecidos com `template`/`departurePoint`/`destination`/`bookedCount`
 - Não enviar `departureTime`/`arrivalEstimate` ao criar `TripInstance` — o backend agora aceita só `departureDate` (YYYY-MM-DD) e combina com o time-of-day do template. Os campos absolutos voltam na resposta.
-- Não expor cron expressions cruas (`0 2 * * *`, `*/15 * * * *`) nem horários em UTC literal na UI — sempre converter pra BR e usar widgets de frequência/horário amigáveis.
+- Não expor cron expressions cruas (`0 2 * * *`, `*/15 * * * *`) nem horários em UTC literal na UI — converter pra BR e mostrar como info (não como input — o cron é global no backend desde 22/05/2026).
+- Não adicionar inputs de `generationCron`/`autoCancelCron` no `SchedulingConfigCard` — esses campos foram removidos do contrato da API. Os horários são fixos: 23:00 BR (geração) e a cada 15min (auto-cancel).
+- Não usar `Date.toLocaleString()`/`Date.toLocaleDateString()` ad-hoc com `timeZone: "UTC"` (mostra o instante UTC como se fosse BR) nem sem `timeZone` (usa fuso do navegador). Sempre passar por `formatDateTime`/`formatFullDate`/`formatDateOnly` em `lib/format.ts`, que já usam `America/Sao_Paulo`.
 - Não usar `_driver.tsx` como guard de rotas onde o user ainda não foi vinculado (ex.: `/profile/driver`) — esse layout redireciona quem não tem membership de driver. Rotas que só dependem de `hasDriverProfile` ficam direto sob `_protected/`.
 - Não tratar `cnhCategory` como string única — backend trocou para `cnhCategories: ("A"|"B"|"C"|"D"|"E")[]` (Phase 5, 19/05/2026). Para listar use `cnhCategories.join(", ")`; para forms use o `<CnhCategoriesField>` em `features/drivers/components/`.
 - Não chamar `PUT /drivers/{id}` em fluxo de self-service — admin-only. Use `driversService.updateMe` (PATCH /drivers/me) com `cnhCategories`/`cnhExpiresAt` apenas.

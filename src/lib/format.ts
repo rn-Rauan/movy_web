@@ -1,4 +1,17 @@
-import type { TripStatus } from "./types";
+import type { Payment, TripStatus } from "./types";
+import { BR_TZ } from "./timezone";
+
+/**
+ * Data ISO usada pra agrupar receita por dia. Preferimos `tripDepartureTime`
+ * (dia em que a viagem acontece) sobre `createdAt` (dia da inscrição) — assim
+ * uma inscrição feita hoje numa viagem de amanhã conta na receita de amanhã.
+ *
+ * Enquanto o backend ainda não enriquece o PaymentResponse com `tripDepartureTime`,
+ * caímos no `createdAt` como fallback.
+ */
+export function paymentBucketDate(p: Payment): string {
+  return p.tripDepartureTime ?? p.createdAt;
+}
 
 export function formatDateTime(iso: string, timeOnly = false) {
   const d = new Date(iso);
@@ -7,7 +20,7 @@ export function formatDateTime(iso: string, timeOnly = false) {
     return d.toLocaleTimeString("pt-BR", {
       hour: "2-digit",
       minute: "2-digit",
-      timeZone: "UTC",
+      timeZone: BR_TZ,
     });
   }
   return d.toLocaleString("pt-BR", {
@@ -15,7 +28,7 @@ export function formatDateTime(iso: string, timeOnly = false) {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "UTC",
+    timeZone: BR_TZ,
   });
 }
 
@@ -27,8 +40,21 @@ export function formatFullDate(iso: string) {
     day: "2-digit",
     month: "long",
     year: "numeric",
-    timeZone: "UTC",
+    timeZone: BR_TZ,
   });
+}
+
+/**
+ * Formata uma data calendário ("YYYY-MM-DD" ou ISO com sufixo Z) como dd/MM/yyyy
+ * SEM aplicar conversão de timezone — para campos que representam um dia civil
+ * (ex.: `cnhExpiresAt`) e que não devem mudar entre fusos.
+ */
+export function formatDateOnly(input: string | null | undefined): string {
+  if (!input) return "—";
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(input);
+  if (!m) return input;
+  const [, y, mo, d] = m;
+  return `${d}/${mo}/${y}`;
 }
 
 export function statusLabel(s: TripStatus | string): string {
@@ -86,7 +112,7 @@ export function paymentMethodLabel(m: string) {
 export function paymentStatusLabel(s: string) {
   const map: Record<string, string> = {
     PENDING: "Pendente",
-    CONFIRMED: "Confirmado",
+    COMPLETED: "Pago",
     FAILED: "Falhou",
   };
   return map[s] ?? s;
@@ -95,7 +121,7 @@ export function paymentStatusLabel(s: string) {
 export function paymentStatusVariant(
   s: string,
 ): "default" | "secondary" | "destructive" | "outline" {
-  if (s === "CONFIRMED") return "default";
+  if (s === "COMPLETED") return "default";
   if (s === "FAILED") return "destructive";
   return "secondary";
 }

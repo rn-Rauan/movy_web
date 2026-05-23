@@ -11,6 +11,7 @@ import {
   type FinancialReport,
 } from "@/features/financial/hooks/useFinancialReport";
 import { useRole } from "@/lib/role-context";
+import { addBrMonths, getBrMonth, getBrYear, startOfBrMonth } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_protected/_admin/financial")({
@@ -32,13 +33,6 @@ const MONTH_NAMES = [
   "Dezembro",
 ];
 
-function startOfMonth(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
-}
-function addMonths(d: Date, n: number): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, 1));
-}
-
 function fmtBR(n: number): { intPart: string; centPart: string } {
   const parts = n.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
@@ -54,8 +48,8 @@ function fmtMoney(n: number): string {
 function FinancialPage() {
   const { adminOrgId } = useRole();
   const [offset, setOffset] = useState(0); // 0 = mês atual, -1 = mês anterior
-  const monthStart = useMemo(() => addMonths(startOfMonth(new Date()), offset), [offset]);
-  const monthLabel = `${MONTH_NAMES[monthStart.getUTCMonth()]} ${monthStart.getUTCFullYear()}`;
+  const monthStart = useMemo(() => addBrMonths(startOfBrMonth(), offset), [offset]);
+  const monthLabel = `${MONTH_NAMES[getBrMonth(monthStart) - 1]} ${getBrYear(monthStart)}`;
 
   const { report, loading, error } = useFinancialReport(adminOrgId, monthStart);
 
@@ -87,7 +81,7 @@ function FinancialPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `relatorio-${monthStart.getUTCFullYear()}-${String(monthStart.getUTCMonth() + 1).padStart(2, "0")}.csv`;
+    a.download = `relatorio-${getBrYear(monthStart)}-${String(getBrMonth(monthStart)).padStart(2, "0")}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
