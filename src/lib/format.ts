@@ -6,8 +6,9 @@ import { BR_TZ } from "./timezone";
  * (dia em que a viagem acontece) sobre `createdAt` (dia da inscrição) — assim
  * uma inscrição feita hoje numa viagem de amanhã conta na receita de amanhã.
  *
- * Enquanto o backend ainda não enriquece o PaymentResponse com `tripDepartureTime`,
- * caímos no `createdAt` como fallback.
+ * O backend enriquece o PaymentResponse com `tripDepartureTime` (snapshot via
+ * enrollment → tripInstance). O fallback pra `createdAt` cobre apenas payments
+ * órfãos (sem enrollment, ex.: cobranças de assinatura SaaS).
  */
 export function paymentBucketDate(p: Payment): string {
   return p.tripDepartureTime ?? p.createdAt;

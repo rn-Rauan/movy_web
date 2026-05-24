@@ -79,8 +79,8 @@ function aggregate(payments: Payment[], trips: TripInstance[], monthStart: Date)
   const monthEnd = addBrMonths(monthStart, 1);
   const prevStart = addBrMonths(monthStart, -1);
 
-  // Bucketing por dia da viagem (tripDepartureTime) com fallback pra createdAt
-  // enquanto o backend ainda não enriquece o PaymentResponse com esse campo.
+  // Bucketing por dia da viagem (tripDepartureTime). Fallback pra createdAt só
+  // em payments órfãos (sem enrollment, ex.: cobranças de assinatura SaaS).
   const paymentsInMonth = payments.filter((p) => {
     const iso = paymentBucketDate(p);
     return iso && inRange(iso, monthStart, monthEnd);
