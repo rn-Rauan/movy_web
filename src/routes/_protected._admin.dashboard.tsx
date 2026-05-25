@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { LoadingList } from "@/components/feedback/LoadingList";
+import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { KpiCard } from "@/components/visual/KpiCard";
 import { RouteVisual } from "@/components/visual/RouteVisual";
 import { OccupancyBar } from "@/components/visual/OccupancyBar";
@@ -122,9 +123,9 @@ function formatBRLParts(value: number) {
 function DashboardPage() {
   const { adminOrgId } = useRole();
   const { user } = useAuth();
-  const { trips, loading } = useTrips({ orgId: adminOrgId ?? "" });
+  const { trips, loading, error: tripsError } = useTrips({ orgId: adminOrgId ?? "" });
   // KPI grande mostra o dia (default = hoje); a receita do mês fica em /financial.
-  const { payments } = useOrgRevenue(adminOrgId);
+  const { payments, error: revenueError } = useOrgRevenue(adminOrgId);
 
   // Default: dia de hoje em BR sempre selecionado. Receita do mês fica em /financial.
   const [selectedYmd, setSelectedYmd] = useState<string>(() => isoToBrYmd(startOfBrDay()));
@@ -189,62 +190,74 @@ function DashboardPage() {
               <div className="text-[11px] font-semibold uppercase tracking-[0.3px] text-white/60">
                 {displayLabel}
               </div>
-              <div className="mt-1 flex items-baseline gap-1">
-                <span className="font-mono text-[18px] font-bold text-white/55">R$</span>
-                <div className="font-mono text-[40px] font-extrabold leading-none tracking-[-1.5px]">
-                  {intPart}
-                  <span className="text-[22px] text-white/50">,{decPart}</span>
+              {revenueError ? (
+                <div className="mt-1 text-[13px] font-semibold leading-snug text-white/70">
+                  Não foi possível carregar a receita.
                 </div>
-              </div>
-              <div className="mt-1 text-[12px] text-white/60">
-                R$ {displayConfirmed.toFixed(2).replace(".", ",")} confirmados · R${" "}
-                {displayPending.toFixed(2).replace(".", ",")} pendentes
-              </div>
+              ) : (
+                <>
+                  <div className="mt-1 flex items-baseline gap-1">
+                    <span className="font-mono text-[18px] font-bold text-white/55">R$</span>
+                    <div className="font-mono text-[40px] font-extrabold leading-none tracking-[-1.5px]">
+                      {intPart}
+                      <span className="text-[22px] text-white/50">,{decPart}</span>
+                    </div>
+                  </div>
+                  <div className="mt-1 text-[12px] text-white/60">
+                    R$ {displayConfirmed.toFixed(2).replace(".", ",")} confirmados · R${" "}
+                    {displayPending.toFixed(2).replace(".", ",")} pendentes
+                  </div>
+                </>
+              )}
             </div>
-            <div className="flex flex-none items-center gap-1 rounded-[10px] bg-white/10 px-2 py-1 text-[11px] font-semibold">
-              <TrendingUp className="h-3 w-3" strokeWidth={1.8} />
-              {displayBadge}
-            </div>
+            {!revenueError && (
+              <div className="flex flex-none items-center gap-1 rounded-[10px] bg-white/10 px-2 py-1 text-[11px] font-semibold">
+                <TrendingUp className="h-3 w-3" strokeWidth={1.8} />
+                {displayBadge}
+              </div>
+            )}
           </div>
 
           {/* Mini chart — receita por dia BR (últimos 7 dias), selecionável */}
-          <div className="flex h-12 items-end gap-1.5">
-            {(() => {
-              const max = Math.max(1, ...revenueLast7.map((b) => b.confirmed + b.pending));
-              return revenueLast7.map((b) => {
-                const total = b.confirmed + b.pending;
-                const isSelected = selectedYmd === b.ymd;
-                return (
-                  <button
-                    key={b.ymd}
-                    type="button"
-                    onClick={() => setSelectedYmd(b.ymd)}
-                    className="flex flex-1 flex-col items-center gap-1 cursor-pointer focus:outline-none"
-                    aria-label={`Receita ${formatDayLabel(b.ymd)}`}
-                    aria-pressed={isSelected}
-                  >
-                    <div
-                      className={
-                        isSelected
-                          ? "w-full rounded bg-accent transition-colors"
-                          : "w-full rounded bg-white/[0.18] hover:bg-white/[0.28] transition-colors"
-                      }
-                      style={{ height: `${(total / max) * 36 + 4}px` }}
-                    />
-                    <div
-                      className={
-                        isSelected
-                          ? "text-[9px] font-extrabold text-accent"
-                          : "text-[9px] font-semibold opacity-50"
-                      }
+          {!revenueError && (
+            <div className="flex h-12 items-end gap-1.5">
+              {(() => {
+                const max = Math.max(1, ...revenueLast7.map((b) => b.confirmed + b.pending));
+                return revenueLast7.map((b) => {
+                  const total = b.confirmed + b.pending;
+                  const isSelected = selectedYmd === b.ymd;
+                  return (
+                    <button
+                      key={b.ymd}
+                      type="button"
+                      onClick={() => setSelectedYmd(b.ymd)}
+                      className="flex flex-1 flex-col items-center gap-1 cursor-pointer focus:outline-none"
+                      aria-label={`Receita ${formatDayLabel(b.ymd)}`}
+                      aria-pressed={isSelected}
                     >
-                      {DAY_LABELS_BR[b.weekday]}
-                    </div>
-                  </button>
-                );
-              });
-            })()}
-          </div>
+                      <div
+                        className={
+                          isSelected
+                            ? "w-full rounded bg-accent transition-colors"
+                            : "w-full rounded bg-white/[0.18] hover:bg-white/[0.28] transition-colors"
+                        }
+                        style={{ height: `${(total / max) * 36 + 4}px` }}
+                      />
+                      <div
+                        className={
+                          isSelected
+                            ? "text-[9px] font-extrabold text-accent"
+                            : "text-[9px] font-semibold opacity-50"
+                        }
+                      >
+                        {DAY_LABELS_BR[b.weekday]}
+                      </div>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          )}
 
           {/* CTA: relatório completo */}
           <Link
@@ -259,73 +272,82 @@ function DashboardPage() {
           </Link>
         </div>
 
-        {/* KPI grid 2x2 */}
-        <div className="grid grid-cols-2 gap-2">
-          <KpiCard
-            icon={Bus}
-            label="Viagens ativas"
-            value={activeTrips.length}
-            hint={`de ${list.length} total`}
-          />
-          <KpiCard
-            icon={Calendar}
-            label="Próximos 7 dias"
-            value={nextWeek.length}
-            hint="partidas"
-            footer={
-              <div className="flex gap-0.5">
-                {tripsNext7.map((b, i) => (
-                  <div
-                    key={i}
-                    className={
-                      b.count > 0
-                        ? "h-1 flex-1 rounded-full bg-accent"
-                        : "h-1 flex-1 rounded-full bg-line-soft"
-                    }
-                  />
+        {tripsError ? (
+          <ErrorCard message={tripsError} />
+        ) : (
+          <>
+            {/* KPI grid 2x2 */}
+            <div className="grid grid-cols-2 gap-2">
+              <KpiCard
+                icon={Bus}
+                label="Viagens ativas"
+                value={activeTrips.length}
+                hint={`de ${list.length} total`}
+              />
+              <KpiCard
+                icon={Calendar}
+                label="Próximos 7 dias"
+                value={nextWeek.length}
+                hint="partidas"
+                footer={
+                  <div className="flex gap-0.5">
+                    {tripsNext7.map((b, i) => (
+                      <div
+                        key={i}
+                        className={
+                          b.count > 0
+                            ? "h-1 flex-1 rounded-full bg-accent"
+                            : "h-1 flex-1 rounded-full bg-line-soft"
+                        }
+                      />
+                    ))}
+                  </div>
+                }
+              />
+              <KpiCard
+                icon={Users}
+                label="Passageiros"
+                value={totalBooked}
+                hint="inscritos"
+                footer={
+                  totalSeats > 0 ? (
+                    <div className="text-[10px] text-muted-foreground">
+                      {totalSeats - totalBooked} vagas disponíveis
+                    </div>
+                  ) : null
+                }
+              />
+              <AlertKpiCard emptyTrips={emptyTrips} />
+            </div>
+
+            {/* Próximas viagens */}
+            <div className="mt-1 flex items-baseline justify-between px-0.5">
+              <h2 className="text-[15px] font-extrabold tracking-[-0.2px] text-ink">
+                Próximas viagens
+              </h2>
+              <Link
+                to="/trips"
+                className="flex items-center gap-0.5 text-[12px] font-bold text-accent"
+              >
+                Ver todas
+                <ChevronRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+              </Link>
+            </div>
+
+            {loading ? (
+              <LoadingList count={3} height="h-20" />
+            ) : upcoming.length === 0 ? (
+              <div className="rounded-2xl border border-line bg-surface p-6 text-center text-sm text-muted-foreground">
+                Nenhuma viagem agendada.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {upcoming.map((t) => (
+                  <UpcomingTripCard key={t.id} trip={t} />
                 ))}
               </div>
-            }
-          />
-          <KpiCard
-            icon={Users}
-            label="Passageiros"
-            value={totalBooked}
-            hint="inscritos"
-            footer={
-              totalSeats > 0 ? (
-                <div className="text-[10px] text-muted-foreground">
-                  {totalSeats - totalBooked} vagas disponíveis
-                </div>
-              ) : null
-            }
-          />
-          <AlertKpiCard emptyTrips={emptyTrips} />
-        </div>
-
-        {/* Próximas viagens */}
-        <div className="mt-1 flex items-baseline justify-between px-0.5">
-          <h2 className="text-[15px] font-extrabold tracking-[-0.2px] text-ink">
-            Próximas viagens
-          </h2>
-          <Link to="/trips" className="flex items-center gap-0.5 text-[12px] font-bold text-accent">
-            Ver todas
-            <ChevronRight className="h-3.5 w-3.5" strokeWidth={1.8} />
-          </Link>
-        </div>
-
-        {loading ? (
-          <LoadingList count={3} height="h-20" />
-        ) : upcoming.length === 0 ? (
-          <div className="rounded-2xl border border-line bg-surface p-6 text-center text-sm text-muted-foreground">
-            Nenhuma viagem agendada.
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {upcoming.map((t) => (
-              <UpcomingTripCard key={t.id} trip={t} />
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </AppShell>

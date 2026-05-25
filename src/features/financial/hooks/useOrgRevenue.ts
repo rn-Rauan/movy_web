@@ -2,17 +2,17 @@ import { useEffect, useState } from "react";
 import { paymentsService } from "@/services/payments.service";
 import { ApiError } from "@/lib/api";
 import { paymentBucketDate } from "@/lib/format";
-import { addBrMonths, isoToBrYmd, startOfBrMonth } from "@/lib/timezone";
+import { addBrMonths, isoToBrYmd, startOfBrDay, startOfBrMonth } from "@/lib/timezone";
 import type { Paginated, Payment } from "@/lib/types";
 
 type Result = {
-  /** Soma de payments com status CONFIRMED no mês BR corrente. */
+  /** Soma de payments com status COMPLETED na janela (mês BR corrente + últimos 7 dias). */
   confirmed: number;
-  /** Soma de payments com status PENDING no mês BR corrente. */
+  /** Soma de payments com status PENDING na janela (mês BR corrente + últimos 7 dias). */
   pending: number;
-  /** Soma de payments com status FAILED no mês BR corrente. */
+  /** Soma de payments com status FAILED na janela (mês BR corrente + últimos 7 dias). */
   lost: number;
-  /** Payments do mês BR corrente — disponibilizados pra agregação adicional. */
+  /** Payments da janela (mês BR corrente + últimos 7 dias) — disponibilizados pra agregação adicional. */
   payments: Payment[];
   loading: boolean;
   error: string | null;
@@ -33,8 +33,10 @@ async function fetchAllPayments(orgId: string): Promise<Payment[]> {
 }
 
 /**
- * Receita do mês BR corrente — confirmados, pendentes e perdidos.
- * Pagina `paymentsService.list` e filtra pelo mês BR atual. Tolerante a 403/404
+ * Receita do mês BR corrente mais os últimos 7 dias — confirmados, pendentes e perdidos.
+ * A janela é ampliada além do início do mês pra cobrir o mini-chart de 7 dias do dashboard
+ * mesmo na virada de mês (ex: dias do mês anterior que caem nos últimos 7 dias).
+ * Pagina `paymentsService.list` e filtra pela janela. Tolerante a 403/404
  * (caso o user não tenha permissão de listar payments — devolve tudo 0).
  */
 export function useOrgRevenue(orgId: string | null | undefined): Result {
@@ -54,16 +56,22 @@ export function useOrgRevenue(orgId: string | null | undefined): Result {
         if (cancelled) return;
         const monthStart = startOfBrMonth();
         const monthEnd = addBrMonths(monthStart, 1);
-        const startYmd = isoToBrYmd(monthStart);
+        // Janela = início do mês OU hoje−6 dias, o que vier primeiro (cobre o
+        // mini-chart de 7 dias do dashboard na virada de mês). BR é UTC−3 fixo
+        // (sem DST), então subtrair ms é seguro.
+        const sevenDayStart = new Date(startOfBrDay().getTime() - 6 * 24 * 60 * 60 * 1000);
+        const monthStartYmd = isoToBrYmd(monthStart);
+        const sevenDayStartYmd = isoToBrYmd(sevenDayStart);
+        const startYmd = sevenDayStartYmd < monthStartYmd ? sevenDayStartYmd : monthStartYmd;
         const endYmd = isoToBrYmd(monthEnd);
-        const inMonth = all.filter((p) => {
+        const inWindow = all.filter((p) => {
           // Filtra pelo dia da viagem quando disponível, senão pelo createdAt
           const bucketIso = paymentBucketDate(p);
           if (!bucketIso) return false;
           const ymd = isoToBrYmd(bucketIso);
           return ymd >= startYmd && ymd < endYmd;
         });
-        setPayments(inMonth);
+        setPayments(inWindow);
       })
       .catch((err) => {
         if (cancelled) return;
