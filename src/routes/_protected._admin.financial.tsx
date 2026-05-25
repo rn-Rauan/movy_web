@@ -18,6 +18,8 @@ export const Route = createFileRoute("/_protected/_admin/financial")({
   component: FinancialPage,
 });
 
+const DAY_LABELS_BR = ["D", "S", "T", "Q", "Q", "S", "S"];
+
 const MONTH_NAMES = [
   "Janeiro",
   "Fevereiro",
@@ -66,11 +68,12 @@ function FinancialPage() {
       ["Viagens confirmadas", String(report.trips.confirmed)],
       ["Viagens agendadas", String(report.trips.scheduled)],
       ["Viagens canceladas", String(report.trips.canceled)],
+      ["Reservas perdidas (canceladas)", fmtMoney(report.canceledLostRevenue)],
       ["Passageiros", String(report.passengers)],
       ["Ocupação média (%)", String(report.avgOccupation)],
       ["Ticket médio", fmtMoney(report.avgTicket)],
       [],
-      ["Top rotas", "Receita prevista"],
+      ["Top rotas", "Receita"],
       ...report.topRoutes.map((r) => [`${r.from} → ${r.to}`, fmtMoney(r.rev)]),
     ];
     const csv = lines
@@ -114,6 +117,7 @@ function FinancialPage() {
         <div className="flex flex-col gap-3">
           <HeroRevenue report={report} />
           <WeeklyBarsCard report={report} />
+          <RevenueHeatmapCard report={report} />
 
           <div>
             <SectionTitle title="Viagens do mês" sub={`${totalTrips(report)} no total`} />
@@ -141,9 +145,9 @@ function FinancialPage() {
                 label="Canceladas"
                 value={report.trips.canceled}
                 sub={
-                  report.revLost > 0
-                    ? `R$ ${fmtMoney(report.revLost)} perdidos`
-                    : "sem receita perdida"
+                  report.canceledLostRevenue > 0
+                    ? `R$ ${fmtMoney(report.canceledLostRevenue)} em reservas perdidas`
+                    : "sem reservas perdidas"
                 }
               />
             </div>
@@ -152,7 +156,7 @@ function FinancialPage() {
           <MiniKpiStrip report={report} />
 
           <div>
-            <SectionTitle title="Top rotas" sub="Maior receita prevista" />
+            <SectionTitle title="Top rotas" sub="Maior receita" />
             {report.topRoutes.length === 0 ? (
               <div className="rounded-2xl border border-line bg-surface px-4 py-6 text-center text-[12px] text-muted-foreground">
                 Sem viagens neste mês.
@@ -376,6 +380,66 @@ function WeeklyBarsCard({ report }: { report: FinancialReport }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Revenue heatmap (semana × dia da semana) ──────────────────────────────────
+
+function RevenueHeatmapCard({ report }: { report: FinancialReport }) {
+  const flat = report.daysGrid.flat();
+  const max = Math.max(1, ...flat);
+  const hasData = flat.some((v) => v > 0);
+
+  return (
+    <div className="rounded-2xl border border-line bg-surface p-3.5">
+      <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.4px] text-muted-foreground">
+        Receita por dia
+      </div>
+
+      {!hasData ? (
+        <div className="py-4 text-center text-[12px] text-muted-foreground">
+          Sem receita confirmada neste mês.
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          {/* Cabeçalho dos dias da semana */}
+          <div className="flex items-center gap-1.5">
+            <div className="w-10 flex-none" />
+            {DAY_LABELS_BR.map((d, i) => (
+              <div
+                key={i}
+                className="flex-1 text-center text-[9px] font-bold uppercase text-muted-foreground"
+              >
+                {d}
+              </div>
+            ))}
+          </div>
+          {report.daysGrid.map((week, wi) => (
+            <div key={wi} className="flex items-center gap-1.5">
+              <div className="w-10 flex-none text-[10px] font-bold text-muted-foreground">
+                {report.weekLabels[wi]}
+              </div>
+              {week.map((value, di) => {
+                const intensity = value / max; // 0..1
+                return (
+                  <div
+                    key={di}
+                    className="flex-1"
+                    aria-label={`${report.weekLabels[wi]} ${DAY_LABELS_BR[di]}: R$ ${fmtMoney(value)}`}
+                    title={`R$ ${fmtMoney(value)}`}
+                  >
+                    <div
+                      className="aspect-square w-full rounded-[5px] border border-line-soft bg-accent"
+                      style={{ opacity: value > 0 ? 0.18 + intensity * 0.82 : 0.06 }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

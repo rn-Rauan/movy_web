@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { paymentsService } from "@/services/payments.service";
 import { ApiError } from "@/lib/api";
+import { fetchAllPages } from "@/lib/paginate";
 import { paymentBucketDate } from "@/lib/format";
 import { addBrMonths, isoToBrYmd, startOfBrDay, startOfBrMonth } from "@/lib/timezone";
-import type { Paginated, Payment } from "@/lib/types";
+import type { Payment } from "@/lib/types";
 
 type Result = {
   /** Soma de payments com status COMPLETED na janela (mês BR corrente + últimos 7 dias). */
@@ -19,17 +20,8 @@ type Result = {
   refetch: () => void;
 };
 
-async function fetchAllPayments(orgId: string): Promise<Payment[]> {
-  const out: Payment[] = [];
-  const size = 100;
-  for (let page = 1; page <= 20; page++) {
-    const res = await paymentsService.list(orgId, page, size);
-    const list = Array.isArray(res) ? res : (res.data ?? []);
-    out.push(...list);
-    const meta = !Array.isArray(res) ? (res as Paginated<Payment>) : null;
-    if (!meta || list.length < size || (meta.totalPages && page >= meta.totalPages)) break;
-  }
-  return out;
+function fetchAllPayments(orgId: string): Promise<Payment[]> {
+  return fetchAllPages((page, limit) => paymentsService.list(orgId, page, limit));
 }
 
 /**

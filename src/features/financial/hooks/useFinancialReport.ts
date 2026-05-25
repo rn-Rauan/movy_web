@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { paymentsService } from "@/services/payments.service";
 import { tripsService } from "@/services/trips.service";
+import { ApiError } from "@/lib/api";
+import { fetchAllPages } from "@/lib/paginate";
 import { paymentBucketDate } from "@/lib/format";
 import {
   addBrMonths,
@@ -10,7 +12,7 @@ import {
   getBrYear,
   startOfBrMonth,
 } from "@/lib/timezone";
-import type { Payment, TripInstance, Paginated } from "@/lib/types";
+import type { Payment, TripInstance } from "@/lib/types";
 
 export type FinancialReport = {
   /** Mês de referência (1º dia 00:00 BR ≡ 03:00 UTC). */
@@ -38,13 +40,15 @@ export type FinancialReport = {
     draft: number; // DRAFT
     inProgress: number; // IN_PROGRESS
   };
-  /** Total de passageiros (sum bookedCount) em viagens FINISHED + IN_PROGRESS + CONFIRMED. */
+  /** Receita perdida em viagens CANCELED do mês (receita prevista: bookedCount × priceOneWay). */
+  canceledLostRevenue: number;
+  /** Total de passageiros (sum bookedCount) nas viagens do mês exceto CANCELED/DRAFT. */
   passengers: number;
   /** Ocupação média (%) ponderada por capacidade nas viagens não-canceladas/draft. */
   avgOccupation: number;
-  /** Ticket médio = revConfirmed / passengers (0 se passengers === 0). */
+  /** Ticket médio = revConfirmed / nº de pagamentos COMPLETED (0 se nenhum). */
   avgTicket: number;
-  /** Top rotas por receita prevista (sum bookedCount × priceOneWay). */
+  /** Top rotas por receita REAL (sum dos payments COMPLETED+PENDING das viagens da rota). */
   topRoutes: {
     key: string;
     from: string;
@@ -60,32 +64,20 @@ function inRange(iso: string, start: Date, end: Date): boolean {
   return t >= start.getTime() && t < end.getTime();
 }
 
-async function fetchAllPayments(orgId: string): Promise<Payment[]> {
-  const out: Payment[] = [];
-  let page = 1;
-  const size = 100;
-  for (let i = 0; i < 20; i++) {
-    const res = await paymentsService.list(orgId, page, size);
-    const list = Array.isArray(res) ? res : (res.data ?? []);
-    out.push(...list);
-    const meta = !Array.isArray(res) ? (res as Paginated<Payment>) : null;
-    if (!meta || list.length < size || (meta.totalPages && page >= meta.totalPages)) break;
-    page += 1;
-  }
-  return out;
-}
-
 function aggregate(payments: Payment[], trips: TripInstance[], monthStart: Date): FinancialReport {
   const monthEnd = addBrMonths(monthStart, 1);
   const prevStart = addBrMonths(monthStart, -1);
 
-  // Bucketing por dia da viagem (tripDepartureTime). Fallback pra createdAt só
-  // em payments órfãos (sem enrollment, ex.: cobranças de assinatura SaaS).
-  const paymentsInMonth = payments.filter((p) => {
+  // Relatório de VIAGENS: ignora payments órfãos (sem enrollment/trip — ex.: cobranças
+  // de assinatura SaaS). Receita de assinatura vive em /payments, não aqui.
+  const tripPayments = payments.filter((p) => p.enrollmentId != null || p.tripInstanceId != null);
+
+  // Bucketing por dia da viagem (tripDepartureTime), com fallback pra createdAt.
+  const paymentsInMonth = tripPayments.filter((p) => {
     const iso = paymentBucketDate(p);
     return iso && inRange(iso, monthStart, monthEnd);
   });
-  const paymentsPrevMonth = payments.filter((p) => {
+  const paymentsPrevMonth = tripPayments.filter((p) => {
     const iso = paymentBucketDate(p);
     return iso && inRange(iso, prevStart, monthStart);
   });
@@ -93,9 +85,12 @@ function aggregate(payments: Payment[], trips: TripInstance[], monthStart: Date)
   let revConfirmed = 0;
   let revPending = 0;
   let revLost = 0;
+  let completedCount = 0;
   for (const p of paymentsInMonth) {
-    if (p.status === "COMPLETED") revConfirmed += p.amount;
-    else if (p.status === "PENDING") revPending += p.amount;
+    if (p.status === "COMPLETED") {
+      revConfirmed += p.amount;
+      completedCount += 1;
+    } else if (p.status === "PENDING") revPending += p.amount;
     else if (p.status === "FAILED") revLost += p.amount;
   }
   const prevRevConfirmed = paymentsPrevMonth
@@ -161,26 +156,42 @@ function aggregate(payments: Payment[], trips: TripInstance[], monthStart: Date)
   const passengers = effectiveTrips.reduce((s, t) => s + (t.bookedCount ?? 0), 0);
   const totalSeats = effectiveTrips.reduce((s, t) => s + (t.totalCapacity ?? 0), 0);
   const avgOccupation = totalSeats > 0 ? Math.round((passengers / totalSeats) * 100) : 0;
-  const avgTicket = passengers > 0 ? revConfirmed / passengers : 0;
+  // Ticket médio = valor médio por pagamento confirmado (mesma base do hero).
+  const avgTicket = completedCount > 0 ? revConfirmed / completedCount : 0;
 
-  // ── Top rotas (por receita prevista, agrupado por origem→destino) ───────
+  // Receita perdida em viagens canceladas (prevista — bookedCount × priceOneWay).
+  const canceledLostRevenue = tripsInMonth
+    .filter((t) => t.tripStatus === "CANCELED")
+    .reduce((s, t) => s + (t.bookedCount ?? 0) * (t.priceOneWay ?? 0), 0);
+
+  // ── Top rotas (por receita REAL, agrupado por origem→destino) ────────────
+  // occ/trips vêm das viagens; rev vem dos payments reais (join tripInstanceId → rota).
+  const routeOf = (t: TripInstance) => ({
+    from: t.template?.origin ?? t.departurePoint ?? "—",
+    to: t.template?.destination ?? t.destination ?? "—",
+  });
+  const routeKeyByTrip = new Map<string, string>(); // tripInstanceId → routeKey
   const routeMap = new Map<
     string,
     { from: string; to: string; trips: number; bookedSum: number; seatSum: number; rev: number }
   >();
   for (const t of effectiveTrips) {
-    const from = t.template?.origin ?? t.departurePoint ?? "—";
-    const to = t.template?.destination ?? t.destination ?? "—";
+    const { from, to } = routeOf(t);
     const key = `${from}→${to}`;
-    const booked = t.bookedCount ?? 0;
-    const seats = t.totalCapacity ?? 0;
-    const price = t.priceOneWay ?? 0;
+    routeKeyByTrip.set(t.id, key);
     const entry = routeMap.get(key) ?? { from, to, trips: 0, bookedSum: 0, seatSum: 0, rev: 0 };
     entry.trips += 1;
-    entry.bookedSum += booked;
-    entry.seatSum += seats;
-    entry.rev += booked * price;
+    entry.bookedSum += t.bookedCount ?? 0;
+    entry.seatSum += t.totalCapacity ?? 0;
     routeMap.set(key, entry);
+  }
+  // Soma a receita real (confirmada + pendente) por rota via o payment → viagem.
+  for (const p of paymentsInMonth) {
+    if (p.status !== "COMPLETED" && p.status !== "PENDING") continue;
+    if (!p.tripInstanceId) continue;
+    const key = routeKeyByTrip.get(p.tripInstanceId);
+    if (!key) continue; // payment de viagem cancelada/fora do conjunto efetivo
+    routeMap.get(key)!.rev += p.amount;
   }
   const topRoutes = Array.from(routeMap.entries())
     .map(([key, v]) => ({
@@ -206,6 +217,7 @@ function aggregate(payments: Payment[], trips: TripInstance[], monthStart: Date)
     weekLabels,
     daysGrid,
     trips: tripsByStatus,
+    canceledLostRevenue,
     passengers,
     avgOccupation,
     avgTicket,
@@ -231,10 +243,21 @@ export function useFinancialReport(
     setLoading(true);
     setError(null);
 
-    Promise.all([fetchAllPayments(orgId), tripsService.listByOrgId(orgId)])
-      .then(([payments, tripsRes]) => {
+    // Payments tolerante a 403/404 (admin sem permissão de listar pagamentos): relatório
+    // segue com receita 0 e métricas de viagem normais, em vez de virar tela de erro.
+    const paymentsP = fetchAllPages<Payment>((page, limit) =>
+      paymentsService.list(orgId, page, limit),
+    ).catch((err) => {
+      if (err instanceof ApiError && (err.status === 403 || err.status === 404)) return [];
+      throw err;
+    });
+    const tripsP = fetchAllPages<TripInstance>((page, limit) =>
+      tripsService.listByOrgId(orgId, page, limit),
+    );
+
+    Promise.all([paymentsP, tripsP])
+      .then(([payments, trips]) => {
         if (cancelled) return;
-        const trips: TripInstance[] = Array.isArray(tripsRes) ? tripsRes : (tripsRes.data ?? []);
         const agg = aggregate(payments, trips, new Date(monthIso));
         setReport(agg);
       })

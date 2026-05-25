@@ -15,8 +15,12 @@ type TripCreatePayload = {
 export const tripsService = {
   listPublic: () => api<Paginated<TripInstance>>("/public/trip-instances", { auth: false }),
 
-  listByOrgId: (orgId: string) =>
-    api<TripInstance[] | Paginated<TripInstance>>(`/trip-instances/organization/${orgId}`),
+  listByOrgId: (orgId: string, page = 1, limit = 10) => {
+    const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+    return api<TripInstance[] | Paginated<TripInstance>>(
+      `/trip-instances/organization/${orgId}?${qs.toString()}`,
+    );
+  },
 
   /**
    * Self-service driver listing. Returns the caller's trips scoped to their current org.
