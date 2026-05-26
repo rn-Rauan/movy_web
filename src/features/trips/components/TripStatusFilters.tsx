@@ -36,16 +36,14 @@ export function TripStatusFilters({ value, onChange, counts }: Props) {
               )}
             >
               {f.label}
-              {count !== undefined && (
-                <span
-                  className={cn(
-                    "flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 font-mono text-[10px] font-bold",
-                    active ? "bg-white/20 text-white" : "bg-line-soft text-muted-foreground",
-                  )}
-                >
-                  {count}
-                </span>
-              )}
+              <span
+                className={cn(
+                  "flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 font-mono text-[10px] font-bold",
+                  active ? "bg-white/[0.15] text-white" : "bg-line-soft text-muted-foreground",
+                )}
+              >
+                {count ?? 0}
+              </span>
             </button>
           );
         })}

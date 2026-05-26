@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Bus, Check as CheckIcon, Plus, User, X } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/handle-error";
@@ -120,6 +120,12 @@ type FormState = {
 };
 
 const NONE = "__none__";
+
+// Estilo dos campos conforme o protótipo: border line, radius 10, ~44px, 13px/600.
+const FIELD_CLS =
+  "h-11 rounded-[10px] border-line bg-surface text-[13px] font-semibold text-ink placeholder:font-normal placeholder:text-muted-foreground";
+const SELECT_CLS =
+  "h-11 rounded-[10px] border-line bg-surface text-[13px] font-semibold data-[placeholder]:font-medium data-[placeholder]:text-muted-foreground";
 
 const EMPTY_FORM: FormState = {
   departurePoint: "",
@@ -270,102 +276,110 @@ export function TemplateFormSheet({
     }
   }
 
+  const bothDefaults = Boolean(form.defaultDriverId && form.defaultVehicleId);
+
   return (
     <BottomSheet open={open} onOpenChange={onOpenChange}>
       <BottomSheetContent
+        sheetTop={56}
         title={editing ? "Editar template" : "Novo template"}
-        description="Rota recorrente que gera viagens automaticamente"
         footer={
           <button
             type="submit"
             form="template-form"
             disabled={submitting}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-ink px-4 py-3 text-[14px] font-extrabold tracking-[-0.2px] text-white transition hover:opacity-90 disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-[14px] font-extrabold tracking-[-0.2px] text-white transition hover:opacity-90 disabled:opacity-50"
           >
+            {!editing && <Plus className="h-[15px] w-[15px]" strokeWidth={2.4} />}
             {submitting ? "Salvando..." : editing ? "Salvar alterações" : "Criar template"}
           </button>
         }
       >
-        <form id="template-form" onSubmit={handleSubmit} className="space-y-4">
+        <form id="template-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Origem / destino */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <FormField label="Origem" error={fieldErrors.departurePoint}>
               <Input
                 value={form.departurePoint}
                 onChange={(e) => setForm((f) => ({ ...f, departurePoint: e.target.value }))}
-                placeholder="Ex: Terminal"
+                placeholder="Terminal"
+                className={FIELD_CLS}
               />
             </FormField>
             <FormField label="Destino" error={fieldErrors.destination}>
               <Input
                 value={form.destination}
                 onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))}
-                placeholder="Ex: Universidade"
+                placeholder="Universidade"
+                className={FIELD_CLS}
               />
             </FormField>
           </div>
 
           {/* Turno segmented */}
           <FormField label="Turno">
-            <div className="grid grid-cols-3 gap-1.5 rounded-xl bg-line-soft p-1">
-              {SHIFTS.map((s) => (
-                <button
-                  key={s.value}
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, shift: s.value }))}
-                  className={cn(
-                    "rounded-lg px-3 py-2 text-[12px] font-bold transition",
-                    form.shift === s.value
-                      ? "bg-surface text-ink shadow-sm"
-                      : "text-muted-foreground hover:text-ink",
-                  )}
-                >
-                  {s.label}
-                </button>
-              ))}
+            <div className="flex gap-1 rounded-[10px] border border-line bg-surface-2 p-[3px]">
+              {SHIFTS.map((s) => {
+                const active = form.shift === s.value;
+                return (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, shift: s.value }))}
+                    className={cn(
+                      "flex-1 rounded-[7px] py-2 text-[12px] transition-colors",
+                      active
+                        ? "bg-surface font-extrabold text-ink shadow-sm"
+                        : "font-medium text-muted-foreground hover:text-ink",
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
             </div>
           </FormField>
 
           {/* Horários */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             <FormField label="Partida" error={fieldErrors.departureTimeOfDay}>
               <Input
                 type="time"
-                className="font-mono"
                 value={form.departureTimeOfDay}
                 onChange={(e) => setForm((f) => ({ ...f, departureTimeOfDay: e.target.value }))}
+                className={cn(FIELD_CLS, "font-mono")}
               />
             </FormField>
             <FormField label="Chegada" error={fieldErrors.arrivalTimeOfDay}>
               <Input
                 type="time"
-                className="font-mono"
                 value={form.arrivalTimeOfDay}
                 onChange={(e) => setForm((f) => ({ ...f, arrivalTimeOfDay: e.target.value }))}
+                className={cn(FIELD_CLS, "font-mono")}
               />
             </FormField>
           </div>
-          <p className="-mt-2 text-[11px] text-muted-foreground">
-            Horários em Brasília (UTC−3). Chegada pode ser anterior à partida se cruza meia-noite.
+          <p className="-mt-2 text-[11px] leading-[1.4] text-muted-foreground">
+            Horários em Brasília (UTC−3). Se a viagem cruza meia-noite, a chegada pode ser anterior
+            à partida.
           </p>
 
-          {/* Capacidade */}
+          {/* Capacidade padrão */}
           <FormField label="Capacidade padrão" error={fieldErrors.defaultCapacity}>
-            <Input
+            <SuffixInput
+              suffix="assentos"
               type="number"
               min="1"
               step="1"
+              inputMode="numeric"
               value={form.defaultCapacity}
               onChange={(e) => setForm((f) => ({ ...f, defaultCapacity: e.target.value }))}
-              placeholder="Ex: 20"
+              placeholder="20"
             />
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Aplicado às viagens geradas a partir deste template.
-            </p>
           </FormField>
 
           {/* Motorista + veículo padrão */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <FormField label="Motorista padrão">
               <Select
                 value={form.defaultDriverId || NONE}
@@ -373,8 +387,14 @@ export function TemplateFormSheet({
                   setForm((f) => ({ ...f, defaultDriverId: v === NONE ? "" : v }))
                 }
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Nenhum" />
+                <SelectTrigger className={SELECT_CLS}>
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <User
+                      className="h-3.5 w-3.5 flex-none text-muted-foreground"
+                      strokeWidth={1.8}
+                    />
+                    <SelectValue placeholder="Nenhum" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>Nenhum</SelectItem>
@@ -394,8 +414,14 @@ export function TemplateFormSheet({
                   setForm((f) => ({ ...f, defaultVehicleId: v === NONE ? "" : v }))
                 }
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Nenhum" />
+                <SelectTrigger className={SELECT_CLS}>
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <Bus
+                      className="h-3.5 w-3.5 flex-none text-muted-foreground"
+                      strokeWidth={1.8}
+                    />
+                    <SelectValue placeholder="Nenhum" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>Nenhum</SelectItem>
@@ -408,22 +434,31 @@ export function TemplateFormSheet({
               </Select>
             </FormField>
           </div>
-          {form.defaultDriverId && form.defaultVehicleId ? (
-            <div className="-mt-2 rounded-lg bg-success-soft px-3 py-2 text-[11px] font-medium text-success">
-              Com motorista e veículo padrão, viagens geradas são publicadas direto como agendadas.
-            </div>
-          ) : (
-            <p className="-mt-2 text-[11px] text-muted-foreground">
-              Defina os dois para publicar viagens geradas automaticamente sem revisão.
-            </p>
-          )}
+          <p className="-mt-2 text-[11px] leading-[1.4] text-muted-foreground">
+            {bothDefaults
+              ? "Com motorista e veículo padrão, as viagens geradas saem direto como Agendada (sem revisão)."
+              : "Sem os dois, as viagens geradas saem como Rascunho e exigem atribuição manual."}
+          </p>
 
           {/* Paradas */}
-          <FormField label={`Paradas (mín. 2)`} error={fieldErrors.stops}>
-            <div className="space-y-2">
+          <div>
+            <div className="mb-1.5 flex items-baseline justify-between gap-2">
+              <Label className="text-[12px] font-bold tracking-[-0.1px] text-ink">
+                Paradas <span className="font-medium text-muted-foreground">· mín. 2</span>
+              </Label>
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, stops: [...f.stops, ""] }))}
+                className="inline-flex items-center gap-1 text-[12px] font-bold text-accent transition hover:opacity-80"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
+                Adicionar
+              </button>
+            </div>
+            <div className="flex flex-col gap-2">
               {form.stops.map((stop, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-line-soft font-mono text-[11px] font-bold text-ink-2">
+                  <div className="flex h-[22px] w-[22px] flex-none items-center justify-center rounded-full bg-line-soft font-mono text-[11px] font-extrabold text-ink-2">
                     {i + 1}
                   </div>
                   <Input
@@ -436,6 +471,7 @@ export function TemplateFormSheet({
                       })
                     }
                     placeholder={`Parada ${i + 1}`}
+                    className={FIELD_CLS}
                   />
                   {form.stops.length > 2 && (
                     <button
@@ -446,7 +482,7 @@ export function TemplateFormSheet({
                           stops: f.stops.filter((_, idx) => idx !== i),
                         }))
                       }
-                      className="flex h-7 w-7 flex-none items-center justify-center rounded-full text-muted-foreground transition hover:bg-line-soft hover:text-danger"
+                      className="flex h-8 w-8 flex-none items-center justify-center rounded-lg border border-line text-muted-foreground transition hover:bg-line-soft hover:text-danger"
                       aria-label="Remover parada"
                     >
                       <X className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -454,54 +490,63 @@ export function TemplateFormSheet({
                   )}
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, stops: [...f.stops, ""] }))}
-                className="inline-flex items-center gap-1 text-[12px] font-bold text-accent transition hover:opacity-80"
-              >
-                <Plus className="h-3.5 w-3.5" strokeWidth={2} />
-                Adicionar parada
-              </button>
             </div>
-          </FormField>
+            {fieldErrors.stops && (
+              <p className="mt-1 text-[11px] font-medium text-danger">{fieldErrors.stops}</p>
+            )}
+          </div>
 
           {/* Preços 3 colunas */}
-          <FormField label="Preços (R$)" error={fieldErrors.priceOneWay}>
+          <div>
+            <Label className="mb-1.5 block text-[12px] font-bold tracking-[-0.1px] text-ink">
+              Preços
+            </Label>
             <div className="grid grid-cols-3 gap-2">
-              <PriceInput
+              <PriceCard
                 label="Ida"
                 value={form.priceOneWay}
                 onChange={(v) => setForm((f) => ({ ...f, priceOneWay: v }))}
               />
-              <PriceInput
+              <PriceCard
                 label="Volta"
                 value={form.priceReturn}
                 onChange={(v) => setForm((f) => ({ ...f, priceReturn: v }))}
               />
-              <PriceInput
-                label="Ida+volta"
+              <PriceCard
+                label="Ida + volta"
                 value={form.priceRoundTrip}
                 onChange={(v) => setForm((f) => ({ ...f, priceRoundTrip: v }))}
                 accent
               />
             </div>
-          </FormField>
+            {fieldErrors.priceOneWay && (
+              <p className="mt-1 text-[11px] font-medium text-danger">{fieldErrors.priceOneWay}</p>
+            )}
+          </div>
 
-          {/* Checkboxes */}
-          <div className="space-y-2">
-            <CheckRow
+          {/* Bloco de opções */}
+          <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface-2 p-3.5">
+            <Check
               label="Visível no marketplace"
+              sub="Apareça na busca pública pra novos passageiros."
               checked={form.isPublic}
               onChange={(c) => setForm((f) => ({ ...f, isPublic: c }))}
             />
-            <CheckRow
+            <Check
               label="Recorrente"
+              sub="O agendamento automático gera essas viagens periodicamente."
               checked={form.isRecurring}
               onChange={(c) => setForm((f) => ({ ...f, isRecurring: c }))}
             />
+            <Check
+              label="Auto-cancelar se receita mínima não for atingida"
+              sub="Cancela viagens com baixa inscrição antes da partida."
+              checked={form.autoCancelEnabled}
+              onChange={(c) => setForm((f) => ({ ...f, autoCancelEnabled: c }))}
+            />
           </div>
 
-          {/* Frequency */}
+          {/* Frequency (revela quando recorrente) */}
           {form.isRecurring && (
             <FormField label="Dias da semana" error={fieldErrors.frequency}>
               <div className="flex flex-wrap gap-1.5">
@@ -534,38 +579,33 @@ export function TemplateFormSheet({
             </FormField>
           )}
 
-          {/* Auto-cancel */}
-          <div className="rounded-xl border border-line bg-surface-2 p-3.5">
-            <CheckRow
-              label="Auto-cancelar se receita mínima não atingida"
-              checked={form.autoCancelEnabled}
-              onChange={(c) => setForm((f) => ({ ...f, autoCancelEnabled: c }))}
-            />
-            {form.autoCancelEnabled && (
-              <div className="mt-3 grid grid-cols-2 gap-3 border-t border-line-soft pt-3">
-                <FormField label="Receita mínima" error={fieldErrors.minRevenue}>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.minRevenue}
-                    onChange={(e) => setForm((f) => ({ ...f, minRevenue: e.target.value }))}
-                    placeholder="0,00"
-                  />
-                </FormField>
-                <FormField label="Minutos antes" error={fieldErrors.autoCancelOffset}>
-                  <Input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={form.autoCancelOffset}
-                    onChange={(e) => setForm((f) => ({ ...f, autoCancelOffset: e.target.value }))}
-                    placeholder="60"
-                  />
-                </FormField>
-              </div>
-            )}
-          </div>
+          {/* Auto-cancel detalhes (revela quando ativo) */}
+          {form.autoCancelEnabled && (
+            <div className="grid grid-cols-2 gap-2.5">
+              <FormField label="Receita mínima" error={fieldErrors.minRevenue}>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.minRevenue}
+                  onChange={(e) => setForm((f) => ({ ...f, minRevenue: e.target.value }))}
+                  placeholder="0,00"
+                  className={cn(FIELD_CLS, "font-mono")}
+                />
+              </FormField>
+              <FormField label="Minutos antes" error={fieldErrors.autoCancelOffset}>
+                <Input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={form.autoCancelOffset}
+                  onChange={(e) => setForm((f) => ({ ...f, autoCancelOffset: e.target.value }))}
+                  placeholder="60"
+                  className={cn(FIELD_CLS, "font-mono")}
+                />
+              </FormField>
+            </div>
+          )}
         </form>
       </BottomSheetContent>
     </BottomSheet>
@@ -574,28 +614,49 @@ export function TemplateFormSheet({
 
 function FormField({
   label,
-  required,
+  hint,
   error,
   children,
 }: {
   label: string;
-  required?: boolean;
+  hint?: string;
   error?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1">
-      <Label className="flex items-center gap-0.5 text-[12px] font-bold uppercase tracking-[0.3px] text-ink-2">
-        {label}
-        {required && <span className="text-danger">*</span>}
-      </Label>
+    <div>
+      <div className="mb-1.5 flex items-baseline gap-1.5">
+        <Label className="text-[12px] font-bold tracking-[-0.1px] text-ink">{label}</Label>
+        {hint && <span className="ml-auto text-[11px] text-muted-foreground">{hint}</span>}
+      </div>
       {children}
-      {error && <p className="text-[11px] font-medium text-danger">{error}</p>}
+      {error && <p className="mt-1 text-[11px] font-medium text-danger">{error}</p>}
     </div>
   );
 }
 
-function PriceInput({
+/** Input com sufixo textual dentro da borda (ex.: "assentos"), no estilo do protótipo. */
+function SuffixInput({
+  suffix,
+  className,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { suffix: string }) {
+  return (
+    <div className="flex h-11 items-center rounded-[10px] border border-line bg-surface px-3 focus-within:ring-1 focus-within:ring-ring">
+      <input
+        {...props}
+        className={cn(
+          "min-w-0 flex-1 bg-transparent font-mono text-[13px] font-semibold text-ink outline-none placeholder:font-normal placeholder:text-muted-foreground",
+          className,
+        )}
+      />
+      <span className="ml-1.5 flex-none text-[13px] text-muted-foreground">{suffix}</span>
+    </div>
+  );
+}
+
+/** Card de preço editável no estilo do protótipo (label uppercase + R$ + valor mono). */
+function PriceCard({
   label,
   value,
   onChange,
@@ -607,46 +668,72 @@ function PriceInput({
   accent?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <span
+    <div
+      className={cn(
+        "rounded-[10px] border px-3 py-2.5",
+        accent ? "border-accent/30 bg-accent-soft" : "border-line bg-surface-2",
+      )}
+    >
+      <div
         className={cn(
           "text-[10px] font-bold uppercase tracking-[0.3px]",
           accent ? "text-accent" : "text-muted-foreground",
         )}
       >
         {label}
-      </span>
-      <Input
-        type="number"
-        min="0"
-        step="0.01"
-        className="font-mono"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="0,00"
-      />
+      </div>
+      <div className="mt-1 flex items-baseline gap-1">
+        <span className="text-[10px] font-bold text-muted-foreground">R$</span>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="0,00"
+          className="min-w-0 flex-1 bg-transparent font-mono text-[16px] font-extrabold tracking-[-0.5px] text-ink outline-none placeholder:font-normal placeholder:text-muted-foreground"
+        />
+      </div>
     </div>
   );
 }
 
-function CheckRow({
+/** Checkbox no estilo do protótipo: caixa 18×18 ink quando marcada, label + sub. */
+function Check({
   label,
+  sub,
   checked,
   onChange,
 }: {
   label: string;
+  sub?: string;
   checked: boolean;
   onChange: (c: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2.5">
+    <label className="flex cursor-pointer items-start gap-2.5">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 cursor-pointer rounded border-line accent-accent"
+        className="peer sr-only"
       />
-      <span className="text-[13px] font-semibold text-ink">{label}</span>
+      <span
+        className={cn(
+          "mt-px flex h-[18px] w-[18px] flex-none items-center justify-center rounded-[5px] border-[1.8px] transition-colors",
+          checked ? "border-ink bg-ink text-white" : "border-line bg-transparent text-transparent",
+        )}
+      >
+        <CheckIcon className="h-[11px] w-[11px]" strokeWidth={3} />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[13px] font-bold text-ink">{label}</span>
+        {sub && (
+          <span className="mt-0.5 block text-[11px] leading-[1.4] text-muted-foreground">
+            {sub}
+          </span>
+        )}
+      </span>
     </label>
   );
 }

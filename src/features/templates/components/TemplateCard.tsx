@@ -100,7 +100,7 @@ export function TemplateCard({ template: tpl, onEdit, onDelete, onGenerate }: Pr
         <div className="mt-2.5 flex flex-wrap gap-1.5">
           {tpl.defaultDriverId && tpl.defaultVehicleId && (
             <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-bold tracking-[0.2px] text-accent">
-              Auto-publica
+              Gera agendada
             </span>
           )}
           {tpl.isPublic && (

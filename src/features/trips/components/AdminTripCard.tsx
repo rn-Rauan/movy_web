@@ -7,11 +7,9 @@ import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 import { getBrDayOfMonth, getBrHour, getBrMinute, getBrMonth } from "@/lib/timezone";
 import type { TripInstance } from "@/lib/types";
 
-function initialsOf(name?: string | null) {
+function initialOf(name?: string | null) {
   if (!name) return "—";
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
-  return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
+  return name.trim().charAt(0).toUpperCase() || "—";
 }
 
 export function AdminTripCard({ trip: t }: { trip: TripInstance }) {
@@ -49,20 +47,25 @@ export function AdminTripCard({ trip: t }: { trip: TripInstance }) {
 
       <RouteVisual from={from} to={to} />
 
-      <div className="mt-3 flex items-center gap-3">
-        {t.driverId && (
-          <div className="flex flex-none items-center gap-1.5">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-accent-soft text-[9px] font-extrabold text-accent">
-              {initialsOf(driverName)}
+      <div className="mt-3.5 flex items-center justify-between gap-2.5 border-t border-dashed border-line pt-3">
+        {t.driverId ? (
+          <div className="flex flex-none items-center gap-1.5 text-ink-2">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-accent-soft text-[10px] font-bold text-accent">
+              {initialOf(driverName)}
             </div>
-            <span className="max-w-[110px] truncate text-[11px] font-semibold text-ink-2">
+            <span className="max-w-[110px] truncate text-[12px] font-semibold">
               {driverName ?? "—"}
             </span>
           </div>
+        ) : (
+          <span className="text-[12px] font-medium text-muted-foreground">Sem motorista</span>
         )}
-        <div className="flex-1">
-          <OccupancyBar booked={t.bookedCount ?? 0} total={t.totalCapacity ?? 0} />
-        </div>
+        <OccupancyBar
+          booked={t.bookedCount ?? 0}
+          total={t.totalCapacity ?? 0}
+          muted={t.tripStatus === "CANCELED"}
+          className="w-full max-w-[180px] flex-1"
+        />
       </div>
     </Link>
   );

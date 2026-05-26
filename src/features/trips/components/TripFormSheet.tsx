@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Bus, List, Plus, User } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/handle-error";
-import { utcHourToBr } from "@/lib/timezone";
 import { tripsService } from "@/services/trips.service";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -65,6 +65,12 @@ const EMPTY: FormState = {
   vehicleId: "",
 };
 
+// Estilo dos campos conforme o protótipo: border line, radius 10, altura ~44, 13px/600.
+const FIELD_CLS =
+  "h-11 rounded-[10px] border-line bg-surface text-[13px] font-semibold text-ink placeholder:font-normal placeholder:text-muted-foreground";
+const SELECT_CLS =
+  "h-11 rounded-[10px] border-line bg-surface text-[13px] font-semibold data-[placeholder]:font-medium data-[placeholder]:text-muted-foreground";
+
 type Props = {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -103,13 +109,6 @@ export function TripFormSheet({
   const templateHasSchedule = Boolean(
     selectedTemplate?.departureTimeOfDay && selectedTemplate?.arrivalTimeOfDay,
   );
-
-  const previewDepartureBr = selectedTemplate?.departureTimeOfDay
-    ? utcHourToBr(selectedTemplate.departureTimeOfDay)
-    : null;
-  const previewArrivalBr = selectedTemplate?.arrivalTimeOfDay
-    ? utcHourToBr(selectedTemplate.arrivalTimeOfDay)
-    : null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -153,27 +152,30 @@ export function TripFormSheet({
     <BottomSheet open={open} onOpenChange={onOpenChange}>
       <BottomSheetContent
         title="Nova viagem"
-        description="Defina template, data e capacidade"
         footer={
           <button
             type="submit"
             form="trip-form"
             disabled={submitting}
-            className="inline-flex w-full items-center justify-center rounded-xl bg-ink px-4 py-3 text-[14px] font-extrabold tracking-[-0.2px] text-white transition hover:opacity-90 disabled:opacity-50"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-[14px] font-extrabold tracking-[-0.2px] text-white transition hover:opacity-90 disabled:opacity-50"
           >
+            <Plus className="h-[15px] w-[15px]" strokeWidth={2.4} />
             {submitting ? "Criando..." : "Criar viagem"}
           </button>
         }
       >
-        <form id="trip-form" onSubmit={handleSubmit} className="space-y-4">
+        <form id="trip-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Template */}
           <FormField label="Template de rota" error={fieldErrors.tripTemplateId}>
             <Select
               value={form.tripTemplateId}
               onValueChange={(v) => setForm((f) => ({ ...f, tripTemplateId: v }))}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um template..." />
+              <SelectTrigger className={SELECT_CLS}>
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <List className="h-3.5 w-3.5 flex-none text-muted-foreground" strokeWidth={1.8} />
+                  <SelectValue placeholder="Selecione um template…" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 {templates.map((tpl) => (
@@ -183,81 +185,86 @@ export function TripFormSheet({
                 ))}
               </SelectContent>
             </Select>
-            {selectedTemplate && templateHasSchedule && (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Partida prevista:{" "}
-                <span className="font-mono font-semibold text-ink-2">{previewDepartureBr}</span> ·
-                Chegada{" "}
-                <span className="font-mono font-semibold text-ink-2">{previewArrivalBr}</span>{" "}
-                (horário de Brasília)
-              </p>
-            )}
             {selectedTemplate && !templateHasSchedule && (
-              <div className="mt-2 flex items-start gap-2 rounded-lg bg-accent-soft px-3 py-2 text-[12px] font-medium text-ink-2">
+              <div className="mt-2 flex items-start gap-2 rounded-[10px] border border-accent/20 bg-accent-soft px-3 py-2 text-[12px] font-medium text-ink-2">
                 <AlertCircle className="mt-0.5 h-3.5 w-3.5 flex-none text-accent" strokeWidth={2} />
                 <span>Template sem horário configurado — edite o template antes de criar.</span>
               </div>
             )}
           </FormField>
 
-          {/* Date + capacity grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Data de partida" error={fieldErrors.departureDate}>
-              <Input
-                type="date"
-                value={form.departureDate}
-                onChange={(e) => setForm((f) => ({ ...f, departureDate: e.target.value }))}
-              />
-            </FormField>
-            <FormField label="Capacidade" error={fieldErrors.totalCapacity}>
-              <Input
-                type="number"
-                min="1"
-                value={form.totalCapacity}
-                onChange={(e) => setForm((f) => ({ ...f, totalCapacity: e.target.value }))}
-                placeholder="Ex: 40"
-              />
-            </FormField>
-          </div>
-
-          {/* Status toggle */}
-          <FormField label="Status inicial">
-            <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-line-soft p-1">
-              {(["DRAFT", "SCHEDULED"] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, initialStatus: s }))}
-                  className={
-                    form.initialStatus === s
-                      ? "rounded-lg bg-surface px-3 py-2 text-[12px] font-bold text-ink shadow-sm"
-                      : "rounded-lg px-3 py-2 text-[12px] font-bold text-muted-foreground hover:text-ink"
-                  }
-                >
-                  {s === "DRAFT" ? "Rascunho" : "Agendada"}
-                </button>
-              ))}
-            </div>
-            {form.initialStatus === "SCHEDULED" && (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Requer motorista e veículo selecionados.
-              </p>
-            )}
+          {/* Data de partida */}
+          <FormField
+            label="Data de partida"
+            hint="O horário vem do template"
+            error={fieldErrors.departureDate}
+          >
+            <Input
+              type="date"
+              value={form.departureDate}
+              onChange={(e) => setForm((f) => ({ ...f, departureDate: e.target.value }))}
+              className={cn(FIELD_CLS, "font-mono")}
+            />
           </FormField>
 
-          {/* Driver + vehicle */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField
-              label="Motorista"
-              required={form.initialStatus === "SCHEDULED"}
-              error={fieldErrors.driverId}
-            >
+          {/* Capacidade total */}
+          <FormField label="Capacidade total" error={fieldErrors.totalCapacity}>
+            <div className="flex h-11 items-center rounded-[10px] border border-line bg-surface px-3 focus-within:ring-1 focus-within:ring-ring">
+              <input
+                type="number"
+                min="1"
+                inputMode="numeric"
+                value={form.totalCapacity}
+                onChange={(e) => setForm((f) => ({ ...f, totalCapacity: e.target.value }))}
+                placeholder="40"
+                className="min-w-0 flex-1 bg-transparent font-mono text-[13px] font-semibold text-ink outline-none placeholder:font-normal placeholder:text-muted-foreground"
+              />
+              <span className="ml-1.5 flex-none text-[13px] text-muted-foreground">assentos</span>
+            </div>
+          </FormField>
+
+          {/* Status inicial */}
+          <FormField label="Status inicial">
+            <div className="flex gap-1 rounded-[10px] border border-line bg-surface-2 p-[3px]">
+              {(["DRAFT", "SCHEDULED"] as const).map((s) => {
+                const active = form.initialStatus === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, initialStatus: s }))}
+                    className={cn(
+                      "flex-1 rounded-[7px] py-2 text-[12px] transition-colors",
+                      active
+                        ? "bg-surface font-extrabold text-ink shadow-sm"
+                        : "font-medium text-muted-foreground hover:text-ink",
+                    )}
+                  >
+                    {s === "DRAFT" ? "Rascunho" : "Agendada"}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1.5 text-[11px] leading-[1.4] text-muted-foreground">
+              Rascunho não aparece pra passageiros até você publicar.
+            </p>
+          </FormField>
+
+          {/* Motorista + veículo */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <FormField label="Motorista" error={fieldErrors.driverId}>
               <Select
                 value={form.driverId || "none"}
                 onValueChange={(v) => setForm((f) => ({ ...f, driverId: v === "none" ? "" : v }))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sem motorista" />
+                <SelectTrigger className={SELECT_CLS}>
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <User
+                      className="h-3.5 w-3.5 flex-none text-muted-foreground"
+                      strokeWidth={1.8}
+                    />
+                    <SelectValue placeholder="Sem motorista" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sem motorista</SelectItem>
@@ -277,17 +284,19 @@ export function TripFormSheet({
               </Select>
             </FormField>
 
-            <FormField
-              label="Veículo"
-              required={form.initialStatus === "SCHEDULED"}
-              error={fieldErrors.vehicleId}
-            >
+            <FormField label="Veículo" error={fieldErrors.vehicleId}>
               <Select
                 value={form.vehicleId || "none"}
                 onValueChange={(v) => setForm((f) => ({ ...f, vehicleId: v === "none" ? "" : v }))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sem veículo" />
+                <SelectTrigger className={SELECT_CLS}>
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <Bus
+                      className="h-3.5 w-3.5 flex-none text-muted-foreground"
+                      strokeWidth={1.8}
+                    />
+                    <SelectValue placeholder="Sem veículo" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sem veículo</SelectItem>
@@ -302,6 +311,15 @@ export function TripFormSheet({
               </Select>
             </FormField>
           </div>
+
+          {/* Aviso destacado */}
+          <div className="flex items-start gap-2 rounded-[10px] border border-accent/20 bg-accent-soft px-3 py-2.5">
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 flex-none text-accent" strokeWidth={2} />
+            <p className="text-[11px] leading-[1.45] text-ink-2">
+              Sem motorista e veículo, a viagem fica como{" "}
+              <strong className="font-bold">Rascunho</strong> até você completar.
+            </p>
+          </div>
         </form>
       </BottomSheetContent>
     </BottomSheet>
@@ -310,23 +328,23 @@ export function TripFormSheet({
 
 function FormField({
   label,
-  required,
+  hint,
   error,
   children,
 }: {
   label: string;
-  required?: boolean;
+  hint?: string;
   error?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1">
-      <Label className="flex items-center gap-0.5 text-[12px] font-bold uppercase tracking-[0.3px] text-ink-2">
-        {label}
-        {required && <span className="text-danger">*</span>}
-      </Label>
+    <div>
+      <div className="mb-1.5 flex items-baseline gap-1.5">
+        <Label className="text-[12px] font-bold tracking-[-0.1px] text-ink">{label}</Label>
+        {hint && <span className="ml-auto text-[11px] text-muted-foreground">{hint}</span>}
+      </div>
       {children}
-      {error && <p className="text-[11px] font-medium text-danger">{error}</p>}
+      {error && <p className="mt-1 text-[11px] font-medium text-danger">{error}</p>}
     </div>
   );
 }

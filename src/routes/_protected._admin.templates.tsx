@@ -26,8 +26,6 @@ function TemplatesPage() {
   const [deleting, setDeleting] = useState<TripTemplate | null>(null);
   const [generating, setGenerating] = useState<TripTemplate | null>(null);
 
-  const hasTemplates = (templates?.length ?? 0) > 0;
-
   function openCreate() {
     setEditing(null);
     setSheetOpen(true);
@@ -43,15 +41,13 @@ function TemplatesPage() {
       title="Templates"
       back
       action={
-        hasTemplates ? (
-          <button
-            onClick={openCreate}
-            className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[12px] font-bold text-white transition hover:opacity-90"
-          >
-            <Plus className="h-3.5 w-3.5" strokeWidth={2} />
-            Novo
-          </button>
-        ) : null
+        <button
+          onClick={openCreate}
+          className="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-[12px] font-bold text-white transition hover:opacity-90"
+        >
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
+          Novo
+        </button>
       }
     >
       {loading ? (
