@@ -115,7 +115,7 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
     drivers/                  → gestão de motoristas da organização
     vehicles/                 → CRUD de veículos da organização
     organization/             → configurações + card de plano (uso vs. limite) + SchedulingConfigCard
-    payments/                 → histórico de pagamentos da subscription (paginado)
+    subscription/             → histórico de assinaturas da org (Subscription: plano, status, validade)
     financial/                → relatório mensal (receita confirmada/pendente/perdida, viagens por status, top rotas, export CSV) — acessado via link no dashboard
 
   _driver/ (guard: isDriver)
@@ -189,7 +189,8 @@ src/
 │   ├── templates/              CRUD admin de templates de rota + GenerateInstancesDialog
 │   ├── vehicles/               CRUD admin de veículos (hooks/ + components/)
 │   ├── scheduling/             SchedulingConfigCard + useSchedulingConfig (toggle + daysAhead — cron é global no backend)
-│   ├── payments/               Histórico de pagamentos da subscription (hooks/ + components/)
+│   ├── subscriptions/          Histórico de assinaturas da org (useSubscriptions + SubscriptionCard/List) — resolve planId→Plan via /public/plans
+│   │                           (payments.service segue existindo p/ tarifas de viagem, consumido só por financial/dashboard — sem tela própria)
 │   └── financial/              Relatório financeiro admin — `useFinancialReport(orgId, monthStart)` agrega payments + trip-instances no client (sem endpoint dedicado no backend)
 │
 ├── services/                Abstração de chamadas de API (repository pattern)

@@ -6,10 +6,10 @@
 // interactive-phone.jsx — Wrapper que junta as telas com a bottom-nav ativa
 // ============================================================================
 
-function InteractivePhone({ t, defaultScreen = 'dashboard' }) {
+function InteractivePhone({ t, defaultScreen = "dashboard" }) {
   const [screen, setScreen] = React.useState(defaultScreen);
   const screens = {
-    dashboard: <ScreenDashboard t={t} onOpenReport={() => setScreen('report')} />,
+    dashboard: <ScreenDashboard t={t} onOpenReport={() => setScreen("report")} />,
     report: <ScreenDashboardReport t={t} />,
     viagens: <ScreenViagens t={t} />,
     templates: <ScreenTemplates t={t} />,
@@ -18,10 +18,8 @@ function InteractivePhone({ t, defaultScreen = 'dashboard' }) {
   };
   return (
     <Phone t={t} label={`Interactive · ${screen}`}>
-      <div style={{ position: 'absolute', inset: 0 }}>
-        {screens[screen]}
-      </div>
-      <BottomNav active={screen === 'report' ? 'dashboard' : screen} onChange={setScreen} t={t} />
+      <div style={{ position: "absolute", inset: 0 }}>{screens[screen]}</div>
+      <BottomNav active={screen === "report" ? "dashboard" : screen} onChange={setScreen} t={t} />
     </Phone>
   );
 }

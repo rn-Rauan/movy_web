@@ -1,9 +1,10 @@
 import { api } from "@/lib/api";
-import type { Subscription, PlanUsage } from "@/lib/types";
+import type { Subscription, PlanUsage, Paginated } from "@/lib/types";
 
 export const subscriptionsService = {
   getActive: (orgId: string) => api<Subscription>(`/organizations/${orgId}/subscriptions/active`),
-  list: (orgId: string) => api<Subscription[]>(`/organizations/${orgId}/subscriptions`),
+  list: (orgId: string) =>
+    api<Subscription[] | Paginated<Subscription>>(`/organizations/${orgId}/subscriptions`),
   create: (orgId: string, planId: string) =>
     api<Subscription>(`/organizations/${orgId}/subscriptions`, {
       method: "POST",

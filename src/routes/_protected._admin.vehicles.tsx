@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { Button } from "@/components/ui/button";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { useRole } from "@/lib/role-context";
@@ -23,9 +22,6 @@ function VehiclesPage() {
   const [editing, setEditing] = useState<Vehicle | null>(null);
   const [removing, setRemoving] = useState<Vehicle | null>(null);
 
-  const active = (vehicles ?? []).filter((v) => v.status !== "INACTIVE");
-  const hasVehicles = active.length > 0;
-
   function openCreate() {
     setEditing(null);
     setFormOpen(true);
@@ -37,15 +33,19 @@ function VehiclesPage() {
   }
 
   return (
-    <AppShell title="Veículos" back>
-      {hasVehicles && (
-        <div className="flex justify-end mb-3">
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4 mr-1" /> Adicionar
-          </Button>
-        </div>
-      )}
-
+    <AppShell
+      title="Veículos"
+      back
+      action={
+        <button
+          onClick={openCreate}
+          className="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-[12px] font-bold text-white transition hover:opacity-90"
+        >
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
+          Novo
+        </button>
+      }
+    >
       {loading ? (
         <LoadingList count={3} height="h-20" />
       ) : error ? (

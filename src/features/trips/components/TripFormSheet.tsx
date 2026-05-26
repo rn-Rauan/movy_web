@@ -110,6 +110,15 @@ export function TripFormSheet({
     selectedTemplate?.departureTimeOfDay && selectedTemplate?.arrivalTimeOfDay,
   );
 
+  const selectedDriver = useMemo(
+    () => drivers.find((d) => d.id === form.driverId) ?? null,
+    [drivers, form.driverId],
+  );
+  const selectedVehicle = useMemo(
+    () => vehicles.find((v) => v.id === form.vehicleId) ?? null,
+    [vehicles, form.vehicleId],
+  );
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!orgId) return;
@@ -263,19 +272,25 @@ export function TripFormSheet({
                       className="h-3.5 w-3.5 flex-none text-muted-foreground"
                       strokeWidth={1.8}
                     />
-                    <SelectValue placeholder="Sem motorista" />
+                    <span className="min-w-0 flex-1 truncate text-left">
+                      {selectedDriver ? (
+                        <DriverDisplayName driver={selectedDriver} />
+                      ) : (
+                        <span className="font-medium text-muted-foreground">Sem motorista</span>
+                      )}
+                    </span>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sem motorista</SelectItem>
                   {drivers.map((d) => (
                     <SelectItem key={d.id} value={d.id} textValue={driverDisplayString(d)}>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm font-medium">
                           <DriverDisplayName driver={d} />
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          CNH {d.cnh} · Cat. {d.cnhCategories.join(", ")}
+                        <span className="truncate text-xs text-muted-foreground">
+                          CNH {d.cnh} ({d.cnhCategories.join(", ")})
                         </span>
                       </div>
                     </SelectItem>
@@ -295,7 +310,13 @@ export function TripFormSheet({
                       className="h-3.5 w-3.5 flex-none text-muted-foreground"
                       strokeWidth={1.8}
                     />
-                    <SelectValue placeholder="Sem veículo" />
+                    <span className="min-w-0 flex-1 truncate text-left">
+                      {selectedVehicle ? (
+                        `${selectedVehicle.model} — ${selectedVehicle.plate}`
+                      ) : (
+                        <span className="font-medium text-muted-foreground">Sem veículo</span>
+                      )}
+                    </span>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -303,7 +324,7 @@ export function TripFormSheet({
                   {vehicles
                     .filter((v) => v.status !== "INACTIVE")
                     .map((v) => (
-                      <SelectItem key={v.id} value={v.id}>
+                      <SelectItem key={v.id} value={v.id} className="truncate">
                         {v.model} — {v.plate}
                       </SelectItem>
                     ))}

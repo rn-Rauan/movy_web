@@ -6,10 +6,10 @@
    InteractivePhone */
 
 function App() {
-  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-    "palette": "terracotta",
-    "showInteractive": true
-  }/*EDITMODE-END*/;
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/ {
+    palette: "terracotta",
+    showInteractive: true,
+  }; /*EDITMODE-END*/
 
   const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const t = PALETTES[tweaks.palette] || PALETTES.terracotta;
@@ -56,7 +56,8 @@ function App() {
           </DCArtboard>
 
           <DCPostIt top={-10} right={60} width={230} rotate={-2}>
-            Modais saíram do cartão-flutuante-no-meio pra bottom sheet com drag handle. Paradas viraram timeline visual.
+            Modais saíram do cartão-flutuante-no-meio pra bottom sheet com drag handle. Paradas
+            viraram timeline visual.
           </DCPostIt>
         </DCSection>
 
@@ -65,15 +66,27 @@ function App() {
           title="Relatório do mês (dashboard detalhado)"
           subtitle="Nova tela acessada pelo botão 'Ver relatório' no dashboard da home. Receita, viagens realizadas/confirmadas/canceladas, top rotas e calendário financeiro."
         >
-          <DCArtboard id="report-finance" label="08 · Relatório · Financeiro em foco" width={390} height={844}>
+          <DCArtboard
+            id="report-finance"
+            label="08 · Relatório · Financeiro em foco"
+            width={390}
+            height={844}
+          >
             <ScreenDashboardReport t={t} />
           </DCArtboard>
-          <DCArtboard id="report-ops" label="09 · Relatório · Operação em foco" width={390} height={844}>
+          <DCArtboard
+            id="report-ops"
+            label="09 · Relatório · Operação em foco"
+            width={390}
+            height={844}
+          >
             <ScreenDashboardReportOps t={t} />
           </DCArtboard>
 
           <DCPostIt top={-10} right={60} width={240} rotate={2}>
-            Duas variações: A foca em dinheiro (receita do mês como hero + breakdown confirmada/pendente/perdida). B foca na operação (viagens realizadas como hero + heatmap diário).
+            Duas variações: A foca em dinheiro (receita do mês como hero + breakdown
+            confirmada/pendente/perdida). B foca na operação (viagens realizadas como hero + heatmap
+            diário).
           </DCPostIt>
         </DCSection>
 
@@ -88,7 +101,8 @@ function App() {
             </DCArtboard>
 
             <DCPostIt top={40} left={520} width={230} rotate={-2}>
-              Tente: comece no Dashboard, toque em "Viagens" na barra inferior, depois "Empresa". Tudo funciona em tempo real.
+              Tente: comece no Dashboard, toque em "Viagens" na barra inferior, depois "Empresa".
+              Tudo funciona em tempo real.
             </DCPostIt>
           </DCSection>
         )}
@@ -99,11 +113,11 @@ function App() {
           <TweakRadio
             label="Tom"
             value={tweaks.palette}
-            onChange={(v) => setTweak('palette', v)}
+            onChange={(v) => setTweak("palette", v)}
             options={[
-              { value: 'terracotta', label: 'Terracota' },
-              { value: 'ocean', label: 'Oceano' },
-              { value: 'forest', label: 'Floresta' },
+              { value: "terracotta", label: "Terracota" },
+              { value: "ocean", label: "Oceano" },
+              { value: "forest", label: "Floresta" },
             ]}
           />
         </TweakSection>
@@ -111,7 +125,7 @@ function App() {
           <TweakToggle
             label="Protótipo clicável"
             value={tweaks.showInteractive}
-            onChange={(v) => setTweak('showInteractive', v)}
+            onChange={(v) => setTweak("showInteractive", v)}
           />
         </TweakSection>
       </TweaksPanel>
@@ -119,4 +133,4 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);

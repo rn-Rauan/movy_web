@@ -96,11 +96,11 @@ export function TemplateCard({ template: tpl, onEdit, onDelete, onGenerate }: Pr
         </span>
       </div>
 
-      {(tpl.isPublic || (tpl.defaultDriverId && tpl.defaultVehicleId) || !hasSchedule) && (
+      {(tpl.isPublic || tpl.isRecurring || !hasSchedule) && (
         <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {tpl.defaultDriverId && tpl.defaultVehicleId && (
+          {tpl.isRecurring && (
             <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-bold tracking-[0.2px] text-accent">
-              Gera agendada
+              Gera automaticamente
             </span>
           )}
           {tpl.isPublic && (

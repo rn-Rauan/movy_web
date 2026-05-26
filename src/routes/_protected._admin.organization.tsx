@@ -24,12 +24,11 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/handle-error";
 import { AppShell } from "@/components/layout/AppShell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { BottomSheet, BottomSheetContent } from "@/components/visual/BottomSheet";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { organizationsService } from "@/services/organizations.service";
@@ -648,11 +647,11 @@ function PlanCard({
           <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2.2} />
         </button>
         <Link
-          to="/payments"
+          to="/subscription"
           className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/[0.18] bg-transparent px-3.5 py-2.5 text-[13px] font-bold text-white transition hover:bg-white/10"
         >
           <CreditCard className="h-3.5 w-3.5" strokeWidth={1.8} />
-          Pagamentos
+          Assinatura
         </Link>
       </div>
     </div>
@@ -775,62 +774,83 @@ function UpgradePlanDialog({
   const noChange = !!currentPlanId && selectedId === currentPlanId;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Escolher um plano</DialogTitle>
-        </DialogHeader>
-        <div className="mt-2">
-          {plans === null ? (
-            <LoadingList count={3} height="h-20" />
-          ) : plans.length === 0 ? (
-            <div className="rounded-xl border border-line bg-surface-2 p-4 text-center text-sm text-muted-foreground">
-              Nenhum plano disponível.
-            </div>
-          ) : (
-            <RadioGroup value={selectedId} onValueChange={setSelectedId} className="space-y-2">
-              {plans.map((p) => {
-                const isCurrent = p.id === currentPlanId;
-                return (
-                  <Label
-                    key={p.id}
-                    htmlFor={`plan-${p.id}`}
-                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-surface p-3 hover:bg-surface-2"
+    <BottomSheet open={open} onOpenChange={onOpenChange}>
+      <BottomSheetContent
+        title="Escolher um plano"
+        footer={
+          <button
+            type="button"
+            disabled={!selectedId || submitting || noChange}
+            onClick={handleConfirm}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-[14px] font-extrabold tracking-[-0.2px] text-white transition hover:opacity-90 disabled:opacity-50"
+          >
+            {submitting ? "Confirmando..." : noChange ? "Plano atual" : "Confirmar plano"}
+          </button>
+        }
+      >
+        {plans === null ? (
+          <LoadingList count={3} height="h-20" />
+        ) : plans.length === 0 ? (
+          <div className="rounded-xl border border-line bg-surface-2 p-4 text-center text-[13px] text-muted-foreground">
+            Nenhum plano disponível.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {plans.map((p) => {
+              const isCurrent = p.id === currentPlanId;
+              const selected = p.id === selectedId;
+              const unlimited = isUnlimitedPlanLimit(p.maxMonthlyTrips);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setSelectedId(p.id)}
+                  aria-pressed={selected}
+                  className={cn(
+                    "flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-colors",
+                    selected
+                      ? "border-accent bg-accent-soft"
+                      : "border-line bg-surface hover:bg-surface-2",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mt-0.5 flex h-[18px] w-[18px] flex-none items-center justify-center rounded-full border-[1.8px] transition-colors",
+                      selected
+                        ? "border-accent bg-accent text-white"
+                        : "border-line bg-transparent text-transparent",
+                    )}
                   >
-                    <RadioGroupItem value={p.id} id={`plan-${p.id}`} className="mt-1" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-ink">{p.name}</span>
-                        {isCurrent && (
-                          <Badge variant="secondary" className="text-xs">
-                            Atual
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="mt-0.5 text-xs text-muted-foreground">
-                        <span className="font-mono font-semibold text-ink-2">
-                          {formatPrice(p.price)}
+                    <Check className="h-[11px] w-[11px]" strokeWidth={3} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[14px] font-extrabold tracking-[-0.2px] text-ink">
+                        {p.name}
+                      </span>
+                      {isCurrent && (
+                        <span className="flex-none rounded-full bg-line-soft px-2 py-0.5 text-[10px] font-bold tracking-[0.3px] text-muted-foreground">
+                          ATUAL
                         </span>
-                        /mês · {p.maxVehicles} veículos · {p.maxDrivers} motoristas ·{" "}
-                        {isUnlimitedPlanLimit(p.maxMonthlyTrips)
-                          ? "viagens ilimitadas/mês"
-                          : `${p.maxMonthlyTrips} viagens/mês`}
-                      </div>
+                      )}
                     </div>
-                  </Label>
-                );
-              })}
-            </RadioGroup>
-          )}
-        </div>
-        <Button
-          className="mt-4 w-full"
-          disabled={!selectedId || submitting || noChange}
-          onClick={handleConfirm}
-        >
-          {submitting ? "Confirmando..." : noChange ? "Plano atual" : "Confirmar"}
-        </Button>
-      </DialogContent>
-    </Dialog>
+                    <div className="mt-0.5 flex items-baseline gap-1">
+                      <span className="font-mono text-[15px] font-extrabold tracking-[-0.5px] text-ink">
+                        {formatPrice(p.price)}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">/mês</span>
+                    </div>
+                    <div className="mt-1.5 text-[11px] leading-[1.5] text-ink-2">
+                      {p.maxVehicles} veículos · {p.maxDrivers} motoristas ·{" "}
+                      {unlimited ? "viagens ilimitadas/mês" : `${p.maxMonthlyTrips} viagens/mês`}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </BottomSheetContent>
+    </BottomSheet>
   );
 }

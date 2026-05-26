@@ -64,13 +64,13 @@ export const BottomSheetContent = React.forwardRef<
         {...props}
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-2.5 pb-1">
+        <div className="flex flex-none justify-center pt-2.5 pb-1">
           <div className="h-1 w-[38px] rounded-full bg-line" />
         </div>
 
         {/* Header */}
         {(title || !hideClose) && (
-          <div className="flex items-center justify-between border-b border-line-soft px-[18px] pb-3 pt-1.5">
+          <div className="flex flex-none items-center justify-between border-b border-line-soft px-[18px] pb-3 pt-1.5">
             <div className="min-w-0">
               {title && (
                 <DialogPrimitive.Title className="m-0 text-[17px] font-extrabold tracking-[-0.3px] text-ink">
@@ -94,12 +94,15 @@ export const BottomSheetContent = React.forwardRef<
           </div>
         )}
 
-        {/* Body */}
-        <div className="flex-1 overflow-auto px-[18px] py-4">{children}</div>
+        {/* Body — `relative` para conter descendentes position:absolute (ex.: inputs sr-only
+            de checkbox). Sem isso, o foco neles dispara scrollIntoView que rola o próprio sheet. */}
+        <div className="relative min-h-0 flex-1 overflow-auto px-[18px] py-4">{children}</div>
 
         {/* Sticky CTA */}
         {footer && (
-          <div className="border-t border-line-soft bg-surface px-[18px] pb-4 pt-2.5">{footer}</div>
+          <div className="flex-none border-t border-line-soft bg-surface px-[18px] pb-4 pt-2.5">
+            {footer}
+          </div>
         )}
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>

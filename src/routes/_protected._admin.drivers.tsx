@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { Button } from "@/components/ui/button";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { useRole } from "@/lib/role-context";
@@ -22,18 +21,20 @@ function DriversPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [removing, setRemoving] = useState<Driver | null>(null);
 
-  const hasDrivers = (drivers?.length ?? 0) > 0;
-
   return (
-    <AppShell title="Motoristas" back>
-      {hasDrivers && (
-        <div className="flex justify-end mb-3">
-          <Button size="sm" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Adicionar
-          </Button>
-        </div>
-      )}
-
+    <AppShell
+      title="Motoristas"
+      back
+      action={
+        <button
+          onClick={() => setAddOpen(true)}
+          className="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-[12px] font-bold text-white transition hover:opacity-90"
+        >
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
+          Adicionar
+        </button>
+      }
+    >
       {loading ? (
         <LoadingList count={3} height="h-20" />
       ) : error ? (
