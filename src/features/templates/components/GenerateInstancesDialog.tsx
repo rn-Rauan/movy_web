@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
+import { CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BottomSheet, BottomSheetContent } from "@/components/visual/BottomSheet";
 import { handleApiError } from "@/lib/handle-error";
 import { templatesService } from "@/services/templates.service";
+import { cn } from "@/lib/utils";
 import type { TripTemplate } from "@/lib/types";
+
+const FIELD_CLS =
+  "h-11 rounded-[10px] border-line bg-surface text-[13px] font-semibold text-ink placeholder:font-normal placeholder:text-muted-foreground";
 
 type Props = {
   template: TripTemplate | null;
@@ -63,42 +60,48 @@ export function GenerateInstancesDialog({ template, defaultDaysAhead, onClose }:
   }
 
   return (
-    <Dialog open={template !== null} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Gerar viagens agora</DialogTitle>
-          <DialogDescription>
+    <BottomSheet open={template !== null} onOpenChange={(o) => !o && onClose()}>
+      <BottomSheetContent
+        title="Gerar viagens agora"
+        footer={
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={submitting}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-[14px] font-extrabold tracking-[-0.2px] text-white transition hover:opacity-90 disabled:opacity-50"
+          >
+            <CalendarPlus className="h-[15px] w-[15px]" strokeWidth={2.2} />
+            {submitting ? "Gerando..." : "Gerar viagens"}
+          </button>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-[12px] leading-[1.5] text-muted-foreground">
             Cria as próximas viagens deste template recorrente. Dias passados, fora da frequência ou
             já existentes são ignorados.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-1">
-          <Label>Dias à frente (1–90)</Label>
-          <Input
-            type="number"
-            min="1"
-            max="90"
-            step="1"
-            value={daysAhead}
-            onChange={(e) => setDaysAhead(e.target.value)}
-            placeholder={placeholder}
-          />
-          {error && <p className="text-xs text-destructive">{error}</p>}
-          <p className="text-xs text-muted-foreground">
-            Em branco usa o padrão da organização ({placeholder} dias).
           </p>
-        </div>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose} disabled={submitting}>
-            Cancelar
-          </Button>
-          <Button onClick={handleGenerate} disabled={submitting}>
-            {submitting ? "Gerando..." : "Gerar"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <div>
+            <Label className="mb-1.5 block text-[12px] font-bold tracking-[-0.1px] text-ink">
+              Dias à frente (1–90)
+            </Label>
+            <Input
+              type="number"
+              min="1"
+              max="90"
+              step="1"
+              value={daysAhead}
+              onChange={(e) => setDaysAhead(e.target.value)}
+              placeholder={placeholder}
+              className={cn(FIELD_CLS, "font-mono")}
+            />
+            {error && <p className="mt-1 text-[11px] font-medium text-danger">{error}</p>}
+            <p className="mt-1.5 text-[11px] leading-[1.4] text-muted-foreground">
+              Em branco usa o padrão da organização ({placeholder} dias).
+            </p>
+          </div>
+        </div>
+      </BottomSheetContent>
+    </BottomSheet>
   );
 }

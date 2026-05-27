@@ -24,10 +24,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { handleApiError } from "@/lib/handle-error";
 import { AppShell } from "@/components/layout/AppShell";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BottomSheet, BottomSheetContent } from "@/components/visual/BottomSheet";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
@@ -50,6 +48,10 @@ import type {
 } from "@/lib/types";
 import { formatDateTime, formatPrice, isUnlimitedPlanLimit } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+// Estilo de campo conforme o padrão dos modais (BottomSheet): border line, radius 10, ~44px.
+const FIELD_CLS =
+  "h-11 rounded-[10px] border-line bg-surface text-[13px] font-semibold text-ink placeholder:font-normal placeholder:text-muted-foreground";
 
 export const Route = createFileRoute("/_protected/_admin/organization")({
   component: OrganizationPage,
@@ -316,17 +318,27 @@ function OrganizationPage() {
         }}
       />
 
-      {/* Org edit dialog */}
-      <Dialog open={orgDialogOpen} onOpenChange={setOrgDialogOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Editar empresa</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleOrgSubmit} className="mt-2 space-y-3">
+      {/* Org edit sheet */}
+      <BottomSheet open={orgDialogOpen} onOpenChange={setOrgDialogOpen}>
+        <BottomSheetContent
+          title="Editar empresa"
+          footer={
+            <button
+              type="submit"
+              form="org-form"
+              disabled={orgSubmitting}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-[14px] font-extrabold tracking-[-0.2px] text-white transition hover:opacity-90 disabled:opacity-50"
+            >
+              {orgSubmitting ? "Salvando..." : "Salvar alterações"}
+            </button>
+          }
+        >
+          <form id="org-form" onSubmit={handleOrgSubmit} className="flex flex-col gap-4">
             <Field2 label="Nome" error={orgFieldErrors.name}>
               <Input
                 value={orgForm.name}
                 onChange={(e) => setOrgForm((f) => ({ ...f, name: e.target.value }))}
+                className={FIELD_CLS}
               />
             </Field2>
             <Field2 label="Slug" error={orgFieldErrors.slug}>
@@ -334,12 +346,14 @@ function OrganizationPage() {
                 value={orgForm.slug}
                 placeholder="minha-empresa"
                 onChange={(e) => setOrgForm((f) => ({ ...f, slug: e.target.value }))}
+                className={FIELD_CLS}
               />
             </Field2>
             <Field2 label="CNPJ">
               <Input
                 value={orgForm.cnpj}
                 onChange={(e) => setOrgForm((f) => ({ ...f, cnpj: e.target.value }))}
+                className={FIELD_CLS}
               />
             </Field2>
             <Field2 label="E-mail" error={orgFieldErrors.email}>
@@ -347,26 +361,26 @@ function OrganizationPage() {
                 type="email"
                 value={orgForm.email}
                 onChange={(e) => setOrgForm((f) => ({ ...f, email: e.target.value }))}
+                className={FIELD_CLS}
               />
             </Field2>
             <Field2 label="Telefone">
               <Input
                 value={orgForm.telephone}
                 onChange={(e) => setOrgForm((f) => ({ ...f, telephone: e.target.value }))}
+                className={FIELD_CLS}
               />
             </Field2>
             <Field2 label="Endereço">
               <Input
                 value={orgForm.address}
                 onChange={(e) => setOrgForm((f) => ({ ...f, address: e.target.value }))}
+                className={FIELD_CLS}
               />
             </Field2>
-            <Button type="submit" className="w-full" disabled={orgSubmitting}>
-              {orgSubmitting ? "Salvando..." : "Salvar"}
-            </Button>
           </form>
-        </DialogContent>
-      </Dialog>
+        </BottomSheetContent>
+      </BottomSheet>
     </AppShell>
   );
 }

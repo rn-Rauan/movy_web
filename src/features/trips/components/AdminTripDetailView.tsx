@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { ArrowLeftRight, Bus, Check, Clock, Ticket, User, Users, X as XIcon } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -269,18 +263,26 @@ export function AdminTripDetailView({
               disabled={assigningDriver}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sem motorista" />
+                <div className="flex min-w-0 flex-1 items-center">
+                  <span className="min-w-0 flex-1 truncate text-left">
+                    {assignedDriver ? (
+                      <DriverDisplayName driver={assignedDriver} />
+                    ) : (
+                      <span className="text-muted-foreground">Sem motorista</span>
+                    )}
+                  </span>
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Sem motorista</SelectItem>
                 {drivers.map((d) => (
                   <SelectItem key={d.id} value={d.id} textValue={driverDisplayString(d)}>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-medium">
                         <DriverDisplayName driver={d} />
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        CNH {d.cnh} · Cat. {d.cnhCategories.join(", ")}
+                      <span className="truncate text-xs text-muted-foreground">
+                        CNH {d.cnh} ({d.cnhCategories.join(", ")})
                       </span>
                     </div>
                   </SelectItem>
@@ -342,12 +344,20 @@ export function AdminTripDetailView({
               disabled={assigningVehicle}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sem veículo" />
+                <div className="flex min-w-0 flex-1 items-center">
+                  <span className="min-w-0 flex-1 truncate text-left">
+                    {assignedVehicle ? (
+                      `${assignedVehicle.model} — ${assignedVehicle.plate}`
+                    ) : (
+                      <span className="text-muted-foreground">Sem veículo</span>
+                    )}
+                  </span>
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Sem veículo</SelectItem>
                 {vehicles.map((v) => (
-                  <SelectItem key={v.id} value={v.id}>
+                  <SelectItem key={v.id} value={v.id} className="truncate">
                     {v.model} — {v.plate}
                   </SelectItem>
                 ))}
