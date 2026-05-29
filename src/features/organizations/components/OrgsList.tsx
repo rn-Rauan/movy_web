@@ -1,5 +1,5 @@
-import { Card } from "@/components/ui/card";
-import { OrgCard } from "./OrgCard";
+import { CompanyCard } from "./CompanyCard";
+import { EmptyState } from "@/components/feedback/EmptyState";
 import type { Organization } from "@/lib/types";
 
 interface OrgsListProps {
@@ -9,17 +9,18 @@ interface OrgsListProps {
 export function OrgsList({ orgs }: OrgsListProps) {
   if (orgs.length === 0) {
     return (
-      <Card className="p-6 text-center text-muted-foreground">
-        Nenhuma empresa ativa no momento.
-      </Card>
+      <EmptyState
+        variant="search"
+        title="Nenhuma empresa encontrada"
+        description="Ainda não há empresas ativas para exibir."
+      />
     );
   }
-
   return (
-    <ul className="space-y-3">
+    <ul className="flex flex-col gap-2">
       {orgs.map((org) => (
         <li key={org.id}>
-          <OrgCard org={org} />
+          <CompanyCard org={org} />
         </li>
       ))}
     </ul>

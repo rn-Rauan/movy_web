@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
 import { useAuth } from "@/lib/auth-context";
 import { handleApiError } from "@/lib/handle-error";
+import { PublicShell } from "@/components/layout/PublicShell";
 
 const searchSchema = z.object({ token: z.string().optional() });
 
@@ -65,63 +66,87 @@ function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 mx-auto w-full max-w-md px-6 py-10 flex flex-col">
-        <div className="flex flex-col items-center text-center mb-8 mt-8">
-          <div className="h-16 w-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mb-4">
-            <Bus className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold">Nova senha</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+    <PublicShell showEntrar={false}>
+      <div className="mx-auto max-w-sm pt-10 pb-6">
+        <div className="mb-7 flex flex-col items-center text-center">
+          <span className="mb-3.5 flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-ink">
+            <Bus className="h-[26px] w-[26px] text-surface" strokeWidth={1.8} />
+          </span>
+          <h1 className="text-[24px] font-extrabold tracking-[-0.6px] text-ink">Nova senha</h1>
+          <p className="mt-1.5 text-[13px] text-muted-foreground">
             Escolha uma nova senha para sua conta
           </p>
         </div>
 
         {missingToken ? (
-          <div className="space-y-4">
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          <div className="flex flex-col gap-3">
+            <div className="rounded-[14px] border border-danger-soft bg-danger-soft p-3.5 text-[12px] leading-[1.45] text-danger">
               Link de recuperação inválido. Solicite um novo.
             </div>
-            <Link to="/forgot-password" className="block">
-              <Button className="w-full h-12 text-base">Solicitar novo link</Button>
+            <Link
+              to="/forgot-password"
+              className="h-12 w-full rounded-[12px] bg-ink text-center text-[14px] font-bold leading-[3rem] text-surface hover:bg-ink/90"
+            >
+              Solicitar novo link
             </Link>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">Nova senha</Label>
+          <form onSubmit={onSubmit} className="flex flex-col gap-3">
+            <FieldGroup label="Nova senha" htmlFor="newPassword" error={errors.newPassword}>
               <Input
                 id="newPassword"
                 type="password"
                 autoComplete="new-password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="h-12 text-base"
                 required
               />
-              {errors.newPassword && (
-                <p className="text-xs text-destructive">{errors.newPassword}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm">Confirmar senha</Label>
+            </FieldGroup>
+            <FieldGroup label="Confirmar senha" htmlFor="confirm" error={errors.confirm}>
               <Input
                 id="confirm"
                 type="password"
                 autoComplete="new-password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="h-12 text-base"
                 required
               />
-              {errors.confirm && <p className="text-xs text-destructive">{errors.confirm}</p>}
-            </div>
-            <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
+            </FieldGroup>
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="mt-1.5 h-12 w-full rounded-[12px] bg-ink text-[14px] font-bold text-surface hover:bg-ink/90"
+            >
               {submitting ? "Salvando..." : "Redefinir senha"}
             </Button>
           </form>
         )}
-      </main>
+      </div>
+    </PublicShell>
+  );
+}
+
+function FieldGroup({
+  label,
+  htmlFor,
+  error,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <Label
+        htmlFor={htmlFor}
+        className="mb-1.5 block text-[11px] font-bold tracking-[0.1px] text-ink-2"
+      >
+        {label}
+      </Label>
+      {children}
+      {error && <p className="mt-1 text-[11px] font-semibold text-danger">{error}</p>}
     </div>
   );
 }

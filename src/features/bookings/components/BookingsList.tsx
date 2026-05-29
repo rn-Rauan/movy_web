@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { BookingCard } from "./BookingCard";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import type { Booking } from "@/lib/types";
@@ -20,12 +19,10 @@ export function BookingsList({ bookings }: BookingsListProps) {
   }
 
   return (
-    <ul className="space-y-3">
+    <ul className="flex flex-col gap-2">
       {bookings.map((b) => (
         <li key={b.id}>
-          <Link to="/my-bookings/$bookingId" params={{ bookingId: b.id }} className="block">
-            <BookingCard booking={b} />
-          </Link>
+          <BookingCard booking={b} />
         </li>
       ))}
     </ul>

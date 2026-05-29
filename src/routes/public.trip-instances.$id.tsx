@@ -1,17 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  AlertCircle,
+  ArrowRight,
+  Building2,
+  ChevronRight,
+  Clock,
+  DollarSign,
+  Users,
+} from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Users, MapPin, DollarSign, Route as RouteIcon, User } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useTripDetail } from "@/features/trips/hooks/useTripDetail";
 import { useUserBookingForTrip } from "@/features/bookings/hooks/useUserBookingForTrip";
 import { useDriverName } from "@/features/drivers/hooks/useDriverName";
-import { formatDateTime, formatFullDate, statusLabel, statusVariant } from "@/lib/format";
+import { formatDateTime, formatFullDate } from "@/lib/format";
 import { ShareButton } from "@/components/ShareButton";
+import { StatusPill } from "@/components/passenger/StatusPill";
+import { RouteVisualTimeline } from "@/components/passenger/RouteVisualTimeline";
+import { MetadataRow, type MetadataItem } from "@/components/passenger/MetadataRow";
 
 export const Route = createFileRoute("/public/trip-instances/$id")({
   head: () => ({
@@ -23,6 +31,18 @@ export const Route = createFileRoute("/public/trip-instances/$id")({
   component: PublicTripDetailPage,
 });
 
+function durationLabel(departure: string, arrival?: string): string | null {
+  if (!arrival) return null;
+  const d = new Date(departure).getTime();
+  const a = new Date(arrival).getTime();
+  if (Number.isNaN(d) || Number.isNaN(a) || a <= d) return null;
+  const mins = Math.round((a - d) / 60000);
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}min`;
+}
+
 function PublicTripDetailPage() {
   const { id } = Route.useParams();
   const { isAuthenticated } = useAuth();
@@ -30,156 +50,266 @@ function PublicTripDetailPage() {
   const { booking: existingBooking } = useUserBookingForTrip(isAuthenticated ? id : undefined);
   const { name: driverName } = useDriverName(isAuthenticated ? trip?.driverId : null);
 
-  function renderContent() {
-    if (loading) return <LoadingList count={3} height="h-32" />;
-    if (error) return <ErrorCard message={error} />;
-    if (!trip) return null;
-
-    const seats = trip.availableSlots ?? trip.totalCapacity;
-    const lotada = seats <= 0;
-
-    const shareText =
-      trip.departurePoint && trip.destination
-        ? `${trip.departurePoint} → ${trip.destination}`
-        : "Confira esta viagem";
-
-    return (
-      <>
-        <div className="flex justify-end mb-3">
+  return (
+    <AppShell
+      title="Detalhes"
+      back
+      action={
+        trip && (
           <ShareButton
             title="Viagem disponível"
-            text={shareText}
+            text={
+              trip.departurePoint && trip.destination
+                ? `${trip.departurePoint} → ${trip.destination}`
+                : "Confira esta viagem"
+            }
             url={`/public/trip-instances/${id}`}
+            variant="outline"
+            size="sm"
           />
-        </div>
-        <Card className="p-5 mb-4">
-          <div className="flex items-start justify-between gap-2 mb-4">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Saída</p>
-              <p className="font-semibold capitalize">{formatFullDate(trip.departureTime)}</p>
-            </div>
-            <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
-          </div>
-
-          <div className="space-y-3 mb-4">
-            {trip.departurePoint ? (
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+        )
+      }
+    >
+      {loading ? (
+        <LoadingList count={3} height="h-32" />
+      ) : error ? (
+        <ErrorCard message={error} />
+      ) : !trip ? null : (
+        <>
+          <div className="pb-32">
+            <article className="mb-3 rounded-2xl border border-line bg-surface p-4">
+              <header className="mb-3 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">Origem</p>
-                  <p className="font-medium">{trip.departurePoint}</p>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.6px] text-muted-foreground">
+                    Saída
+                  </div>
+                  <div className="mt-1 text-balance text-[17px] font-extrabold capitalize tracking-[-0.4px] text-ink">
+                    {formatFullDate(trip.departureTime)}
+                  </div>
                 </div>
+                <StatusPill status={trip.tripStatus} />
+              </header>
+
+              <RouteVisualTimeline
+                origin={{
+                  name: trip.departurePoint ?? "—",
+                  address: trip.template?.origin,
+                  time: formatDateTime(trip.departureTime, true),
+                }}
+                destination={{
+                  name: trip.destination ?? "—",
+                  address: trip.template?.destination,
+                  time: trip.arrivalEstimate
+                    ? formatDateTime(trip.arrivalEstimate, true)
+                    : undefined,
+                  estimatedArrival: !!trip.arrivalEstimate,
+                }}
+                className="mt-3.5"
+              />
+
+              <div className="mt-3.5 border-t border-dashed border-line pt-3">
+                <MetadataRow items={buildMeta(trip)} />
               </div>
-            ) : null}
-            {trip.destination ? (
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-primary shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Destino</p>
-                  <p className="font-medium">{trip.destination}</p>
+
+              {driverName && (
+                <div className="mt-3 border-t border-dashed border-line pt-3 text-[12px] text-muted-foreground">
+                  Motorista: <span className="font-semibold text-ink-2">{driverName}</span>
                 </div>
-              </div>
-            ) : null}
-          </div>
+              )}
+            </article>
 
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-            <Info icon={<Calendar className="h-4 w-4" />} label="Saída">
-              {formatDateTime(trip.departureTime, true)}
-            </Info>
-            {trip.arrivalEstimate ? (
-              <Info icon={<Clock className="h-4 w-4" />} label="Chegada estimada">
-                {formatDateTime(trip.arrivalEstimate, true)}
-              </Info>
-            ) : null}
-            <Info icon={<Users className="h-4 w-4" />} label="Vagas">
-              {lotada ? "Lotada" : `${seats} disponíveis`}
-            </Info>
-            {trip.priceOneWay != null ? (
-              <Info icon={<DollarSign className="h-4 w-4" />} label="Preço">
-                R$ {trip.priceOneWay.toFixed(2)}
-              </Info>
-            ) : null}
-            {driverName ? (
-              <Info icon={<User className="h-4 w-4" />} label="Motorista">
-                {driverName}
-              </Info>
-            ) : null}
-          </div>
-        </Card>
-
-        {trip.stops && trip.stops.length > 0 ? (
-          <Card className="p-5 mb-4">
-            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-              <RouteIcon className="h-4 w-4 text-primary" />
-              Paradas
-            </h3>
-            <ol className="space-y-2">
-              {trip.stops.map((stop, i) => (
-                <li key={`${stop}-${i}`} className="flex items-start gap-3 text-sm">
-                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary shrink-0">
-                    {i + 1}
+            {trip.organizationName && (
+              <Link
+                to={
+                  trip.organizationSlug ? "/public/organizations/$slug" : "/public/trip-instances"
+                }
+                params={trip.organizationSlug ? { slug: trip.organizationSlug } : undefined}
+                className="mb-3 flex items-center gap-3 rounded-[14px] border border-line bg-surface p-3.5 transition hover:border-ink-2"
+              >
+                <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-xl border border-line bg-surface-2">
+                  <Building2 className="h-5 w-5 text-ink" strokeWidth={1.6} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-extrabold tracking-[-0.2px] text-ink">
+                    {trip.organizationName}
                   </span>
-                  <span>{stop}</span>
-                </li>
-              ))}
-            </ol>
-          </Card>
-        ) : null}
+                  <span className="mt-px block text-[11px] text-muted-foreground">
+                    Ver perfil da empresa
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 text-ink-2" strokeWidth={1.6} />
+              </Link>
+            )}
 
-        {!isAuthenticated ? (
-          <Link to="/login" search={{ redirect: `/public/trip-instances/${id}` }} className="block">
-            <Button className="w-full h-12 text-base" disabled={lotada}>
-              {lotada ? "Viagem lotada" : "Entrar para reservar"}
-            </Button>
-          </Link>
-        ) : existingBooking ? (
-          <Link
-            to="/my-bookings/$bookingId"
-            params={{ bookingId: existingBooking.id }}
-            className="block"
-          >
-            <Button className="w-full h-12 text-base" variant="outline">
-              Você já está inscrito — ver inscrição
-            </Button>
-          </Link>
-        ) : trip.organizationId ? (
-          <Link
-            to="/trips/$orgId/$tripId/book"
-            params={{ orgId: trip.organizationId, tripId: id }}
-            className="block"
-          >
-            <Button className="w-full h-12 text-base" disabled={lotada}>
-              {lotada ? "Viagem lotada" : "Inscrever-se"}
-            </Button>
-          </Link>
-        ) : null}
-      </>
-    );
-  }
+            {trip.stops && trip.stops.length > 0 && (
+              <div className="mb-3 rounded-[14px] border border-line bg-surface p-3.5">
+                <h3 className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.6px] text-muted-foreground">
+                  Paradas
+                </h3>
+                <ol className="flex flex-col gap-2">
+                  {trip.stops.map((stop, i) => (
+                    <li
+                      key={`${stop}-${i}`}
+                      className="flex items-start gap-2.5 text-[13px] text-ink"
+                    >
+                      <span className="mt-px inline-flex h-5 w-5 flex-none items-center justify-center rounded-full bg-accent-soft font-mono text-[10px] font-bold text-accent">
+                        {i + 1}
+                      </span>
+                      <span>{stop}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
 
-  return (
-    <AppShell title="Detalhes" back>
-      {renderContent()}
+            <div className="flex items-start gap-2.5 rounded-xl border border-line bg-surface-2 p-3 text-[11px] leading-[1.45] text-ink-2">
+              <AlertCircle className="mt-px h-4 w-4 flex-none text-ink-2" strokeWidth={1.6} />
+              <span>
+                Apresente-se 15 min antes da saída. Cancelamento gratuito até 2h antes — depois
+                disso, sem reembolso.
+              </span>
+            </div>
+          </div>
+
+          <StickyCta
+            trip={trip}
+            existingBookingId={existingBooking?.id}
+            isAuthenticated={isAuthenticated}
+            id={id}
+          />
+        </>
+      )}
     </AppShell>
   );
 }
 
-function Info({
-  icon,
-  label,
-  children,
+function buildMeta(trip: {
+  departureTime: string;
+  arrivalEstimate?: string;
+  availableSlots?: number;
+  totalCapacity: number;
+  priceOneWay?: number;
+}): MetadataItem[] {
+  const items: MetadataItem[] = [];
+  const dur = durationLabel(trip.departureTime, trip.arrivalEstimate);
+  if (dur) {
+    items.push({
+      label: "Duração",
+      value: dur,
+      icon: <Clock className="h-3 w-3" strokeWidth={1.6} />,
+    });
+  }
+  const seats = trip.availableSlots ?? trip.totalCapacity;
+  items.push({
+    label: "Vagas",
+    value: seats <= 0 ? "Lotada" : `${seats} livres`,
+    icon: <Users className="h-3 w-3" strokeWidth={1.6} />,
+  });
+  if (trip.priceOneWay != null) {
+    items.push({
+      label: "Preço",
+      value: `R$ ${trip.priceOneWay.toFixed(0)}`,
+      icon: <DollarSign className="h-3 w-3" strokeWidth={1.6} />,
+      strong: true,
+    });
+  }
+  return items;
+}
+
+function StickyCta({
+  trip,
+  existingBookingId,
+  isAuthenticated,
+  id,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
+  trip: {
+    organizationId?: string;
+    priceOneWay?: number;
+    totalCapacity: number;
+    availableSlots?: number;
+  };
+  existingBookingId?: string;
+  isAuthenticated: boolean;
+  id: string;
 }) {
+  const seats = trip.availableSlots ?? trip.totalCapacity;
+  const lotada = seats != null && seats <= 0;
+  const price = trip.priceOneWay;
+
   return (
-    <div>
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        {icon}
-        {label}
-      </p>
-      <p className="font-medium mt-0.5">{children}</p>
+    <div className="fixed inset-x-0 bottom-[64px] z-10 border-t border-line bg-surface pb-[max(env(safe-area-inset-bottom),0px)]">
+      <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
+        {price != null && (
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.4px] text-muted-foreground">
+              Total
+            </div>
+            <div className="font-mono text-[20px] font-extrabold leading-none tracking-[-0.5px] text-ink">
+              R$ {price.toFixed(0)}
+            </div>
+          </div>
+        )}
+        <CtaButton
+          trip={trip}
+          existingBookingId={existingBookingId}
+          isAuthenticated={isAuthenticated}
+          id={id}
+          lotada={lotada}
+        />
+      </div>
     </div>
   );
+}
+
+function CtaButton({
+  trip,
+  existingBookingId,
+  isAuthenticated,
+  id,
+  lotada,
+}: {
+  trip: { organizationId?: string };
+  existingBookingId?: string;
+  isAuthenticated: boolean;
+  id: string;
+  lotada: boolean;
+}) {
+  const base =
+    "flex flex-1 items-center justify-center gap-2 rounded-[12px] px-4 py-3.5 text-[14px] font-bold transition-colors";
+  if (!isAuthenticated) {
+    return (
+      <Link
+        to="/login"
+        search={{ redirect: `/public/trip-instances/${id}` }}
+        className={`${base} ${lotada ? "pointer-events-none bg-surface-2 text-muted-foreground" : "bg-ink text-surface hover:bg-ink/90"}`}
+      >
+        {lotada ? "Viagem lotada" : "Entrar para reservar"}
+        {!lotada && <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />}
+      </Link>
+    );
+  }
+  if (existingBookingId) {
+    return (
+      <Link
+        to="/my-bookings/$bookingId"
+        params={{ bookingId: existingBookingId }}
+        className={`${base} border border-line bg-surface text-ink hover:bg-line-soft`}
+      >
+        Você já está inscrito — ver inscrição
+      </Link>
+    );
+  }
+  if (trip.organizationId) {
+    return (
+      <Link
+        to="/trips/$orgId/$tripId/book"
+        params={{ orgId: trip.organizationId, tripId: id }}
+        className={`${base} ${lotada ? "pointer-events-none bg-surface-2 text-muted-foreground" : "bg-ink text-surface hover:bg-ink/90"}`}
+      >
+        {lotada ? "Viagem lotada" : "Inscrever-se"}
+        {!lotada && <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />}
+      </Link>
+    );
+  }
+  return null;
 }

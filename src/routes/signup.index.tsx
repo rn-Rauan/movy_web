@@ -2,10 +2,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
+import { Bus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PublicShell } from "@/components/layout/PublicShell";
+import { SignupAudienceToggle } from "@/components/passenger/SignupAudienceToggle";
 
 export const Route = createFileRoute("/signup/")({
   component: SignupPage,
@@ -52,84 +55,102 @@ function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 mx-auto w-full max-w-md px-6 py-8">
-        <div className="mb-6 mt-4">
-          <h1 className="text-2xl font-bold">Criar conta</h1>
-          <p className="text-muted-foreground text-sm mt-1">Leva menos de um minuto</p>
+    <PublicShell showEntrar={false}>
+      <div className="mx-auto max-w-sm pt-7 pb-6">
+        <div className="mb-5 flex flex-col items-center text-center">
+          <span className="mb-3.5 flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-ink">
+            <Bus className="h-[26px] w-[26px] text-surface" strokeWidth={1.8} />
+          </span>
+          <h1 className="text-[24px] font-extrabold tracking-[-0.6px] text-ink">Criar conta</h1>
+          <p className="mt-1.5 text-[13px] text-muted-foreground">Leva menos de um minuto</p>
         </div>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <Field id="name" label="Nome completo">
+
+        <SignupAudienceToggle current="passenger" />
+
+        <form onSubmit={onSubmit} className="flex flex-col gap-3">
+          <FieldGroup label="Nome completo" htmlFor="name">
             <Input
               id="name"
               value={form.name}
               onChange={(e) => update("name", e.target.value)}
-              className="h-12 text-base"
               autoComplete="name"
               required
             />
-          </Field>
-          <Field id="email" label="E-mail">
+          </FieldGroup>
+          <FieldGroup label="E-mail" htmlFor="email">
             <Input
               id="email"
               type="email"
               inputMode="email"
               value={form.email}
               onChange={(e) => update("email", e.target.value)}
-              className="h-12 text-base"
               autoComplete="email"
               required
             />
-          </Field>
-          <Field id="telephone" label="Telefone">
+          </FieldGroup>
+          <FieldGroup label="Telefone" htmlFor="telephone">
             <Input
               id="telephone"
               type="tel"
               inputMode="tel"
               value={form.telephone}
               onChange={(e) => update("telephone", e.target.value)}
-              className="h-12 text-base"
               autoComplete="tel"
               required
             />
-          </Field>
-          <Field id="password" label="Senha">
+          </FieldGroup>
+          <FieldGroup label="Senha" htmlFor="password" hint="Mínimo 8 caracteres">
             <Input
               id="password"
               type="password"
               value={form.password}
               onChange={(e) => update("password", e.target.value)}
-              className="h-12 text-base"
               autoComplete="new-password"
               required
             />
-          </Field>
-          <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
+          </FieldGroup>
+
+          <Button
+            type="submit"
+            disabled={submitting}
+            className="mt-1.5 h-12 w-full rounded-[12px] bg-ink text-[14px] font-bold text-surface hover:bg-ink/90"
+          >
             {submitting ? "Criando..." : "Criar conta"}
           </Button>
         </form>
-        <p className="text-center text-sm text-muted-foreground mt-6">
+
+        <p className="mt-5 text-center text-[13px] text-muted-foreground">
           Já tem conta?{" "}
-          <Link to="/login" className="text-primary font-medium">
+          <Link to="/login" className="font-bold text-ink hover:underline">
             Entrar
           </Link>
         </p>
-        <p className="text-center text-xs text-muted-foreground mt-2">
-          Tem empresa de transporte?{" "}
-          <Link to="/signup/empresa" className="underline">
-            Cadastre sua empresa
-          </Link>
-        </p>
-      </main>
-    </div>
+      </div>
+    </PublicShell>
   );
 }
 
-function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
+function FieldGroup({
+  label,
+  htmlFor,
+  hint,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+    <div>
+      <Label
+        htmlFor={htmlFor}
+        className="mb-1.5 block text-[11px] font-bold tracking-[0.1px] text-ink-2"
+      >
+        {label}
+      </Label>
       {children}
+      {hint && <p className="mt-1 pl-0.5 text-[10px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }

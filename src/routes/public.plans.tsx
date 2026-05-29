@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Bus, Users, MapPin, Calendar, ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { plansService } from "@/services/plans.service";
@@ -50,11 +48,12 @@ function PublicPlansPage() {
 
   return (
     <AppShell title="Planos" back>
-      <section className="text-center mb-6">
-        <h1 className="text-2xl font-bold mb-2">Planos para sua empresa</h1>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Escolha o plano que mais combina com o tamanho da sua operação. Você pode mudar de plano a
-          qualquer momento.
+      <section className="mb-6 text-center">
+        <h1 className="text-balance text-[24px] font-extrabold tracking-[-0.6px] text-ink">
+          Planos para sua empresa
+        </h1>
+        <p className="mx-auto mt-1.5 max-w-md text-balance text-[13px] text-muted-foreground">
+          Escolha o plano que mais combina com o tamanho da sua operação. Mude a qualquer momento.
         </p>
       </section>
 
@@ -63,87 +62,103 @@ function PublicPlansPage() {
       ) : error ? (
         <ErrorCard message={error} />
       ) : plans && plans.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-[14px] border border-line bg-surface p-8 text-center text-[13px] text-muted-foreground">
           Nenhum plano disponível no momento.
-        </Card>
+        </div>
       ) : (
-        <div className="space-y-4 mb-8">
+        <div className="mb-6 flex flex-col gap-3">
           {(plans ?? []).map((plan, i) => (
             <PlanCard key={plan.id} plan={plan} highlighted={i === 1} />
           ))}
         </div>
       )}
 
-      <Card className="p-5 mb-4 bg-primary/5 border-primary/20">
-        <h3 className="font-semibold text-sm mb-1">Pronto para começar?</h3>
-        <p className="text-xs text-muted-foreground mb-3">
-          Cadastre sua empresa em poucos minutos e comece a gerenciar suas viagens hoje mesmo.
+      <div className="mb-3 rounded-[14px] border border-accent/30 bg-accent-soft p-4">
+        <h3 className="text-[14px] font-extrabold text-ink">Pronto para começar?</h3>
+        <p className="mt-1 text-[12px] text-ink-2">
+          Cadastre sua empresa em poucos minutos e comece a gerenciar viagens hoje.
         </p>
-        <Link to="/signup/empresa">
-          <Button className="w-full">
-            Cadastrar empresa
-            <ArrowRight className="h-4 w-4 ml-1.5" />
-          </Button>
+        <Link
+          to="/signup/empresa"
+          className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-[12px] bg-ink text-[13px] font-bold text-surface hover:bg-ink/90"
+        >
+          Cadastrar empresa <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
         </Link>
-      </Card>
+      </div>
     </AppShell>
   );
 }
 
 function PlanCard({ plan, highlighted }: { plan: Plan; highlighted?: boolean }) {
   return (
-    <Card className={`p-5 relative ${highlighted ? "border-primary border-2 shadow-md" : ""}`}>
+    <div
+      className={`relative rounded-[14px] border bg-surface p-4 ${
+        highlighted ? "border-2 border-accent shadow-sm" : "border-line"
+      }`}
+    >
       {highlighted && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.4px] text-white">
           Mais popular
         </div>
       )}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">{plan.name}</h3>
-        <div className="flex items-baseline gap-1 mt-1">
-          <span className="text-3xl font-bold">{formatPrice(plan.price)}</span>
-          <span className="text-xs text-muted-foreground">
+      <div className="mb-3.5">
+        <h3 className="text-[16px] font-extrabold tracking-[-0.2px] text-ink">{plan.name}</h3>
+        <div className="mt-1 flex items-baseline gap-1">
+          <span className="font-mono text-[28px] font-extrabold tracking-[-0.5px] text-ink">
+            {formatPrice(plan.price)}
+          </span>
+          <span className="text-[11px] text-muted-foreground">
             / {plan.durationDays === 30 ? "mês" : `${plan.durationDays} dias`}
           </span>
         </div>
       </div>
 
-      <ul className="space-y-2 text-sm mb-4">
-        <Feature icon={<Bus className="h-4 w-4" />}>
-          Até <strong>{plan.maxVehicles}</strong> {plan.maxVehicles === 1 ? "veículo" : "veículos"}
+      <ul className="mb-4 flex flex-col gap-1.5 text-[13px] text-ink-2">
+        <Feature icon={<Bus className="h-4 w-4" strokeWidth={1.6} />}>
+          Até <strong className="text-ink">{plan.maxVehicles}</strong>{" "}
+          {plan.maxVehicles === 1 ? "veículo" : "veículos"}
         </Feature>
-        <Feature icon={<Users className="h-4 w-4" />}>
-          Até <strong>{plan.maxDrivers}</strong>{" "}
+        <Feature icon={<Users className="h-4 w-4" strokeWidth={1.6} />}>
+          Até <strong className="text-ink">{plan.maxDrivers}</strong>{" "}
           {plan.maxDrivers === 1 ? "motorista" : "motoristas"}
         </Feature>
-        <Feature icon={<Calendar className="h-4 w-4" />}>
+        <Feature icon={<Calendar className="h-4 w-4" strokeWidth={1.6} />}>
           {isUnlimitedPlanLimit(plan.maxMonthlyTrips) ? (
             <>
-              <strong>Viagens ilimitadas</strong> por mês
+              <strong className="text-ink">Viagens ilimitadas</strong> por mês
             </>
           ) : (
             <>
-              Até <strong>{plan.maxMonthlyTrips}</strong> viagens por mês
+              Até <strong className="text-ink">{plan.maxMonthlyTrips}</strong> viagens por mês
             </>
           )}
         </Feature>
-        <Feature icon={<MapPin className="h-4 w-4" />}>Templates de rota ilimitados</Feature>
-        <Feature icon={<Check className="h-4 w-4" />}>Página pública para divulgar viagens</Feature>
+        <Feature icon={<MapPin className="h-4 w-4" strokeWidth={1.6} />}>
+          Templates de rota ilimitados
+        </Feature>
+        <Feature icon={<Check className="h-4 w-4" strokeWidth={1.6} />}>
+          Página pública para divulgar viagens
+        </Feature>
       </ul>
 
-      <Link to="/signup/empresa">
-        <Button variant={highlighted ? "default" : "outline"} className="w-full">
-          Começar com {plan.name}
-        </Button>
+      <Link
+        to="/signup/empresa"
+        className={`flex h-11 w-full items-center justify-center rounded-[12px] text-[13px] font-bold transition-colors ${
+          highlighted
+            ? "bg-ink text-surface hover:bg-ink/90"
+            : "border border-line bg-surface text-ink hover:bg-line-soft"
+        }`}
+      >
+        Começar com {plan.name}
       </Link>
-    </Card>
+    </div>
   );
 }
 
 function Feature({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <li className="flex items-start gap-2">
-      <span className="text-primary mt-0.5 shrink-0">{icon}</span>
+      <span className="mt-0.5 shrink-0 text-accent">{icon}</span>
       <span>{children}</span>
     </li>
   );

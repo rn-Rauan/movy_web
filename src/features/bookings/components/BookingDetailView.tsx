@@ -1,5 +1,4 @@
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Clock, DollarSign, Hash, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -18,11 +17,12 @@ import {
   enrollmentTypeLabel,
   formatDateTime,
   formatFullDate,
-  statusLabel,
-  statusVariant,
+  formatPrice,
 } from "@/lib/format";
-import { Calendar, MapPin, CreditCard, Hash, Users, Clock, User } from "lucide-react";
 import { useDriverName } from "@/features/drivers/hooks/useDriverName";
+import { StatusPill } from "@/components/passenger/StatusPill";
+import { RouteVisualTimeline } from "@/components/passenger/RouteVisualTimeline";
+import { MetadataRow, type MetadataItem } from "@/components/passenger/MetadataRow";
 
 interface BookingDetailViewProps {
   booking: BookingDetails;
@@ -35,66 +35,89 @@ export function BookingDetailView({ booking, onCancel, cancelling }: BookingDeta
   const departure = booking.tripDepartureTime || booking.enrollmentDate;
   const { name: driverName } = useDriverName(booking.tripInstance?.driverId);
 
+  const meta: MetadataItem[] = [
+    {
+      label: "Tipo",
+      value: enrollmentTypeLabel(booking.enrollmentType),
+      icon: <Hash className="h-3 w-3" strokeWidth={1.6} />,
+    },
+  ];
+  if (booking.availableSlots != null && booking.totalCapacity != null) {
+    meta.push({
+      label: "Vagas",
+      value: `${booking.availableSlots}/${booking.totalCapacity}`,
+      icon: <Users className="h-3 w-3" strokeWidth={1.6} />,
+    });
+  }
+  if (booking.recordedPrice != null) {
+    meta.push({
+      label: "Valor",
+      value: formatPrice(booking.recordedPrice),
+      icon: <DollarSign className="h-3 w-3" strokeWidth={1.6} />,
+      strong: true,
+    });
+  }
+
   return (
     <>
-      <Card className="p-5 mb-4">
-        <div className="flex items-start justify-between gap-2 mb-4">
+      <article className="mb-3 rounded-2xl border border-line bg-surface p-4">
+        <header className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Data da viagem</p>
-            <p className="font-semibold capitalize">{formatFullDate(departure)}</p>
+            <div className="text-[10px] font-bold uppercase tracking-[0.6px] text-muted-foreground">
+              Data da viagem
+            </div>
+            <div className="mt-1 text-balance text-[17px] font-extrabold capitalize tracking-[-0.4px] text-ink">
+              {formatFullDate(departure)}
+            </div>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <Badge variant={isActive ? "default" : "destructive"}>
-              {bookingStatusLabel(booking.status)}
-            </Badge>
-            {booking.tripStatus ? (
-              <Badge variant={statusVariant(booking.tripStatus)}>
-                {statusLabel(booking.tripStatus)}
-              </Badge>
-            ) : null}
+            <StatusPill status={booking.status} />
+            {booking.tripStatus && <StatusPill status={booking.tripStatus} />}
           </div>
+        </header>
+
+        <RouteVisualTimeline
+          origin={{
+            name: booking.boardingStop,
+            time: formatDateTime(departure, true),
+          }}
+          destination={{
+            name: booking.alightingStop,
+            time: booking.tripArrivalEstimate
+              ? formatDateTime(booking.tripArrivalEstimate, true)
+              : undefined,
+            estimatedArrival: !!booking.tripArrivalEstimate,
+          }}
+          className="mt-3.5"
+        />
+
+        <div className="mt-3.5 border-t border-dashed border-line pt-3">
+          <MetadataRow items={meta} />
         </div>
 
-        <div className="space-y-3">
-          <Row icon={<Calendar className="h-4 w-4" />} label="Saída">
-            {formatDateTime(departure, true)}
-          </Row>
-          {booking.tripArrivalEstimate ? (
-            <Row icon={<Clock className="h-4 w-4" />} label="Chegada">
-              {formatDateTime(booking.tripArrivalEstimate, true)}
-            </Row>
-          ) : null}
-          <Row icon={<MapPin className="h-4 w-4" />} label="Embarque">
-            {booking.boardingStop}
-          </Row>
-          <Row icon={<MapPin className="h-4 w-4" />} label="Desembarque">
-            {booking.alightingStop}
-          </Row>
-          <Row icon={<Hash className="h-4 w-4" />} label="Tipo">
-            {enrollmentTypeLabel(booking.enrollmentType)}
-          </Row>
-          {driverName ? (
-            <Row icon={<User className="h-4 w-4" />} label="Motorista">
-              {driverName}
-            </Row>
-          ) : null}
-          {booking.availableSlots != null && booking.totalCapacity != null ? (
-            <Row icon={<Users className="h-4 w-4" />} label="Vagas">
-              {booking.availableSlots} de {booking.totalCapacity}
-            </Row>
-          ) : null}
-          {booking.recordedPrice != null ? (
-            <Row icon={<CreditCard className="h-4 w-4" />} label="Valor">
-              R$ {booking.recordedPrice.toFixed(2)}
-            </Row>
-          ) : null}
-        </div>
-      </Card>
+        {driverName && (
+          <div className="mt-3 flex items-center gap-2 border-t border-dashed border-line pt-3 text-[12px] text-muted-foreground">
+            <User className="h-3.5 w-3.5" strokeWidth={1.6} />
+            Motorista: <span className="font-semibold text-ink-2">{driverName}</span>
+          </div>
+        )}
 
-      {isActive ? (
+        {booking.tripArrivalEstimate == null && (
+          <div className="mt-3 flex items-center gap-2 border-t border-dashed border-line pt-3 text-[11px] text-muted-foreground">
+            <Clock className="h-3 w-3" strokeWidth={1.6} />
+            Horário de chegada será confirmado próximo à viagem.
+          </div>
+        )}
+      </article>
+
+      {isActive && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="w-full h-12 text-base" disabled={cancelling}>
+            <Button
+              variant="destructive"
+              className="h-12 w-full rounded-[12px] bg-danger text-[14px] font-bold text-white hover:bg-danger/90"
+              disabled={cancelling}
+            >
               {cancelling ? "Cancelando..." : "Cancelar inscrição"}
             </Button>
           </AlertDialogTrigger>
@@ -111,27 +134,7 @@ export function BookingDetailView({ booking, onCancel, cancelling }: BookingDeta
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      ) : null}
+      )}
     </>
-  );
-}
-
-function Row({
-  icon,
-  label,
-  children,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="flex items-center gap-2 text-muted-foreground">
-        {icon}
-        {label}
-      </span>
-      <span className="font-medium">{children}</span>
-    </div>
   );
 }

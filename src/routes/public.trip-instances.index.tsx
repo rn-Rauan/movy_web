@@ -1,16 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Search, ArrowUpDown } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { ContextBanner } from "@/components/layout/ContextBanner";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { usePublicTrips } from "@/features/trips/hooks/usePublicTrips";
 import type { Shift, SortBy } from "@/features/trips/hooks/usePublicTrips";
-import { DATE_RANGE_OPTIONS } from "@/lib/date-filters";
+import { DATE_RANGE_OPTIONS, type DateRange } from "@/lib/date-filters";
 import { PublicTripCard } from "@/features/trips/components/PublicTripCard";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -18,10 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@/lib/auth-context";
+import { SegmentFilter, type SegmentOption } from "@/components/passenger/SegmentFilter";
 
-const SHIFTS: { value: Shift; label: string }[] = [
-  { value: "ALL", label: "Todos turnos" },
+const DATE_SEGMENTS: SegmentOption<DateRange>[] = DATE_RANGE_OPTIONS.map((d) => ({
+  value: d.value,
+  label: d.value === "ANY" ? "Qualquer" : d.value === "THIS_WEEK" ? "Esta sem." : d.label,
+}));
+
+const SHIFT_SEGMENTS: SegmentOption<Shift>[] = [
+  { value: "ALL", label: "Todos" },
   { value: "MORNING", label: "Manhã" },
   { value: "AFTERNOON", label: "Tarde" },
   { value: "EVENING", label: "Noite" },
@@ -60,54 +63,25 @@ function PublicTripsPage() {
     loading,
     error,
   } = usePublicTrips();
-  const { isAuthenticated } = useAuth();
 
   return (
-    <AppShell title="Viagens">
-      <ContextBanner variant="public" />
-
-      {!isAuthenticated ? (
-        <div className="mb-4 flex justify-end">
-          <Link to="/login">
-            <Button variant="outline" size="sm">
-              Entrar
-            </Button>
-          </Link>
+    <AppShell title="Explorar">
+      <div className="-mx-4 -mt-3.5 mb-3 border-b border-line bg-background px-4 py-3">
+        <div className="relative mb-2.5">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-muted-foreground"
+            strokeWidth={1.6}
+          />
+          <Input
+            placeholder="Origem, destino ou empresa"
+            className="h-10 rounded-[11px] border-line bg-surface pl-9 text-[13px]"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-      ) : null}
-
-      <div className="relative mb-3">
-        <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Buscar origem, destino ou empresa"
-          className="pl-9 h-11"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-
-      <div className="-mx-4 px-4 mb-2 overflow-x-auto">
-        <div className="flex gap-2 pb-1 w-max">
-          {DATE_RANGE_OPTIONS.map((d) => (
-            <FilterPill
-              key={d.value}
-              active={dateRange === d.value}
-              onClick={() => setDateRange(d.value)}
-            >
-              {d.label}
-            </FilterPill>
-          ))}
-        </div>
-      </div>
-
-      <div className="-mx-4 px-4 mb-4 overflow-x-auto">
-        <div className="flex gap-2 pb-1 w-max">
-          {SHIFTS.map((s) => (
-            <FilterPill key={s.value} active={shift === s.value} onClick={() => setShift(s.value)}>
-              {s.label}
-            </FilterPill>
-          ))}
-        </div>
+        <SegmentFilter options={DATE_SEGMENTS} value={dateRange} onChange={setDateRange} />
+        <div className="h-1.5" />
+        <SegmentFilter options={SHIFT_SEGMENTS} value={shift} onChange={setShift} />
       </div>
 
       {loading ? (
@@ -123,14 +97,16 @@ function PublicTripsPage() {
         />
       ) : (
         <>
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <p className="text-sm text-muted-foreground">
-              {filtered.length}{" "}
-              {filtered.length === 1 ? "viagem encontrada" : "viagens encontradas"}
-            </p>
+          <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
+            <span className="text-[12px] font-semibold text-muted-foreground">
+              <span className="font-bold text-ink">
+                {filtered.length} {filtered.length === 1 ? "viagem" : "viagens"}
+              </span>{" "}
+              {filtered.length === 1 ? "encontrada" : "encontradas"}
+            </span>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
-              <SelectTrigger className="w-auto h-9 gap-1.5 text-xs px-3">
-                <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <SelectTrigger className="h-8 gap-1.5 rounded-full border-line bg-surface px-2.5 text-[11px] font-bold text-ink-2">
+                <ArrowUpDown className="h-3 w-3" strokeWidth={1.6} />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent align="end">
@@ -142,7 +118,7 @@ function PublicTripsPage() {
               </SelectContent>
             </Select>
           </div>
-          <ul className="space-y-3">
+          <ul className="flex flex-col gap-2">
             {filtered.map((trip) => (
               <li key={trip.id}>
                 <PublicTripCard trip={trip} />
@@ -152,29 +128,5 @@ function PublicTripsPage() {
         </>
       )}
     </AppShell>
-  );
-}
-
-function FilterPill({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`text-xs whitespace-nowrap px-3 py-1.5 rounded-full border transition-colors ${
-        active
-          ? "bg-primary text-primary-foreground border-primary"
-          : "bg-card border-border text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

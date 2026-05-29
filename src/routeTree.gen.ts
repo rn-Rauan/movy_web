@@ -27,6 +27,7 @@ import { Route as ProtectedMyBookingsRouteImport } from './routes/_protected.my-
 import { Route as ProtectedDriverRouteImport } from './routes/_protected._driver'
 import { Route as ProtectedAdminRouteImport } from './routes/_protected._admin'
 import { Route as PublicTripInstancesIndexRouteImport } from './routes/public.trip-instances.index'
+import { Route as PublicOrganizationsIndexRouteImport } from './routes/public.organizations.index'
 import { Route as PublicTripInstancesIdRouteImport } from './routes/public.trip-instances.$id'
 import { Route as PublicOrganizationsSlugRouteImport } from './routes/public.organizations.$slug'
 import { Route as ProtectedTripsOrgIdRouteImport } from './routes/_protected.trips.$orgId'
@@ -132,6 +133,12 @@ const PublicTripInstancesIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => PublicTripInstancesRoute,
+  } as any)
+const PublicOrganizationsIndexRoute =
+  PublicOrganizationsIndexRouteImport.update({
+    id: '/public/organizations/',
+    path: '/public/organizations/',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const PublicTripInstancesIdRoute = PublicTripInstancesIdRouteImport.update({
   id: '/$id',
@@ -255,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
+  '/public/organizations/': typeof PublicOrganizationsIndexRoute
   '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
   '/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
@@ -287,6 +295,7 @@ export interface FileRoutesByTo {
   '/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
+  '/public/organizations': typeof PublicOrganizationsIndexRoute
   '/public/trip-instances': typeof PublicTripInstancesIndexRoute
   '/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
@@ -325,6 +334,7 @@ export interface FileRoutesById {
   '/_protected/trips/$orgId': typeof ProtectedTripsOrgIdRouteWithChildren
   '/public/organizations/$slug': typeof PublicOrganizationsSlugRoute
   '/public/trip-instances/$id': typeof PublicTripInstancesIdRoute
+  '/public/organizations/': typeof PublicOrganizationsIndexRoute
   '/public/trip-instances/': typeof PublicTripInstancesIndexRoute
   '/_protected/trips/$orgId/$tripId/book': typeof ProtectedTripsOrgIdTripIdBookRoute
 }
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/trips/$orgId'
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
+    | '/public/organizations/'
     | '/public/trip-instances/'
     | '/trips/$orgId/$tripId/book'
   fileRoutesByTo: FileRoutesByTo
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/trips/$orgId'
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
+    | '/public/organizations'
     | '/public/trip-instances'
     | '/trips/$orgId/$tripId/book'
   id:
@@ -430,6 +442,7 @@ export interface FileRouteTypes {
     | '/_protected/trips/$orgId'
     | '/public/organizations/$slug'
     | '/public/trip-instances/$id'
+    | '/public/organizations/'
     | '/public/trip-instances/'
     | '/_protected/trips/$orgId/$tripId/book'
   fileRoutesById: FileRoutesById
@@ -445,6 +458,7 @@ export interface RootRouteChildren {
   PublicPlansRoute: typeof PublicPlansRoute
   PublicTripInstancesRoute: typeof PublicTripInstancesRouteWithChildren
   PublicOrganizationsSlugRoute: typeof PublicOrganizationsSlugRoute
+  PublicOrganizationsIndexRoute: typeof PublicOrganizationsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -574,6 +588,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/public/trip-instances/'
       preLoaderRoute: typeof PublicTripInstancesIndexRouteImport
       parentRoute: typeof PublicTripInstancesRoute
+    }
+    '/public/organizations/': {
+      id: '/public/organizations/'
+      path: '/public/organizations'
+      fullPath: '/public/organizations/'
+      preLoaderRoute: typeof PublicOrganizationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/public/trip-instances/$id': {
       id: '/public/trip-instances/$id'
@@ -834,6 +855,7 @@ const rootRouteChildren: RootRouteChildren = {
   PublicPlansRoute: PublicPlansRoute,
   PublicTripInstancesRoute: PublicTripInstancesRouteWithChildren,
   PublicOrganizationsSlugRoute: PublicOrganizationsSlugRoute,
+  PublicOrganizationsIndexRoute: PublicOrganizationsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -3,10 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Bus, CheckCircle2, XCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { authService } from "@/services/auth.service";
 import { useAuth } from "@/lib/auth-context";
 import { tokenStorage } from "@/lib/api";
+import { PublicShell } from "@/components/layout/PublicShell";
 
 const searchSchema = z.object({ token: z.string().optional() });
 
@@ -58,55 +58,59 @@ function VerifyEmailPage() {
   }, [token, setSession, navigate]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 mx-auto w-full max-w-md px-6 py-10 flex flex-col">
-        <div className="flex flex-col items-center text-center mb-8 mt-8">
-          <div className="h-16 w-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center mb-4">
-            <Bus className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-bold">Verificar e-mail</h1>
+    <PublicShell showEntrar={false}>
+      <div className="mx-auto max-w-sm pt-10 pb-6">
+        <div className="mb-7 flex flex-col items-center text-center">
+          <span className="mb-3.5 flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-ink">
+            <Bus className="h-[26px] w-[26px] text-surface" strokeWidth={1.8} />
+          </span>
+          <h1 className="text-[24px] font-extrabold tracking-[-0.6px] text-ink">
+            Verificar e-mail
+          </h1>
         </div>
 
         {state === "pending" && (
-          <p className="text-center text-sm text-muted-foreground">Verificando seu e-mail...</p>
+          <p className="text-center text-[13px] text-muted-foreground">Verificando seu e-mail...</p>
         )}
 
         {state === "success" && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4">
-              <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
-              <span className="text-sm">E-mail verificado com sucesso. Redirecionando...</span>
-            </div>
+          <div className="flex items-center gap-3 rounded-[14px] border border-success-soft bg-success-soft p-3.5">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-success" strokeWidth={1.8} />
+            <span className="text-[12px] font-semibold text-success">
+              E-mail verificado com sucesso. Redirecionando...
+            </span>
           </div>
         )}
 
         {state === "error" && (
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-4">
-              <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <span className="text-sm">{errorMessage}</span>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start gap-3 rounded-[14px] border border-danger-soft bg-danger-soft p-3.5">
+              <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger" strokeWidth={1.8} />
+              <span className="text-[12px] font-semibold text-danger">{errorMessage}</span>
             </div>
-            <Link to="/login" className="block">
-              <Button variant="outline" className="w-full h-12 text-base">
-                Voltar ao login
-              </Button>
+            <Link
+              to="/login"
+              className="h-12 w-full rounded-[12px] border border-line bg-surface text-center text-[14px] font-bold leading-[3rem] text-ink hover:bg-line-soft"
+            >
+              Voltar ao login
             </Link>
           </div>
         )}
 
         {state === "missing" && (
-          <div className="space-y-4">
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+          <div className="flex flex-col gap-3">
+            <div className="rounded-[14px] border border-danger-soft bg-danger-soft p-3.5 text-[12px] font-semibold text-danger">
               Link de verificação inválido.
             </div>
-            <Link to="/login" className="block">
-              <Button variant="outline" className="w-full h-12 text-base">
-                Voltar ao login
-              </Button>
+            <Link
+              to="/login"
+              className="h-12 w-full rounded-[12px] border border-line bg-surface text-center text-[14px] font-bold leading-[3rem] text-ink hover:bg-line-soft"
+            >
+              Voltar ao login
             </Link>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </PublicShell>
   );
 }

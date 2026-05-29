@@ -1,71 +1,75 @@
 import { Link } from "@tanstack/react-router";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, Users, MapPin, ChevronRight } from "lucide-react";
-import { formatDateTime, statusLabel, statusVariant } from "@/lib/format";
+import { ChevronRight } from "lucide-react";
+import { RouteVisualHorizontal } from "@/components/passenger/RouteVisualHorizontal";
+import { OccupancyBar } from "@/components/passenger/OccupancyBar";
+import { formatDateTime } from "@/lib/format";
+import { BR_TZ } from "@/lib/timezone";
 import type { PublicTrip } from "../hooks/usePublicTrips";
 
 interface PublicTripCardProps {
   trip: PublicTrip;
 }
 
+function formatBrShortDate(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: BR_TZ,
+  });
+}
+
 export function PublicTripCard({ trip }: PublicTripCardProps) {
   const seats = trip.availableSlots ?? trip.totalCapacity;
+  const total = trip.totalCapacity ?? seats;
+  const price = trip.priceOneWay;
+  const time = formatDateTime(trip.departureTime, true);
+  const date = formatBrShortDate(trip.departureTime);
+  const company = trip.organizationName ?? "Empresa";
+  const initial = company.charAt(0).toUpperCase();
 
   return (
-    <Card className="p-4">
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <p className="text-xs font-medium text-primary">{trip.organizationName}</p>
-        <Badge variant={statusVariant(trip.tripStatus)}>{statusLabel(trip.tripStatus)}</Badge>
-      </div>
-
-      <div className="space-y-1.5 mb-3">
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="font-medium truncate">{trip.departurePoint}</span>
+    <Link
+      to="/public/trip-instances/$id"
+      params={{ id: trip.id }}
+      className="block rounded-[14px] border border-line bg-surface p-3.5 transition-colors hover:border-ink-2"
+    >
+      <div className="mb-3 flex items-start justify-between">
+        <div>
+          <div className="font-mono text-[20px] font-extrabold leading-none tracking-[-0.5px] text-ink">
+            {time}
+          </div>
+          <div className="mt-1 text-[11px] font-bold text-muted-foreground">{date}</div>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="h-4 w-4 text-primary shrink-0" />
-          <span className="font-medium truncate">{trip.destination}</span>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
-        <span className="flex items-center gap-1.5">
-          <Calendar className="h-3.5 w-3.5" />
-          {formatDateTime(trip.departureTime)}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Users className="h-3.5 w-3.5" />
-          {seats} vagas
-        </span>
-        {trip.priceOneWay != null ? (
-          <span className="font-semibold text-foreground">
-            a partir de R$ {trip.priceOneWay.toFixed(2)}
+        <div className="flex items-center gap-1.5">
+          <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-accent-soft text-[9px] font-extrabold text-accent">
+            {initial}
           </span>
-        ) : null}
+          <span className="text-[11px] font-bold text-ink-2">{company}</span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mt-3">
-        {trip.organizationSlug ? (
-          <Link to="/public/organizations/$slug" params={{ slug: trip.organizationSlug }}>
-            <Button variant="outline" className="w-full h-10">
-              Ver empresa
-            </Button>
-          </Link>
-        ) : (
-          <Button variant="outline" className="w-full h-10" disabled>
-            Ver empresa
-          </Button>
-        )}
-        <Link to="/public/trip-instances/$id" params={{ id: trip.id }}>
-          <Button className="w-full h-10">
-            Ver viagem
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </Link>
+      <RouteVisualHorizontal from={trip.departurePoint ?? "—"} to={trip.destination ?? "—"} />
+
+      <div className="mt-3.5 flex items-center justify-between gap-2.5 border-t border-dashed border-line pt-3">
+        <OccupancyBar available={seats} total={total} />
+        <div className="flex items-center gap-2.5">
+          {price != null && (
+            <div className="text-right">
+              <div className="text-[9px] font-semibold uppercase tracking-[0.3px] text-muted-foreground">
+                a partir de
+              </div>
+              <div className="font-mono text-[16px] font-extrabold leading-none tracking-[-0.3px] text-ink">
+                R$ {price.toFixed(0)}
+              </div>
+            </div>
+          )}
+          <span className="inline-flex items-center gap-1 rounded-[10px] bg-ink px-3.5 py-2.5 text-[12px] font-bold text-surface">
+            Reservar <ChevronRight className="h-3 w-3" strokeWidth={2.4} />
+          </span>
+        </div>
       </div>
-    </Card>
+    </Link>
   );
 }

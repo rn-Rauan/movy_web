@@ -3,6 +3,9 @@
    PALETTES, ScreenDashboard, ScreenViagens, ScreenEmpresa, ScreenPerfil,
    ScreenTripDetail, ModalNewTrip, ModalNewTemplate,
    ScreenDashboardReport, ScreenDashboardReportOps,
+   ScreenLanding, ScreenLogin, ScreenCadastro,
+   ScreenExplorar, ScreenEmpresasPublicas, ScreenInscricoes,
+   ScreenViagemDetalhe, ScreenInscricao,
    InteractivePhone */
 
 function App() {
@@ -87,6 +90,55 @@ function App() {
             Duas variações: A foca em dinheiro (receita do mês como hero + breakdown
             confirmada/pendente/perdida). B foca na operação (viagens realizadas como hero + heatmap
             diário).
+          </DCPostIt>
+        </DCSection>
+
+        <DCSection
+          id="publico"
+          title="Público — landing & autenticação"
+          subtitle="Telas externas (não logado): home enxuta, entrar e criar conta. Cada tela mora num arquivo próprio pra ser reusada no app real."
+        >
+          <DCArtboard id="landing" label="W01 · Landing" width={390} height={844}>
+            <ScreenLanding t={t} />
+          </DCArtboard>
+          <DCArtboard id="login" label="W02 · Entrar" width={390} height={844}>
+            <ScreenLogin t={t} />
+          </DCArtboard>
+          <DCArtboard id="cadastro" label="W03 · Cadastro passageiro" width={390} height={844}>
+            <ScreenCadastro t={t} />
+          </DCArtboard>
+
+          <DCPostIt top={-10} right={60} width={240} rotate={-2}>
+            Landing manteve a simplicidade original — só melhorou hierarquia. Cadastro tem toggle
+            passageiro/empresa no topo, sem precisar duas páginas.
+          </DCPostIt>
+        </DCSection>
+
+        <DCSection
+          id="passageiro"
+          title="Passageiro (logado) — fluxo completo"
+          subtitle="Navbar de 4 abas: Explorar / Empresas / Inscrições / Perfil. Detalhe da viagem e formulário de inscrição completam o caminho até a reserva."
+        >
+          <DCArtboard id="explorar" label="W04 · Explorar viagens" width={390} height={844}>
+            <ScreenExplorar t={t} />
+          </DCArtboard>
+          <DCArtboard id="empresas-publicas" label="W05 · Empresas" width={390} height={844}>
+            <ScreenEmpresasPublicas t={t} />
+          </DCArtboard>
+          <DCArtboard id="inscricoes" label="W06 · Minhas inscrições" width={390} height={844}>
+            <ScreenInscricoes t={t} />
+          </DCArtboard>
+          <DCArtboard id="viagem-detalhe" label="W07 · Detalhe da viagem" width={390} height={844}>
+            <ScreenViagemDetalhe t={t} />
+          </DCArtboard>
+          <DCArtboard id="inscricao" label="W08 · Inscrever-se" width={390} height={844}>
+            <ScreenInscricao t={t} />
+          </DCArtboard>
+
+          <DCPostIt top={-10} right={60} width={260} rotate={2}>
+            Fluxo: Explorar → tap num card → Detalhe (W07) → Inscrever-se (W08) → Inscrições (W06)
+            confirma. Empresas (W05) é caminho alternativo: ver empresa → suas viagens → mesmo
+            destino.
           </DCPostIt>
         </DCSection>
 

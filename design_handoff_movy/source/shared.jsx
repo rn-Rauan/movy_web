@@ -305,6 +305,17 @@ const I = {
       <path d="M7 12h0M17 12h0" />
     </Icon>
   ),
+  compass: (p) => (
+    <Icon {...p}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.5 8.5-2 5.5-5.5 2 2-5.5 5.5-2z" />
+    </Icon>
+  ),
+  pix: (p) => (
+    <Icon {...p}>
+      <path d="M5 12 12 5l7 7-7 7-7-7z" />
+    </Icon>
+  ),
 };
 
 // ----------------------------------------------------------------------------
@@ -636,6 +647,203 @@ function Scroll({ children, style }) {
   );
 }
 
+// ----------------------------------------------------------------------------
+// Passenger bottom nav (4 tabs — Explorar / Empresas / Inscrições / Perfil)
+// ----------------------------------------------------------------------------
+
+function PassengerNav({ active, onChange, t }) {
+  const items = [
+    { id: "explorar", label: "Explorar", Icon: I.compass },
+    { id: "empresas", label: "Empresas", Icon: I.building },
+    { id: "inscricoes", label: "Inscrições", Icon: I.ticket },
+    { id: "perfil", label: "Perfil", Icon: I.user },
+  ];
+  return (
+    <nav
+      style={{
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: t.surface,
+        borderTop: `1px solid ${t.line}`,
+        padding: "8px 6px 14px",
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: 2,
+      }}
+    >
+      {items.map(({ id, label, Icon: Ic }) => {
+        const on = active === id;
+        return (
+          <button
+            key={id}
+            onClick={() => onChange && onChange(id)}
+            style={{
+              border: 0,
+              background: "transparent",
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 4,
+              padding: "6px 4px 4px",
+              borderRadius: 10,
+              color: on ? t.accent : t.muted,
+              fontFamily: "'Manrope', sans-serif",
+              fontSize: 10,
+              fontWeight: on ? 700 : 500,
+              letterSpacing: 0.1,
+            }}
+          >
+            <div
+              style={{
+                padding: "4px 14px",
+                borderRadius: 99,
+                background: on ? t.accentSoft : "transparent",
+                transition: "background .15s",
+              }}
+            >
+              <Ic size={20} stroke={on ? 2 : 1.6} />
+            </div>
+            <span>{label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Public top bar (logo + Entrar) for unauthenticated screens
+// ----------------------------------------------------------------------------
+
+function PublicTopBar({ t, showEntrar = true, title }) {
+  return (
+    <header
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 5,
+        background: t.surface,
+        borderBottom: `1px solid ${t.line}`,
+        padding: "12px 18px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 7,
+            background: t.ink,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <I.bus size={15} color={t.surface} />
+        </div>
+        <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.5, color: t.ink }}>
+          movy
+        </span>
+        {title && (
+          <React.Fragment>
+            <span style={{ color: t.line }}>/</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: t.ink2 }}>{title}</span>
+          </React.Fragment>
+        )}
+      </div>
+      {showEntrar && (
+        <button
+          style={{
+            border: `1px solid ${t.line}`,
+            background: t.surface,
+            color: t.ink,
+            padding: "6px 14px",
+            borderRadius: 99,
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer",
+            fontFamily: "inherit",
+          }}
+        >
+          Entrar
+        </button>
+      )}
+    </header>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Reusable form field (label + input + optional rightLink + hint)
+// ----------------------------------------------------------------------------
+
+function FormField({ t, label, placeholder, type = "text", rightLink, hint, value, icon, as }) {
+  const isSelect = as === "select";
+  return (
+    <label style={{ display: "block" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 5,
+        }}
+      >
+        <span style={{ fontSize: 11, fontWeight: 700, color: t.ink2, letterSpacing: 0.1 }}>
+          {label}
+        </span>
+        {rightLink}
+      </div>
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          background: t.surface,
+          border: `1px solid ${t.line}`,
+          borderRadius: 11,
+        }}
+      >
+        {icon && <span style={{ paddingLeft: 12, display: "flex", color: t.muted }}>{icon}</span>}
+        <input
+          type={type}
+          placeholder={placeholder}
+          defaultValue={value}
+          readOnly={isSelect}
+          style={{
+            flex: 1,
+            minWidth: 0,
+            boxSizing: "border-box",
+            padding: "11px 13px",
+            borderRadius: 11,
+            border: 0,
+            background: "transparent",
+            fontSize: 13,
+            fontFamily: "inherit",
+            color: value ? t.ink : t.ink,
+            outline: "none",
+            paddingLeft: icon ? 8 : 13,
+            cursor: isSelect ? "pointer" : "text",
+          }}
+        />
+        {isSelect && (
+          <span style={{ paddingRight: 12, color: t.muted, display: "flex" }}>
+            <I.chevronDown size={16} />
+          </span>
+        )}
+      </div>
+      {hint && (
+        <div style={{ marginTop: 4, fontSize: 10, color: t.muted, paddingLeft: 2 }}>{hint}</div>
+      )}
+    </label>
+  );
+}
+
 // Export to window for cross-file access
 Object.assign(window, {
   PALETTES,
@@ -645,9 +853,12 @@ Object.assign(window, {
   StatusPill,
   Route,
   BottomNav,
+  PassengerNav,
   TopBar,
+  PublicTopBar,
   Card,
   Bar,
   Phone,
   Scroll,
+  FormField,
 });

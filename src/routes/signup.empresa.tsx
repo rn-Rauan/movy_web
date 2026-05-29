@@ -9,6 +9,8 @@ import { useRole } from "@/lib/role-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PublicShell } from "@/components/layout/PublicShell";
+import { SignupAudienceToggle } from "@/components/passenger/SignupAudienceToggle";
 import type { AuthUser } from "@/lib/types";
 
 export const Route = createFileRoute("/signup/empresa")({
@@ -35,7 +37,7 @@ const schema = z.object({
 function slugify(value: string): string {
   return value
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
@@ -129,161 +131,178 @@ function SignupEmpresaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 mx-auto w-full max-w-md px-6 py-8">
-        <div className="mb-6 mt-4 flex items-start gap-3">
-          <div className="rounded-lg bg-primary/10 p-2 text-primary">
-            <Building2 className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Cadastre sua empresa de transporte</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Gerencie frota, motoristas, viagens e cobre passageiros em um só lugar.
-            </p>
-          </div>
+    <PublicShell showEntrar={false}>
+      <div className="mx-auto max-w-sm pt-7 pb-6">
+        <div className="mb-5 flex flex-col items-center text-center">
+          <span className="mb-3.5 flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-ink">
+            <Building2 className="h-[26px] w-[26px] text-surface" strokeWidth={1.8} />
+          </span>
+          <h1 className="text-[24px] font-extrabold tracking-[-0.6px] text-ink">
+            Cadastrar empresa
+          </h1>
+          <p className="mt-1.5 text-balance text-[13px] text-muted-foreground">
+            Gerencie frota, motoristas e cobre passageiros em um só lugar.
+          </p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-6">
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Responsável
-            </h2>
-            <Field id="userName" label="Nome completo">
+        <SignupAudienceToggle current="company" />
+
+        <form onSubmit={onSubmit} className="flex flex-col gap-5">
+          <section className="flex flex-col gap-3">
+            <SectionLabel>Responsável</SectionLabel>
+            <FieldGroup label="Nome completo" htmlFor="userName">
               <Input
                 id="userName"
                 value={form.userName}
                 onChange={(e) => update("userName", e.target.value)}
-                className="h-12 text-base"
                 autoComplete="name"
                 required
               />
-            </Field>
-            <Field id="userEmail" label="E-mail">
+            </FieldGroup>
+            <FieldGroup label="E-mail" htmlFor="userEmail">
               <Input
                 id="userEmail"
                 type="email"
                 inputMode="email"
                 value={form.userEmail}
                 onChange={(e) => update("userEmail", e.target.value)}
-                className="h-12 text-base"
                 autoComplete="email"
                 required
               />
-            </Field>
-            <Field id="userTelephone" label="Telefone">
+            </FieldGroup>
+            <FieldGroup label="Telefone" htmlFor="userTelephone">
               <Input
                 id="userTelephone"
                 type="tel"
                 inputMode="tel"
                 value={form.userTelephone}
                 onChange={(e) => update("userTelephone", e.target.value)}
-                className="h-12 text-base"
                 autoComplete="tel"
                 required
               />
-            </Field>
-            <Field id="userPassword" label="Senha">
+            </FieldGroup>
+            <FieldGroup label="Senha" htmlFor="userPassword" hint="Mínimo 8 caracteres">
               <Input
                 id="userPassword"
                 type="password"
                 value={form.userPassword}
                 onChange={(e) => update("userPassword", e.target.value)}
-                className="h-12 text-base"
                 autoComplete="new-password"
                 required
               />
-            </Field>
+            </FieldGroup>
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Empresa
-            </h2>
-            <Field id="organizationName" label="Nome da empresa">
+          <section className="flex flex-col gap-3">
+            <SectionLabel>Empresa</SectionLabel>
+            <FieldGroup label="Nome da empresa" htmlFor="organizationName">
               <Input
                 id="organizationName"
                 value={form.organizationName}
                 onChange={(e) => onOrgNameChange(e.target.value)}
-                className="h-12 text-base"
                 required
               />
-            </Field>
-            <Field id="cnpj" label="CNPJ">
+            </FieldGroup>
+            <FieldGroup label="CNPJ" htmlFor="cnpj">
               <Input
                 id="cnpj"
                 value={form.cnpj}
                 onChange={(e) => update("cnpj", e.target.value)}
-                className="h-12 text-base"
                 required
               />
-            </Field>
-            <Field id="organizationEmail" label="E-mail comercial">
+            </FieldGroup>
+            <FieldGroup label="E-mail comercial" htmlFor="organizationEmail">
               <Input
                 id="organizationEmail"
                 type="email"
                 inputMode="email"
                 value={form.organizationEmail}
                 onChange={(e) => update("organizationEmail", e.target.value)}
-                className="h-12 text-base"
                 required
               />
-            </Field>
-            <Field id="organizationTelephone" label="Telefone comercial">
+            </FieldGroup>
+            <FieldGroup label="Telefone comercial" htmlFor="organizationTelephone">
               <Input
                 id="organizationTelephone"
                 type="tel"
                 inputMode="tel"
                 value={form.organizationTelephone}
                 onChange={(e) => update("organizationTelephone", e.target.value)}
-                className="h-12 text-base"
                 required
               />
-            </Field>
-            <Field id="address" label="Endereço">
+            </FieldGroup>
+            <FieldGroup label="Endereço" htmlFor="address">
               <Input
                 id="address"
                 value={form.address}
                 onChange={(e) => update("address", e.target.value)}
-                className="h-12 text-base"
                 required
               />
-            </Field>
-            <Field id="slug" label="Slug (URL pública)">
+            </FieldGroup>
+            <FieldGroup
+              label="Slug (URL pública)"
+              htmlFor="slug"
+              hint={`Sua URL: /public/organizations/${form.slug || "minha-empresa"}`}
+            >
               <Input
                 id="slug"
                 value={form.slug}
                 onChange={(e) => onSlugChange(e.target.value)}
-                className="h-12 text-base"
                 placeholder="minha-empresa"
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                Sua URL será /public/organizations/{form.slug || "minha-empresa"}
-              </p>
-            </Field>
+            </FieldGroup>
           </section>
 
-          <Button type="submit" disabled={submitting} className="w-full h-12 text-base">
+          <Button
+            type="submit"
+            disabled={submitting}
+            className="h-12 w-full rounded-[12px] bg-ink text-[14px] font-bold text-surface hover:bg-ink/90"
+          >
             {submitting ? "Cadastrando..." : "Cadastrar empresa"}
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="mt-5 text-center text-[13px] text-muted-foreground">
           Já tem conta?{" "}
-          <Link to="/login" className="text-primary font-medium">
+          <Link to="/login" className="font-bold text-ink hover:underline">
             Entrar
           </Link>
         </p>
-      </main>
-    </div>
+      </div>
+    </PublicShell>
   );
 }
 
-function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+    <h2 className="text-[11px] font-bold uppercase tracking-[0.6px] text-muted-foreground">
       {children}
+    </h2>
+  );
+}
+
+function FieldGroup({
+  label,
+  htmlFor,
+  hint,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <Label
+        htmlFor={htmlFor}
+        className="mb-1.5 block text-[11px] font-bold tracking-[0.1px] text-ink-2"
+      >
+        {label}
+      </Label>
+      {children}
+      {hint && <p className="mt-1 pl-0.5 text-[10px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }

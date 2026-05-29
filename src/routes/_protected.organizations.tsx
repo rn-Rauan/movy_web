@@ -20,30 +20,39 @@ function OrganizationsPage() {
 
   return (
     <AppShell title="Empresas">
-      <p className="text-sm text-muted-foreground mb-4">
-        Escolha a empresa para ver as viagens disponíveis.
-      </p>
-
-      {hasOrgs && (
-        <div className="relative mb-4">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar empresa pelo nome"
-            className="pl-9 h-11"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      )}
+      <div className="-mx-4 -mt-3.5 mb-3 border-b border-line bg-background px-4 py-3">
+        <p className="mb-2.5 rounded-[10px] border border-line bg-surface-2 px-3 py-2 text-[12px] leading-[1.4] text-ink-2">
+          Escolha a empresa para ver as viagens disponíveis.
+        </p>
+        {hasOrgs && (
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-muted-foreground"
+              strokeWidth={1.6}
+            />
+            <Input
+              placeholder="Buscar empresa pelo nome"
+              className="h-10 rounded-[11px] border-line bg-surface pl-9 text-[13px]"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        )}
+      </div>
 
       {loading ? (
-        <LoadingList count={3} height="h-20" />
+        <LoadingList count={3} height="h-44" />
       ) : error ? (
         <ErrorCard message={error} />
       ) : hasActiveFilters && filtered.length === 0 ? (
-        <div className="text-center py-10 text-sm text-muted-foreground">
+        <div className="rounded-[14px] border border-line bg-surface p-6 text-center text-[13px] text-muted-foreground">
           <p className="mb-3">Nenhuma empresa encontrada.</p>
-          <Button variant="outline" size="sm" onClick={resetFilters}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetFilters}
+            className="rounded-full border-line"
+          >
             Limpar busca
           </Button>
         </div>

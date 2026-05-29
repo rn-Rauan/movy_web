@@ -1,9 +1,9 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { ArrowRight, Building2, CreditCard, MapPin, Settings2, UserPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Building2, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
+import { PublicShell } from "@/components/layout/PublicShell";
+import { AudienceCard } from "@/components/passenger/AudienceCard";
 
 export const Route = createFileRoute("/")({
   component: IndexPage,
@@ -25,132 +25,82 @@ function IndexPage() {
 
 function LandingPage() {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <main className="flex-1 mx-auto w-full max-w-2xl px-4 py-10 sm:py-16">
-        {/* Hero */}
-        <section className="text-center space-y-4 mb-10">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-lg shadow-primary/20">
-            <MapPin className="h-6 w-6" />
+    <PublicShell>
+      <div className="pt-7 pb-8">
+        <section className="mb-6">
+          <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1">
+            <span className="h-[5px] w-[5px] rounded-full bg-accent" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.3px] text-accent">
+              +1.240 viagens essa semana
+            </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
-            A plataforma de viagens compartilhadas pra empresas e passageiros
+          <h1 className="text-balance text-[30px] font-extrabold leading-[1.08] tracking-[-1px] text-ink">
+            Viagens compartilhadas pra empresas e passageiros.
           </h1>
-          <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
-            Reserve sua próxima viagem ou gerencie sua frota, motoristas e cobrança em um só lugar.
+          <p className="mt-3 text-[14px] leading-[1.5] text-ink-2">
+            Reserve sua próxima viagem ou gerencie sua frota em um só lugar.
           </p>
         </section>
 
-        {/* CTAs */}
-        <section className="grid gap-4 sm:grid-cols-2 mb-12">
-          <Link to="/public/trip-instances" className="group">
-            <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50 hover:-translate-y-0.5">
-              <CardContent className="p-6 flex flex-col h-full">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <h2 className="text-lg font-semibold mb-1">Quero reservar viagens</h2>
-                <p className="text-sm text-muted-foreground flex-1">
-                  Explore viagens disponíveis perto de você e garanta sua vaga em segundos.
-                </p>
-                <div className="mt-4 inline-flex items-center text-sm font-medium text-primary">
-                  Ver viagens
-                  <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/signup/empresa" className="group">
-            <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50 hover:-translate-y-0.5">
-              <CardContent className="p-6 flex flex-col h-full">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground mb-4">
-                  <Building2 className="h-5 w-5" />
-                </div>
-                <h2 className="text-lg font-semibold mb-1">Tenho empresa de transporte</h2>
-                <p className="text-sm text-muted-foreground flex-1">
-                  Cadastre sua empresa, organize sua frota e cobre passageiros sem complicação.
-                </p>
-                <div className="mt-4 inline-flex items-center text-sm font-medium text-primary">
-                  Cadastrar empresa
-                  <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+        <section className="mb-6 flex flex-col gap-2.5">
+          <AudienceCard
+            kind="passenger"
+            to="/public/trip-instances"
+            icon={<MapPin className="h-5 w-5" strokeWidth={1.8} />}
+            title="Quero reservar viagens"
+            body="Encontre viagens perto de você e garanta sua vaga em segundos."
+            cta="Ver viagens"
+          />
+          <AudienceCard
+            kind="company"
+            to="/signup/empresa"
+            icon={<Building2 className="h-5 w-5" strokeWidth={1.8} />}
+            title="Tenho empresa de transporte"
+            body="Cadastre sua empresa, organize sua frota e cobre passageiros."
+            cta="Cadastrar empresa"
+          />
         </section>
 
-        <section className="text-center mb-12">
-          <Link to="/public/plans">
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
-              Ver planos para empresas
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          </Link>
+        <section className="mb-7">
+          <div className="mb-3 pl-0.5 text-[11px] font-bold uppercase tracking-[0.6px] text-muted-foreground">
+            Como funciona
+          </div>
+          <div className="overflow-hidden rounded-[14px] border border-line bg-surface">
+            {[
+              { n: 1, t: "Cadastre", d: "Crie sua conta em poucos passos." },
+              { n: 2, t: "Gerencie", d: "Organize viagens, rotas e motoristas." },
+              { n: 3, t: "Embarque", d: "Pague no app, vaga garantida." },
+            ].map((s, i) => (
+              <div
+                key={s.n}
+                className={`flex items-center gap-3.5 px-3.5 py-3.5 ${
+                  i ? "border-t border-line" : ""
+                }`}
+              >
+                <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-ink font-mono text-[12px] font-bold text-surface">
+                  {s.n}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[14px] font-bold text-ink">{s.t}</div>
+                  <div className="mt-px text-[12px] leading-snug text-muted-foreground">{s.d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
 
-        {/* Como funciona */}
-        <section className="mb-12">
-          <h2 className="text-xl font-semibold mb-5 text-center">Como funciona</h2>
-          <ol className="space-y-3">
-            <Step
-              n={1}
-              icon={<UserPlus className="h-5 w-5" />}
-              title="Cadastre"
-              text="Crie sua conta como passageiro ou empresa em poucos passos."
-            />
-            <Step
-              n={2}
-              icon={<Settings2 className="h-5 w-5" />}
-              title="Gerencie"
-              text="Organize viagens, templates de rota e equipe de motoristas."
-            />
-            <Step
-              n={3}
-              icon={<CreditCard className="h-5 w-5" />}
-              title="Cobre"
-              text="Receba pagamentos e acompanhe inscrições em tempo real."
-            />
-          </ol>
-        </section>
-      </main>
-
-      <footer className="border-t border-border py-6">
-        <div className="mx-auto max-w-2xl px-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <span>Já tem conta?</span>
-          <Button asChild variant="link" size="sm" className="px-1">
-            <Link to="/login">Entrar</Link>
-          </Button>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-function Step({
-  n,
-  icon,
-  title,
-  text,
-}: {
-  n: number;
-  icon: React.ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <li className="flex items-start gap-4 rounded-xl border border-border bg-card p-4">
-      <div className="relative shrink-0">
-        <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          {icon}
-        </div>
-        <span className="absolute -top-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
-          {n}
-        </span>
+        <footer className="mt-7 flex items-center justify-between border-t border-line pt-4 text-[11px] text-muted-foreground">
+          <span>© 2026 movy</span>
+          <div className="flex items-center gap-3.5">
+            <Link to="/public/plans" className="hover:text-ink">
+              Planos
+            </Link>
+            <Link to="/login" className="hover:text-ink">
+              Entrar
+            </Link>
+          </div>
+        </footer>
       </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <p className="text-sm text-muted-foreground">{text}</p>
-      </div>
-    </li>
+    </PublicShell>
   );
 }

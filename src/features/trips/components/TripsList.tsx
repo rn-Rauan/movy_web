@@ -1,6 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import { Card } from "@/components/ui/card";
-import { TripCard } from "./TripCard";
+import { PublicTripCard } from "./PublicTripCard";
+import { EmptyState } from "@/components/feedback/EmptyState";
 import type { TripInstance } from "@/lib/types";
 
 interface TripsListProps {
@@ -10,17 +9,18 @@ interface TripsListProps {
 export function TripsList({ trips }: TripsListProps) {
   if (trips.length === 0) {
     return (
-      <Card className="p-6 text-center text-muted-foreground">Nenhuma viagem disponível.</Card>
+      <EmptyState
+        variant="trips"
+        title="Nenhuma viagem disponível"
+        description="Esta empresa ainda não tem viagens públicas."
+      />
     );
   }
-
   return (
-    <ul className="space-y-3">
+    <ul className="flex flex-col gap-2">
       {trips.map((trip) => (
         <li key={trip.id}>
-          <Link to="/public/trip-instances/$id" params={{ id: trip.id }} className="block">
-            <TripCard trip={trip} />
-          </Link>
+          <PublicTripCard trip={trip} />
         </li>
       ))}
     </ul>
