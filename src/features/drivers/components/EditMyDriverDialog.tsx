@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BottomSheet, BottomSheetContent } from "@/components/visual/BottomSheet";
 import { driversService } from "@/services/drivers.service";
 import { handleApiError } from "@/lib/handle-error";
 import { DriverProfileForm, type DriverFormPayload } from "./DriverProfileForm";
@@ -35,11 +35,8 @@ export function EditMyDriverDialog({ driver, onClose, onUpdated }: Props) {
   }
 
   return (
-    <Dialog open={!!driver} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Editar dados do motorista</DialogTitle>
-        </DialogHeader>
+    <BottomSheet open={!!driver} onOpenChange={(o) => !o && onClose()}>
+      <BottomSheetContent title="Editar dados do motorista">
         {driver && (
           <DriverProfileForm
             mode="edit"
@@ -48,7 +45,7 @@ export function EditMyDriverDialog({ driver, onClose, onUpdated }: Props) {
             onSubmit={handleSubmit}
           />
         )}
-      </DialogContent>
-    </Dialog>
+      </BottomSheetContent>
+    </BottomSheet>
   );
 }

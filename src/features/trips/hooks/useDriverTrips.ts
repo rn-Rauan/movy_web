@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { tripsService } from "@/services/trips.service";
+import { fetchAllPages } from "@/lib/paginate";
 import { handleApiError } from "@/lib/handle-error";
 import type { TripInstance, TripStatus } from "@/lib/types";
 
@@ -10,11 +11,9 @@ export function useDriverTrips(status?: TripStatus) {
 
   useEffect(() => {
     let cancelled = false;
-    tripsService
-      .listForDriver(1, 50, status)
-      .then((res) => {
+    fetchAllPages<TripInstance>((page, limit) => tripsService.listForDriver(page, limit, status))
+      .then((list) => {
         if (cancelled) return;
-        const list = Array.isArray(res) ? res : (res.data ?? []);
         const sorted = [...list].sort(
           (a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime(),
         );

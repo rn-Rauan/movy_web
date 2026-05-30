@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
 import { driversService } from "@/services/drivers.service";
+import { handleApiError } from "@/lib/handle-error";
 import type { Driver, Paginated } from "@/lib/types";
 
 export const DRIVER_ROLE_ID = 2;
@@ -20,9 +20,8 @@ export function useDrivers(orgId: string | null | undefined) {
         setDrivers(list);
       })
       .catch((err) => {
-        const msg = err instanceof Error ? err.message : "Erro ao carregar motoristas";
-        setError(msg);
-        toast.error(msg);
+        setError(err instanceof Error ? err.message : "Erro ao carregar motoristas");
+        handleApiError(err, "Erro ao carregar motoristas");
       });
   }, [orgId]);
 
