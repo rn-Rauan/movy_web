@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { LoginRequired } from "@/components/feedback/LoginRequired";
+import { useAuth } from "@/lib/auth-context";
 import { useBookings } from "@/features/bookings/hooks/useBookings";
 import type { BookingStatusFilter } from "@/features/bookings/hooks/useBookings";
 import { BookingsList } from "@/features/bookings/components/BookingsList";
@@ -16,6 +18,18 @@ export const Route = createFileRoute("/_protected/my-bookings")({
 });
 
 function MyBookingsPage() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return (
+      <AppShell title="Minhas inscrições">
+        <LoginRequired message="Entre na sua conta para ver suas inscrições." />
+      </AppShell>
+    );
+  }
+  return <MyBookingsContent />;
+}
+
+function MyBookingsContent() {
   const {
     bookings,
     filtered,

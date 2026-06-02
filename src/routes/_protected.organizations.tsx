@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { LoginRequired } from "@/components/feedback/LoginRequired";
+import { useAuth } from "@/lib/auth-context";
 import { useOrganizations } from "@/features/organizations/hooks/useOrganizations";
 import { OrgsList } from "@/features/organizations/components/OrgsList";
 
@@ -13,6 +15,18 @@ export const Route = createFileRoute("/_protected/organizations")({
 });
 
 function OrganizationsPage() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return (
+      <AppShell title="Empresas">
+        <LoginRequired message="Entre na sua conta para ver as empresas e reservar viagens." />
+      </AppShell>
+    );
+  }
+  return <OrganizationsContent />;
+}
+
+function OrganizationsContent() {
   const { orgs, filtered, search, setSearch, resetFilters, hasActiveFilters, loading, error } =
     useOrganizations();
 

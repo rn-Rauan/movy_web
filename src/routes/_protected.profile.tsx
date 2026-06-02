@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LoginRequired } from "@/components/feedback/LoginRequired";
 import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
 import { api } from "@/lib/api";
@@ -59,6 +60,18 @@ function initials(name?: string) {
 }
 
 function ProfileIndex() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return (
+      <AppShell title="Perfil">
+        <LoginRequired message="Entre na sua conta para ver e editar seu perfil." />
+      </AppShell>
+    );
+  }
+  return <ProfileIndexContent />;
+}
+
+function ProfileIndexContent() {
   const { user, logout, refreshUser } = useAuth();
   const { hasDriverProfile, isDriver } = useRole();
 

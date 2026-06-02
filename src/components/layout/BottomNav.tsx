@@ -10,7 +10,6 @@ import {
   User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
 import { cn } from "@/lib/utils";
 
@@ -52,11 +51,10 @@ const driverTabs: NavItem[] = [
 ];
 
 export function BottomNav() {
-  const { isAuthenticated } = useAuth();
   const { isAdmin, isDriver, adminOrgId, roleLoading } = useRole();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
-  if (!isAuthenticated || roleLoading) return null;
+  if (roleLoading) return null;
 
   const tabs = isAdmin && adminOrgId ? adminTabs() : isDriver ? driverTabs : passengerTabs;
 

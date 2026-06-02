@@ -1,5 +1,5 @@
-import { useRouter } from "@tanstack/react-router";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
+import { ArrowLeft, LogIn, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { BottomNav } from "./BottomNav";
 
@@ -15,6 +15,7 @@ type Props = {
 export function AppShell({ title, back, children, showTabs = true, action }: Props) {
   const router = useRouter();
   const { logout, isAuthenticated } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -36,7 +37,7 @@ export function AppShell({ title, back, children, showTabs = true, action }: Pro
           </div>
           <div className="flex flex-none items-center gap-1.5">
             {action}
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <button
                 onClick={logout}
                 aria-label="Sair"
@@ -44,6 +45,15 @@ export function AppShell({ title, back, children, showTabs = true, action }: Pro
               >
                 <LogOut className="h-[18px] w-[18px]" strokeWidth={1.8} />
               </button>
+            ) : (
+              <Link
+                to="/login"
+                search={{ redirect: pathname }}
+                aria-label="Entrar"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-ink-2 transition hover:bg-line-soft"
+              >
+                <LogIn className="h-[18px] w-[18px]" strokeWidth={1.8} />
+              </Link>
             )}
           </div>
         </div>

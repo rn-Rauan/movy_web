@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LoginRequired } from "@/components/feedback/LoginRequired";
+import { useAuth } from "@/lib/auth-context";
 import { useTripDetail } from "@/features/trips/hooks/useTripDetail";
 import { useBookingForm } from "@/features/bookings/hooks/useBookingForm";
 import { useUserBookingForTrip } from "@/features/bookings/hooks/useUserBookingForTrip";
@@ -52,6 +54,18 @@ const PAYMENT_OPTIONS: PaymentOption<PaymentMethod>[] = [
 ];
 
 function BookPage() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return (
+      <AppShell title="Inscrição" back>
+        <LoginRequired message="Entre na sua conta para reservar esta viagem." />
+      </AppShell>
+    );
+  }
+  return <BookContent />;
+}
+
+function BookContent() {
   const { tripId } = Route.useParams();
   const navigate = useNavigate();
   const { trip } = useTripDetail(tripId, { authenticated: true });

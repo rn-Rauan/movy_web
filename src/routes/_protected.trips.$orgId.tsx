@@ -3,6 +3,8 @@ import { z } from "zod";
 import { AppShell } from "@/components/layout/AppShell";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { LoginRequired } from "@/components/feedback/LoginRequired";
+import { useAuth } from "@/lib/auth-context";
 import { useTrips } from "@/features/trips/hooks/useTrips";
 import { TripsList } from "@/features/trips/components/TripsList";
 
@@ -23,6 +25,18 @@ function TripsRoute() {
 }
 
 function TripsListPage() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return (
+      <AppShell title="Viagens" back>
+        <LoginRequired message="Entre na sua conta para ver as viagens desta empresa." />
+      </AppShell>
+    );
+  }
+  return <TripsListContent />;
+}
+
+function TripsListContent() {
   const { orgId } = Route.useParams();
   const { slug } = Route.useSearch();
   const { trips, loading, error } = useTrips({ orgId, slug });

@@ -1,21 +1,13 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { useAuth } from "@/lib/auth-context";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
+// Antes esse layout fazia hard redirect pra /login se !isAuthenticated. Agora deixa o
+// Outlet renderizar sempre e cada rota filha decide se mostra <LoginRequired /> inline
+// (mantendo AppShell + BottomNav visíveis pra deslogado). Mantemos o nome `_protected`
+// pra evitar mexer em routeTree.gen.ts e em todos os createFileRoute filhos.
 export const Route = createFileRoute("/_protected")({
   component: ProtectedLayout,
 });
 
 function ProtectedLayout() {
-  const { isAuthenticated, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate({ to: "/login" });
-    }
-  }, [loading, isAuthenticated, navigate]);
-
-  if (loading || !isAuthenticated) return null;
   return <Outlet />;
 }

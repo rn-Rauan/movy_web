@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { LoginRequired } from "@/components/feedback/LoginRequired";
+import { useAuth } from "@/lib/auth-context";
 import {
   DriverProfileForm,
   type DriverFormPayload,
@@ -25,6 +27,18 @@ export const Route = createFileRoute("/_protected/profile/driver")({
 });
 
 function DriverProfilePage() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return (
+      <AppShell title="Perfil de motorista" back>
+        <LoginRequired message="Entre na sua conta para acessar o perfil de motorista." />
+      </AppShell>
+    );
+  }
+  return <DriverProfileContent />;
+}
+
+function DriverProfileContent() {
   const { driver, setDriver, loading, notFound, error } = useMyDriver();
   const { isDriver, refetchRole } = useRole();
   const [submitting, setSubmitting] = useState(false);

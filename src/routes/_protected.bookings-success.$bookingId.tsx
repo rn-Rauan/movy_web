@@ -6,6 +6,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { LoginRequired } from "@/components/feedback/LoginRequired";
+import { useAuth } from "@/lib/auth-context";
 import { useBookingDetail } from "@/features/bookings/hooks/useBookingDetail";
 import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 import { formatDateTime, paymentMethodLabel, formatPrice, formatFullDate } from "@/lib/format";
@@ -17,6 +19,18 @@ export const Route = createFileRoute("/_protected/bookings-success/$bookingId")(
 });
 
 function BookingSuccessPage() {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return (
+      <AppShell title="Confirmação" showTabs={false}>
+        <LoginRequired message="Entre na sua conta para ver a confirmação da reserva." />
+      </AppShell>
+    );
+  }
+  return <BookingSuccessContent />;
+}
+
+function BookingSuccessContent() {
   const { bookingId } = Route.useParams();
   const { booking, loading, error } = useBookingDetail(bookingId);
 
