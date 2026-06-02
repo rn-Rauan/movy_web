@@ -22,6 +22,33 @@ function priceOf(t: PublicTrip): number {
   return t.priceOneWay ?? t.priceRoundTrip ?? t.priceReturn ?? Number.POSITIVE_INFINITY;
 }
 
+/** A rota (template) ou, na falta dele, a própria instância — chave de agrupamento. */
+function routeKeyOf(t: PublicTrip): string {
+  return t.tripTemplateId ?? t.id;
+}
+
+export type TripGroup = { trip: PublicTrip; extraDatesCount: number };
+
+/**
+ * Agrupa instâncias da mesma rota (template recorrente gera uma por dia). Mantém só a
+ * próxima saída como representante e conta as demais datas, evitando poluir a lista.
+ */
+export function groupByRoute(list: PublicTrip[]): TripGroup[] {
+  const map = new Map<string, PublicTrip[]>();
+  for (const t of list) {
+    const key = routeKeyOf(t);
+    const arr = map.get(key);
+    if (arr) arr.push(t);
+    else map.set(key, [t]);
+  }
+  return [...map.values()].map((instances) => {
+    const byDate = [...instances].sort(
+      (a, b) => new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime(),
+    );
+    return { trip: byDate[0], extraDatesCount: byDate.length - 1 };
+  });
+}
+
 export function usePublicTrips() {
   const [trips, setTrips] = useState<PublicTrip[] | null>(null);
   const [search, setSearch] = useState("");
@@ -31,7 +58,7 @@ export function usePublicTrips() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    (tripsService.listPublic() as Promise<Paginated<PublicTrip>>)
+    (tripsService.listPublic({ limit: 50 }) as Promise<Paginated<PublicTrip>>)
       .then((res) => setTrips(Array.isArray(res) ? res : (res.data ?? [])))
       .catch((err) => {
         setError(err.message);
@@ -39,7 +66,7 @@ export function usePublicTrips() {
       });
   }, []);
 
-  const filtered = useMemo(() => {
+  const grouped = useMemo(() => {
     const list = trips ?? [];
     const q = search.trim().toLowerCase();
 
@@ -56,7 +83,12 @@ export function usePublicTrips() {
       return true;
     });
 
-    const sorted = [...filteredList].sort((a, b) => {
+    // Agrupa por rota (representante = próxima saída) antes de ordenar os grupos.
+    const groups = groupByRoute(filteredList);
+
+    return groups.sort((ga, gb) => {
+      const a = ga.trip;
+      const b = gb.trip;
       switch (sortBy) {
         case "DEPARTURE_DESC":
           return new Date(b.departureTime).getTime() - new Date(a.departureTime).getTime();
@@ -69,8 +101,6 @@ export function usePublicTrips() {
           return new Date(a.departureTime).getTime() - new Date(b.departureTime).getTime();
       }
     });
-
-    return sorted;
   }, [trips, search, shift, dateRange, sortBy]);
 
   function resetFilters() {
@@ -85,7 +115,7 @@ export function usePublicTrips() {
 
   return {
     trips,
-    filtered,
+    grouped,
     search,
     setSearch,
     shift,

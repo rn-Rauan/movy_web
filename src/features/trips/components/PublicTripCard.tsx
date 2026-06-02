@@ -1,13 +1,17 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, Users } from "lucide-react";
+import { CalendarDays, ChevronRight, Users } from "lucide-react";
 import { RouteVisualHorizontal } from "@/components/passenger/RouteVisualHorizontal";
-import { OccupancyBar } from "@/components/passenger/OccupancyBar";
+import { OccupancyBar } from "@/components/visual/OccupancyBar";
 import { formatDateTime } from "@/lib/format";
 import { BR_TZ } from "@/lib/timezone";
 import type { PublicTrip } from "../hooks/usePublicTrips";
 
 interface PublicTripCardProps {
   trip: PublicTrip;
+  /** Outras datas disponíveis da mesma rota (viagens recorrentes agrupadas). */
+  extraDatesCount?: number;
+  /** Inscritos reais (via /bookings/availability — só logado). Habilita a barra de ocupação estilo admin. */
+  booked?: number | null;
 }
 
 function formatBrShortDate(iso: string) {
@@ -20,9 +24,10 @@ function formatBrShortDate(iso: string) {
   });
 }
 
-export function PublicTripCard({ trip }: PublicTripCardProps) {
-  const hasOccupancy = trip.availableSlots != null;
-  const capacity = trip.totalCapacity ?? trip.availableSlots;
+export function PublicTripCard({ trip, extraDatesCount = 0, booked }: PublicTripCardProps) {
+  const bookedCount = booked ?? trip.bookedCount;
+  const hasOccupancy = bookedCount != null;
+  const capacity = trip.totalCapacity;
   const price = trip.priceOneWay;
   const time = formatDateTime(trip.departureTime, true);
   const date = formatBrShortDate(trip.departureTime);
@@ -40,7 +45,15 @@ export function PublicTripCard({ trip }: PublicTripCardProps) {
           <div className="font-mono text-[20px] font-extrabold leading-none tracking-[-0.5px] text-ink">
             {time}
           </div>
-          <div className="mt-1 text-[11px] font-bold text-muted-foreground">{date}</div>
+          <div className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
+            {date}
+            {extraDatesCount > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-bold text-accent">
+                <CalendarDays className="h-2.5 w-2.5" strokeWidth={2} />+{extraDatesCount}{" "}
+                {extraDatesCount === 1 ? "data" : "datas"}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-accent-soft text-[9px] font-extrabold text-accent">
@@ -54,7 +67,9 @@ export function PublicTripCard({ trip }: PublicTripCardProps) {
 
       <div className="mt-3.5 flex items-center justify-between gap-2.5 border-t border-dashed border-line pt-3">
         {hasOccupancy ? (
-          <OccupancyBar available={trip.availableSlots!} total={capacity ?? trip.availableSlots!} />
+          <div className="max-w-[140px] flex-1">
+            <OccupancyBar booked={bookedCount!} total={capacity ?? 0} />
+          </div>
         ) : capacity != null ? (
           <span className="flex items-center gap-1.5 text-[11px] font-bold text-ink-2">
             <Users className="h-3 w-3 text-muted-foreground" strokeWidth={1.6} />

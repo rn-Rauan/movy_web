@@ -13,9 +13,11 @@ import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { useAuth } from "@/lib/auth-context";
 import { useTripDetail } from "@/features/trips/hooks/useTripDetail";
+import { useTripDates } from "@/features/trips/hooks/useTripDates";
 import { useUserBookingForTrip } from "@/features/bookings/hooks/useUserBookingForTrip";
 import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 import { formatDateTime, formatFullDate } from "@/lib/format";
+import { BR_TZ } from "@/lib/timezone";
 import { ShareButton } from "@/components/ShareButton";
 import { StatusPill } from "@/components/passenger/StatusPill";
 import { RouteVisualTimeline } from "@/components/passenger/RouteVisualTimeline";
@@ -30,6 +32,19 @@ export const Route = createFileRoute("/public/trip-instances/$id")({
   }),
   component: PublicTripDetailPage,
 });
+
+function formatChipDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d
+    .toLocaleDateString("pt-BR", {
+      weekday: "short",
+      day: "2-digit",
+      month: "2-digit",
+      timeZone: BR_TZ,
+    })
+    .replace(".", "");
+}
 
 function durationLabel(departure: string, arrival?: string): string | null {
   if (!arrival) return null;
@@ -47,6 +62,11 @@ function PublicTripDetailPage() {
   const { id } = Route.useParams();
   const { isAuthenticated } = useAuth();
   const { trip, availability, loading, error } = useTripDetail(id);
+  const tripDates = useTripDates({
+    organizationId: trip?.organizationId,
+    templateId: trip?.tripTemplateId,
+    enabled: !!trip?.tripTemplateId,
+  });
   const { booking: existingBooking } = useUserBookingForTrip(isAuthenticated ? id : undefined);
   const { name: driverName } = useDriverName(isAuthenticated ? trip?.driverId : null);
 
@@ -106,6 +126,33 @@ function PublicTripDetailPage() {
                 }}
                 className="mt-3.5"
               />
+
+              {tripDates.length > 1 && (
+                <div className="mt-3.5 border-t border-dashed border-line pt-3">
+                  <h3 className="mb-2 text-[11px] font-bold uppercase tracking-[0.6px] text-muted-foreground">
+                    Escolha a data
+                  </h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {tripDates.map((d) => {
+                      const active = d.id === id;
+                      return (
+                        <Link
+                          key={d.id}
+                          to="/public/trip-instances/$id"
+                          params={{ id: d.id }}
+                          className={
+                            active
+                              ? "rounded-full border border-ink bg-ink px-3 py-1.5 text-[12px] font-bold text-surface"
+                              : "rounded-full border border-line bg-surface px-3 py-1.5 text-[12px] font-bold text-ink-2 hover:border-ink-2"
+                          }
+                        >
+                          {formatChipDate(d.departureTime)}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-3.5 border-t border-dashed border-line pt-3">
                 <MetadataRow items={buildMeta(trip, availability?.availableSlots)} />

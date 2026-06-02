@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Search, ArrowUpDown } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -6,6 +7,7 @@ import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { usePublicTrips } from "@/features/trips/hooks/usePublicTrips";
 import type { Shift, SortBy } from "@/features/trips/hooks/usePublicTrips";
+import { useTripsAvailability } from "@/features/trips/hooks/useTripsAvailability";
 import { DATE_RANGE_OPTIONS, type DateRange } from "@/lib/date-filters";
 import { PublicTripCard } from "@/features/trips/components/PublicTripCard";
 import { Input } from "@/components/ui/input";
@@ -49,7 +51,7 @@ export const Route = createFileRoute("/public/trip-instances/")({
 
 function PublicTripsPage() {
   const {
-    filtered,
+    grouped,
     search,
     setSearch,
     shift,
@@ -63,6 +65,9 @@ function PublicTripsPage() {
     loading,
     error,
   } = usePublicTrips();
+
+  const ids = useMemo(() => grouped.map((g) => g.trip.id), [grouped]);
+  const availability = useTripsAvailability(ids);
 
   return (
     <AppShell title="Explorar">
@@ -88,7 +93,7 @@ function PublicTripsPage() {
         <LoadingList count={3} height="h-40" />
       ) : error ? (
         <ErrorCard message={error} />
-      ) : filtered.length === 0 ? (
+      ) : grouped.length === 0 ? (
         <EmptyState
           variant="search"
           title="Nenhuma viagem encontrada"
@@ -100,9 +105,9 @@ function PublicTripsPage() {
           <div className="mb-2.5 flex items-center justify-between gap-2 px-0.5">
             <span className="text-[12px] font-semibold text-muted-foreground">
               <span className="font-bold text-ink">
-                {filtered.length} {filtered.length === 1 ? "viagem" : "viagens"}
+                {grouped.length} {grouped.length === 1 ? "rota" : "rotas"}
               </span>{" "}
-              {filtered.length === 1 ? "encontrada" : "encontradas"}
+              {grouped.length === 1 ? "encontrada" : "encontradas"}
             </span>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
               <SelectTrigger className="h-8 w-auto justify-start gap-1.5 rounded-full border-line bg-surface px-2.5 text-[11px] font-bold text-ink-2">
@@ -119,9 +124,13 @@ function PublicTripsPage() {
             </Select>
           </div>
           <ul className="flex flex-col gap-2">
-            {filtered.map((trip) => (
+            {grouped.map(({ trip, extraDatesCount }) => (
               <li key={trip.id}>
-                <PublicTripCard trip={trip} />
+                <PublicTripCard
+                  trip={trip}
+                  extraDatesCount={extraDatesCount}
+                  booked={availability.get(trip.id)?.activeCount}
+                />
               </li>
             ))}
           </ul>

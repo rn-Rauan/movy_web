@@ -6,6 +6,8 @@ import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { Input } from "@/components/ui/input";
 import { useTrips } from "@/features/trips/hooks/useTrips";
+import { groupByRoute } from "@/features/trips/hooks/usePublicTrips";
+import { useTripsAvailability } from "@/features/trips/hooks/useTripsAvailability";
 import { organizationsService } from "@/services/organizations.service";
 import { DATE_RANGE_OPTIONS, isInDateRange, type DateRange } from "@/lib/date-filters";
 import { ShareButton } from "@/components/ShareButton";
@@ -81,6 +83,9 @@ function PublicOrgPage() {
     });
   }, [trips, shift, dateRange, search]);
 
+  const grouped = useMemo(() => groupByRoute(visible), [visible]);
+  const ids = useMemo(() => grouped.map((g) => g.trip.id), [grouped]);
+  const availability = useTripsAvailability(ids);
   const hasTrips = (trips?.length ?? 0) > 0;
   const hasActiveFilters = shift !== "ALL" || dateRange !== "ANY" || search.trim() !== "";
 
@@ -147,7 +152,7 @@ function PublicOrgPage() {
         <LoadingList count={2} height="h-36" />
       ) : error ? (
         <ErrorCard message={error} />
-      ) : visible.length === 0 ? (
+      ) : grouped.length === 0 ? (
         <div className="rounded-[14px] border border-line bg-surface p-6 text-center text-[13px] text-muted-foreground">
           <p className="mb-3">
             {hasActiveFilters
@@ -166,9 +171,13 @@ function PublicOrgPage() {
         </div>
       ) : (
         <ul className="flex flex-col gap-2">
-          {visible.map((trip) => (
+          {grouped.map(({ trip, extraDatesCount }) => (
             <li key={trip.id}>
-              <PublicTripCard trip={trip} />
+              <PublicTripCard
+                trip={trip}
+                extraDatesCount={extraDatesCount}
+                booked={availability.get(trip.id)?.activeCount}
+              />
             </li>
           ))}
         </ul>

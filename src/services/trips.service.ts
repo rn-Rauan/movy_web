@@ -13,7 +13,17 @@ type TripCreatePayload = {
 };
 
 export const tripsService = {
-  listPublic: () => api<Paginated<TripInstance>>("/public/trip-instances", { auth: false }),
+  // Public endpoint (no occupancy in the payload — only `totalCapacity`). Real occupancy for
+  // logged-in users comes from `/bookings/availability/{id}` (see useTripsAvailability). We pass
+  // `auth: true` only so a token is attached when present; anonymous callers just omit it (no 401).
+  listPublic: (params?: { organizationId?: string; page?: number; limit?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.organizationId) qs.set("organizationId", params.organizationId);
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.limit) qs.set("limit", String(params.limit));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return api<Paginated<TripInstance>>(`/public/trip-instances${suffix}`, { auth: true });
+  },
 
   listByOrgId: (orgId: string, page = 1, limit = 10) => {
     const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
