@@ -147,7 +147,10 @@ src/
 │   │   │   ├── usePublicTrips.ts    Busca + filtro do marketplace público
 │   │   │   ├── useTrips.ts          Lista por orgId ou slug
 │   │   │   ├── useTripDetail.ts     Detalhe + disponibilidade de inscrição
-│   │   │   └── useTripPassengers.ts Lista passageiros (silencia 403 se não-membro)
+│   │   │   ├── useTripPassengers.ts Lista passageiros (silencia 403 se não-membro)
+│   │   │   ├── useAdminTripDetail.ts Detalhe admin + transições de status/assignment
+│   │   │   ├── useTripCreateOptions.ts Opções (templates/drivers/vehicles) p/ criar instância
+│   │   │   └── useDriverTrips.ts    Viagens atribuídas ao motorista (GET /trip-instances/driver/me)
 │   │   └── components/
 │   │       ├── TripCard.tsx         Card compacto (lista protegida)
 │   │       ├── TripsList.tsx        Lista com links para detalhe
@@ -158,7 +161,8 @@ src/
 │   │   ├── hooks/
 │   │   │   ├── useBookings.ts       Lista inscrições do usuário
 │   │   │   ├── useBookingDetail.ts  Detalhe + cancel()
-│   │   │   └── useBookingForm.ts    Form state + prefill() + submit()
+│   │   │   ├── useBookingForm.ts    Form state + prefill() + submit()
+│   │   │   └── useUserBookingForTrip.ts Inscrição do user p/ uma viagem (gate "Ver inscrição" no detalhe público)
 │   │   └── components/
 │   │       ├── BookingCard.tsx
 │   │       ├── BookingsList.tsx     Lista com empty state
@@ -168,13 +172,13 @@ src/
 │   │   ├── hooks/
 │   │   │   └── useOrganizations.ts  Lista organizações ativas
 │   │   └── components/
-│   │       ├── OrgCard.tsx
+│   │       ├── CompanyCard.tsx
 │   │       └── OrgsList.tsx         Lista com links para trips
 │   │
 │   ├── drivers/                Self-service (useMyDriver, DriverProfileForm, EditMyDriverDialog) + admin (DriverCard sem edit — só remove)
 │   │   ├── components/
 │   │   │   ├── DriverProfileForm.tsx   Form usado em create e edit (schema factory makeDriverSchema com initialExpiresAt)
-│   │   │   ├── EditMyDriverDialog.tsx  Wrapper Dialog do form modo edit (chama PATCH /drivers/me)
+│   │   │   ├── EditMyDriverDialog.tsx  Wrapper BottomSheet do form modo edit (chama PATCH /drivers/me)
 │   │   │   ├── CnhCategoriesField.tsx  Grid de checkboxes A–E (multi-categoria)
 │   │   │   ├── DriverDisplayName.tsx   Renderiza nome via useDriverName (cache global); fallback "Motorista"
 │   │   │   ├── DriverCard.tsx          Card admin com badge de status + botão remover (sem pencil — admin não edita CNH)
@@ -191,7 +195,7 @@ src/
 │   ├── scheduling/             SchedulingConfigCard + useSchedulingConfig (toggle + daysAhead — cron é global no backend)
 │   ├── subscriptions/          Histórico de assinaturas da org (useSubscriptions + SubscriptionCard/List) — resolve planId→Plan via /public/plans
 │   │                           (payments.service segue existindo p/ tarifas de viagem, consumido só por financial/dashboard — sem tela própria)
-│   └── financial/              Relatório financeiro admin — `useFinancialReport(orgId, monthStart)` agrega payments + trip-instances no client (sem endpoint dedicado no backend)
+│   └── financial/              Relatório financeiro admin — `useFinancialReport(orgId, monthStart)` agrega payments + trip-instances no client (sem endpoint dedicado no backend); `useOrgRevenue` expõe receita prevista p/ o dashboard
 │
 ├── services/                Abstração de chamadas de API (repository pattern)
 │   ├── trips.service.ts
@@ -214,6 +218,12 @@ src/
 │   │   ├── LoadingList.tsx  Skeletons de lista
 │   │   ├── ErrorCard.tsx    Card de erro
 │   │   └── EmptyState.tsx   Estado vazio com action opcional
+│   ├── visual/             Primitivas de apresentação reutilizáveis (fora do shadcn/ui)
+│   │   ├── BottomSheet.tsx  Sheet de baixo (Radix Dialog) — title/description/footer/sheetTop; padrão p/ forms e edição
+│   │   ├── KpiCard.tsx      Card de métrica (dashboard)
+│   │   ├── StatusPill.tsx   Badge de status
+│   │   ├── Timeline.tsx · RouteVisual.tsx  Visuais de viagem/rota
+│   │   └── UsageBar.tsx · OccupancyBar.tsx Barras de uso/ocupação
 │   └── ShareButton.tsx      Web Share API + clipboard fallback
 │
 └── lib/
@@ -457,6 +467,7 @@ O backend não inclui `userName`/`userEmail` no payload de `Driver` da maioria d
 - **Após alterar rotas:** TanStack Router regenera `routeTree.gen.ts` automaticamente em dev mode
 - **Hooks como use cases:** cada hook de feature encapsula fetch + state + side effects; nunca duplicar lógica entre hooks
 - **Componentes de feature:** recebem dados via props, não fazem fetch próprio — separação pura de apresentação
+- **Forms e edição usam `BottomSheet`:** o padrão atual é o primitivo compartilhado `components/visual/BottomSheet.tsx` (não `Dialog` cru) — ver `TemplateFormSheet`, `TripFormSheet`, `EditMyDriverDialog`. Cuidado: arquivos com sufixo `*Dialog` (ex: `GenerateInstancesDialog`, `AddDriverDialog`, `RemoveDriverDialog`) podem ainda ser baseados em `Dialog`/`AlertDialog` — o nome é histórico, confira o import antes de assumir.
 
 ---
 

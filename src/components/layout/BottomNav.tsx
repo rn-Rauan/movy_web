@@ -8,8 +8,10 @@ import {
   Bus,
   FileText,
   User,
+  LogIn,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +45,22 @@ function adminTabs(): NavItem[] {
   ];
 }
 
+const guestTabs: NavItem[] = [
+  {
+    to: "/public/trip-instances",
+    icon: Compass,
+    label: "Explorar",
+    match: "/public/trip-instances",
+  },
+  {
+    to: "/public/organizations",
+    icon: Building2,
+    label: "Empresas",
+    match: "/public/organizations",
+  },
+  { to: "/login", icon: LogIn, label: "Entrar", match: "/login" },
+];
+
 const driverTabs: NavItem[] = [
   { to: "/public/trip-instances", icon: Compass, label: "Explorar", match: "/public" },
   { to: "/my-trips", icon: Truck, label: "Como motorista", match: "/my-trips" },
@@ -51,12 +69,19 @@ const driverTabs: NavItem[] = [
 ];
 
 export function BottomNav() {
+  const { isAuthenticated } = useAuth();
   const { isAdmin, isDriver, adminOrgId, roleLoading } = useRole();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   if (roleLoading) return null;
 
-  const tabs = isAdmin && adminOrgId ? adminTabs() : isDriver ? driverTabs : passengerTabs;
+  const tabs = !isAuthenticated
+    ? guestTabs
+    : isAdmin && adminOrgId
+      ? adminTabs()
+      : isDriver
+        ? driverTabs
+        : passengerTabs;
 
   const colsClass =
     tabs.length === 5 ? "grid-cols-5" : tabs.length === 4 ? "grid-cols-4" : "grid-cols-3";

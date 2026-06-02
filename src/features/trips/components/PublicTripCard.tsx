@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Users } from "lucide-react";
 import { RouteVisualHorizontal } from "@/components/passenger/RouteVisualHorizontal";
 import { OccupancyBar } from "@/components/passenger/OccupancyBar";
 import { formatDateTime } from "@/lib/format";
@@ -21,8 +21,8 @@ function formatBrShortDate(iso: string) {
 }
 
 export function PublicTripCard({ trip }: PublicTripCardProps) {
-  const seats = trip.availableSlots ?? trip.totalCapacity;
-  const total = trip.totalCapacity ?? seats;
+  const hasOccupancy = trip.availableSlots != null;
+  const capacity = trip.totalCapacity ?? trip.availableSlots;
   const price = trip.priceOneWay;
   const time = formatDateTime(trip.departureTime, true);
   const date = formatBrShortDate(trip.departureTime);
@@ -53,7 +53,16 @@ export function PublicTripCard({ trip }: PublicTripCardProps) {
       <RouteVisualHorizontal from={trip.departurePoint ?? "—"} to={trip.destination ?? "—"} />
 
       <div className="mt-3.5 flex items-center justify-between gap-2.5 border-t border-dashed border-line pt-3">
-        <OccupancyBar available={seats} total={total} />
+        {hasOccupancy ? (
+          <OccupancyBar available={trip.availableSlots!} total={capacity ?? trip.availableSlots!} />
+        ) : capacity != null ? (
+          <span className="flex items-center gap-1.5 text-[11px] font-bold text-ink-2">
+            <Users className="h-3 w-3 text-muted-foreground" strokeWidth={1.6} />
+            Até {capacity} lugares
+          </span>
+        ) : (
+          <span />
+        )}
         <div className="flex items-center gap-2.5">
           {price != null && (
             <div className="text-right">

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { Building2, MapPin } from "lucide-react";
+import { ArrowRight, Building2, MapPin } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
 import { PublicShell } from "@/components/layout/PublicShell";
@@ -28,12 +28,6 @@ function LandingPage() {
     <PublicShell>
       <div className="pt-7 pb-8">
         <section className="mb-6">
-          <div className="mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1">
-            <span className="h-[5px] w-[5px] rounded-full bg-accent" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3px] text-accent">
-              +1.240 viagens essa semana
-            </span>
-          </div>
           <h1 className="text-balance text-[30px] font-extrabold leading-[1.08] tracking-[-1px] text-ink">
             Viagens compartilhadas pra empresas e passageiros.
           </h1>
@@ -59,6 +53,12 @@ function LandingPage() {
             body="Cadastre sua empresa, organize sua frota e cobre passageiros."
             cta="Cadastrar empresa"
           />
+          <Link
+            to="/public/plans"
+            className="inline-flex items-center gap-1 self-start pl-0.5 text-[12px] font-bold text-accent hover:underline"
+          >
+            Comparar planos e preços <ArrowRight className="h-3 w-3" strokeWidth={2.4} />
+          </Link>
         </section>
 
         <section className="mb-7">

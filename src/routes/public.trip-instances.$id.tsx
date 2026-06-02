@@ -46,7 +46,7 @@ function durationLabel(departure: string, arrival?: string): string | null {
 function PublicTripDetailPage() {
   const { id } = Route.useParams();
   const { isAuthenticated } = useAuth();
-  const { trip, loading, error } = useTripDetail(id);
+  const { trip, availability, loading, error } = useTripDetail(id);
   const { booking: existingBooking } = useUserBookingForTrip(isAuthenticated ? id : undefined);
   const { name: driverName } = useDriverName(isAuthenticated ? trip?.driverId : null);
 
@@ -108,7 +108,7 @@ function PublicTripDetailPage() {
               />
 
               <div className="mt-3.5 border-t border-dashed border-line pt-3">
-                <MetadataRow items={buildMeta(trip)} />
+                <MetadataRow items={buildMeta(trip, availability?.availableSlots)} />
               </div>
 
               {driverName && (
@@ -173,6 +173,7 @@ function PublicTripDetailPage() {
 
           <StickyCta
             trip={trip}
+            availableSlots={availability?.availableSlots}
             existingBookingId={existingBooking?.id}
             isAuthenticated={isAuthenticated}
             id={id}
@@ -183,13 +184,16 @@ function PublicTripDetailPage() {
   );
 }
 
-function buildMeta(trip: {
-  departureTime: string;
-  arrivalEstimate?: string;
-  availableSlots?: number;
-  totalCapacity: number;
-  priceOneWay?: number;
-}): MetadataItem[] {
+function buildMeta(
+  trip: {
+    departureTime: string;
+    arrivalEstimate?: string;
+    availableSlots?: number;
+    totalCapacity: number;
+    priceOneWay?: number;
+  },
+  realSlots?: number,
+): MetadataItem[] {
   const items: MetadataItem[] = [];
   const dur = durationLabel(trip.departureTime, trip.arrivalEstimate);
   if (dur) {
@@ -199,12 +203,22 @@ function buildMeta(trip: {
       icon: <Clock className="h-3 w-3" strokeWidth={1.6} />,
     });
   }
-  const seats = trip.availableSlots ?? trip.totalCapacity;
-  items.push({
-    label: "Vagas",
-    value: seats <= 0 ? "Lotada" : `${seats} livres`,
-    icon: <Users className="h-3 w-3" strokeWidth={1.6} />,
-  });
+  // `availableSlots` só existe via endpoint autenticado de disponibilidade. Sem ele
+  // (visitante deslogado), mostramos a capacidade neutra em vez de vagas falsas.
+  const seats = realSlots ?? trip.availableSlots;
+  items.push(
+    seats != null
+      ? {
+          label: "Vagas",
+          value: seats <= 0 ? "Lotada" : `${seats} livres`,
+          icon: <Users className="h-3 w-3" strokeWidth={1.6} />,
+        }
+      : {
+          label: "Capacidade",
+          value: `Até ${trip.totalCapacity} lugares`,
+          icon: <Users className="h-3 w-3" strokeWidth={1.6} />,
+        },
+  );
   if (trip.priceOneWay != null) {
     items.push({
       label: "Preço",
@@ -218,6 +232,7 @@ function buildMeta(trip: {
 
 function StickyCta({
   trip,
+  availableSlots,
   existingBookingId,
   isAuthenticated,
   id,
@@ -228,11 +243,13 @@ function StickyCta({
     totalCapacity: number;
     availableSlots?: number;
   };
+  availableSlots?: number;
   existingBookingId?: string;
   isAuthenticated: boolean;
   id: string;
 }) {
-  const seats = trip.availableSlots ?? trip.totalCapacity;
+  // Só consideramos "lotada" quando há disponibilidade real (logado). Sem ela, não bloqueamos o CTA.
+  const seats = availableSlots ?? trip.availableSlots;
   const lotada = seats != null && seats <= 0;
   const price = trip.priceOneWay;
 

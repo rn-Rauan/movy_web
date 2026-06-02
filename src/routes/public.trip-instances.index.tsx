@@ -105,7 +105,7 @@ function PublicTripsPage() {
               {filtered.length === 1 ? "encontrada" : "encontradas"}
             </span>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
-              <SelectTrigger className="h-8 gap-1.5 rounded-full border-line bg-surface px-2.5 text-[11px] font-bold text-ink-2">
+              <SelectTrigger className="h-8 w-auto justify-start gap-1.5 rounded-full border-line bg-surface px-2.5 text-[11px] font-bold text-ink-2">
                 <ArrowUpDown className="h-3 w-3" strokeWidth={1.6} />
                 <SelectValue />
               </SelectTrigger>

@@ -13,6 +13,14 @@ type OrgUpdatePayload = {
 export const organizationsService = {
   listActive: () => api<Organization[] | Paginated<Organization>>("/organizations/active"),
 
+  /** Public directory of active organizations — anonymous, paginated. */
+  listPublic: (page = 1, limit = 50) => {
+    const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+    return api<Organization[] | Paginated<Organization>>(`/public/organizations?${qs.toString()}`, {
+      auth: false,
+    });
+  },
+
   listMine: () => api<Paginated<Organization>>("/organizations/me"),
 
   getBySlug: (slug: string) => api<Organization>(`/public/organizations/${slug}`, { auth: false }),

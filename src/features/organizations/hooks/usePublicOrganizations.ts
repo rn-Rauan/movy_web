@@ -1,17 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { tripsService } from "@/services/trips.service";
-import type { Organization, Paginated, TripInstance } from "@/lib/types";
-
-type PublicTrip = TripInstance & { organizationName?: string; organizationSlug?: string };
+import { organizationsService } from "@/services/organizations.service";
+import type { Organization, Paginated } from "@/lib/types";
 
 /**
- * Public list of organizations derived from `tripsService.listPublic()`. We dedupe by slug —
- * the backend doesn't expose a public `/organizations` list, but every public trip carries
- * `organizationSlug` + `organizationName`, which is enough to build a discovery surface.
- *
- * Limitations vs. `useOrganizations` (protected): no contact info, no address, no rating.
- * `CompanyCard` already gracefully omits those fields when missing.
+ * Public directory of active organizations via `GET /public/organizations` (anonymous).
+ * Lists every active org — including those without public trips — and carries contact/address
+ * fields, which `CompanyCard` renders when present.
  */
 export function usePublicOrganizations() {
   const [orgs, setOrgs] = useState<Organization[] | null>(null);
@@ -20,21 +15,11 @@ export function usePublicOrganizations() {
 
   useEffect(() => {
     let cancelled = false;
-    (tripsService.listPublic() as Promise<Paginated<PublicTrip> | PublicTrip[]>)
+    (organizationsService.listPublic() as Promise<Paginated<Organization> | Organization[]>)
       .then((res) => {
         if (cancelled) return;
         const list = Array.isArray(res) ? res : (res.data ?? []);
-        const map = new Map<string, Organization>();
-        for (const t of list) {
-          if (!t.organizationSlug || !t.organizationName) continue;
-          if (map.has(t.organizationSlug)) continue;
-          map.set(t.organizationSlug, {
-            id: t.organizationId,
-            slug: t.organizationSlug,
-            name: t.organizationName,
-          });
-        }
-        setOrgs([...map.values()].sort((a, b) => a.name.localeCompare(b.name)));
+        setOrgs([...list].sort((a, b) => a.name.localeCompare(b.name)));
       })
       .catch((err) => {
         if (cancelled) return;
