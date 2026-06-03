@@ -99,6 +99,36 @@ function SectionLabel({ icon: Icon, children }: { icon: LucideIcon; children: Re
   );
 }
 
+/** Métrica compacta do "resumo ao vivo" da seção de Inscrições. */
+function Stat({
+  value,
+  of,
+  label,
+  tone = "muted",
+}: {
+  value: number;
+  of?: number;
+  label: string;
+  tone?: "muted" | "success" | "warn";
+}) {
+  const fg = tone === "warn" ? "text-warning" : tone === "success" ? "text-success" : "text-ink-2";
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div
+        className={cn("font-mono text-[17px] font-extrabold leading-none tracking-[-0.5px]", fg)}
+      >
+        {value}
+        {of != null && (
+          <span className="text-[11px] font-semibold text-muted-foreground"> / {of}</span>
+        )}
+      </div>
+      <div className="text-[10px] font-bold uppercase tracking-[0.3px] text-muted-foreground">
+        {label}
+      </div>
+    </div>
+  );
+}
+
 type Props = {
   role: "admin" | "driver";
   trip: TripInstance;
@@ -169,6 +199,15 @@ export function AdminTripDetailView({
       : undefined;
 
   const hasSticky = transitions.length > 0;
+
+  // Resumo ao vivo — só inscrições ativas contam.
+  const activeBookings = bookings.filter((b) => b.status === "ACTIVE");
+  const activeCount = activeBookings.length;
+  const presentCount = activeBookings.filter((b) => b.presenceConfirmed).length;
+  const paidCount = activeBookings.filter(
+    (b) => paymentsByBookingId.get(b.id)?.status === "COMPLETED",
+  ).length;
+  const pendingCount = activeCount - paidCount;
 
   return (
     <div className={cn("flex flex-col gap-3.5", hasSticky && "pb-24")}>
@@ -382,9 +421,20 @@ export function AdminTripDetailView({
         <div className="mb-2.5 flex items-center justify-between gap-2">
           <SectionLabel icon={Ticket}>Inscrições</SectionLabel>
           <span className="font-mono text-[11px] font-bold text-muted-foreground">
-            {bookings.length} / {trip.totalCapacity ?? 0}
+            {activeCount} / {trip.totalCapacity ?? 0}
           </span>
         </div>
+        {bookings.length > 0 && (
+          <div className="mb-3.5 flex gap-[18px] border-b border-dashed border-line pb-3.5">
+            <Stat value={presentCount} of={activeCount} label="presentes" tone="success" />
+            <Stat value={paidCount} of={activeCount} label="pagas" tone="success" />
+            <Stat
+              value={pendingCount}
+              label="pendentes"
+              tone={pendingCount > 0 ? "warn" : "muted"}
+            />
+          </div>
+        )}
         {bookings.length === 0 ? (
           <div className="rounded-[10px] border border-dashed border-line bg-surface-2 px-4 py-5 text-center">
             <Users className="mx-auto h-[22px] w-[22px] text-muted-foreground" strokeWidth={1.7} />

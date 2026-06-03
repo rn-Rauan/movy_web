@@ -24,6 +24,62 @@ function ScreenTripDetail({ t }) {
     vehicle: { name: "Onibus Jacintu\u2019s amarelo", plate: "ABC1D23", seats: 30 },
   };
 
+  // Inscrições — estado vivo (clicar nos chips alterna presença/pagamento)
+  const [pax, setPax] = React.useState([
+    {
+      id: 1,
+      name: "Jubiraci Nogueira",
+      type: "Ida e volta",
+      method: "PIX",
+      price: "23,00",
+      stop: "Rodoviária",
+      paid: false,
+      present: false,
+    },
+    {
+      id: 2,
+      name: "Marcos Lima",
+      type: "Só ida",
+      method: "Dinheiro",
+      price: "14,00",
+      stop: "Parada Centro",
+      paid: true,
+      present: false,
+    },
+    {
+      id: 3,
+      name: "Ana Beatriz",
+      type: "Ida e volta",
+      method: "PIX",
+      price: "23,00",
+      stop: "Rodoviária",
+      paid: true,
+      present: true,
+    },
+    {
+      id: 4,
+      name: "Rafael Souza",
+      type: "Só ida",
+      method: "PIX",
+      price: "14,00",
+      stop: "Faculdade Piripiri",
+      paid: false,
+      present: false,
+      cancelled: true,
+    },
+  ]);
+  const toggle = (id, key) =>
+    setPax((ps) => ps.map((p) => (p.id === id ? { ...p, [key]: !p[key] } : p)));
+  const cancel = (id) =>
+    setPax((ps) =>
+      ps.map((p) => (p.id === id ? { ...p, cancelled: !p.cancelled, present: false } : p)),
+    );
+
+  const active = pax.filter((p) => !p.cancelled);
+  const activeCount = active.length;
+  const paidCount = active.filter((p) => p.paid).length;
+  const presentCount = active.filter((p) => p.present).length;
+
   return (
     <Phone t={t} label="05 Detalhe da viagem">
       <TopBar
@@ -157,11 +213,11 @@ function ScreenTripDetail({ t }) {
                       fontFamily: "'JetBrains Mono', monospace",
                     }}
                   >
-                    {trip.booked}
+                    {activeCount}
                     <span style={{ color: t.muted, fontWeight: 500 }}> / {trip.total} lugares</span>
                   </div>
                 </div>
-                <Bar value={trip.booked} max={trip.total} t={t} color={t.accent} />
+                <Bar value={activeCount} max={trip.total} t={t} color={t.accent} />
               </div>
             </div>
           </div>
@@ -336,7 +392,7 @@ function ScreenTripDetail({ t }) {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: 10,
+                marginBottom: 12,
               }}
             >
               <SectionLabel t={t} icon={I.ticket} compact>
@@ -350,26 +406,64 @@ function ScreenTripDetail({ t }) {
                   fontFamily: "'JetBrains Mono', monospace",
                 }}
               >
-                0 / {trip.total}
+                {activeCount} / {trip.total}
               </span>
             </div>
+
+            {/* Resumo ao vivo */}
             <div
               style={{
-                background: t.surface2,
-                border: `1px dashed ${t.line}`,
-                borderRadius: 10,
-                padding: "20px 16px",
-                textAlign: "center",
+                display: "flex",
+                gap: 18,
+                marginBottom: 14,
+                paddingBottom: 14,
+                borderBottom: `1px dashed ${t.line}`,
               }}
             >
-              <I.users size={22} color={t.muted} />
-              <div style={{ fontSize: 13, color: t.ink2, fontWeight: 700, marginTop: 6 }}>
-                Nenhum passageiro ainda
-              </div>
-              <div style={{ fontSize: 11, color: t.muted, marginTop: 2, lineHeight: 1.4 }}>
-                Compartilhe o link público pra começar a receber inscrições.
-              </div>
+              <Stat t={t} value={presentCount} of={activeCount} label="presentes" tone="success" />
+              <Stat t={t} value={paidCount} of={activeCount} label="pagas" tone="success" />
+              <Stat
+                t={t}
+                value={activeCount - paidCount}
+                label="pendentes"
+                tone={activeCount - paidCount > 0 ? "warn" : "muted"}
+              />
             </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {pax.map((p) => (
+                <PassengerCard
+                  key={p.id}
+                  t={t}
+                  p={p}
+                  onToggle={(k) => toggle(p.id, k)}
+                  onCancel={() => cancel(p.id)}
+                />
+              ))}
+            </div>
+
+            <button
+              style={{
+                marginTop: 12,
+                width: "100%",
+                border: `1px dashed ${t.line}`,
+                background: t.surface2,
+                color: t.ink2,
+                padding: "11px",
+                borderRadius: 11,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: -0.1,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}
+            >
+              <I.plus size={14} stroke={2.2} /> Adicionar inscrição manual
+            </button>
           </Card>
         </div>
       </Scroll>
@@ -594,3 +688,244 @@ function Timeline({ t, from, to, departure, arrival, paradas }) {
 }
 
 Object.assign(window, { ScreenTripDetail, Timeline, SectionLabel });
+
+// ----------------------------------------------------------------------------
+// Inscrições — resumo + cartão de passageiro com chips-toggle
+// ----------------------------------------------------------------------------
+
+function Stat({ t, value, of, label, tone }) {
+  const fg = tone === "warn" ? t.warn : tone === "success" ? t.success : t.ink2;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <div
+        style={{
+          fontSize: 17,
+          fontWeight: 800,
+          color: fg,
+          lineHeight: 1,
+          fontFamily: "'JetBrains Mono', monospace",
+          letterSpacing: -0.5,
+        }}
+      >
+        {value}
+        {of != null && (
+          <span style={{ color: t.muted, fontSize: 11, fontWeight: 600 }}> / {of}</span>
+        )}
+      </div>
+      <div
+        style={{
+          fontSize: 10,
+          color: t.muted,
+          fontWeight: 700,
+          letterSpacing: 0.3,
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function ToggleChip({ t, on, onClick, IconOn, IconOff, labelOn, labelOff, offTone }) {
+  const fg = on ? t.success : offTone === "warn" ? t.warn : t.muted;
+  const bg = on ? t.successSoft : offTone === "warn" ? t.warnSoft : t.surface;
+  const border = on ? "transparent" : t.line;
+  const Ic = on ? IconOn : IconOff;
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flex: 1,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 6,
+        padding: "9px 8px",
+        borderRadius: 10,
+        cursor: "pointer",
+        border: `1px solid ${border}`,
+        background: bg,
+        color: fg,
+        fontFamily: "inherit",
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: -0.1,
+        transition: "background .15s, color .15s, border-color .15s",
+      }}
+    >
+      <Ic size={14} stroke={2.2} /> {on ? labelOn : labelOff}
+    </button>
+  );
+}
+
+function PassengerCard({ t, p, onToggle, onCancel }) {
+  const initial = p.name.trim()[0].toUpperCase();
+
+  if (p.cancelled) {
+    return (
+      <div
+        style={{
+          background: t.surface2,
+          border: `1px dashed ${t.line}`,
+          borderRadius: 12,
+          padding: "10px 12px",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <div
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 10,
+            flex: "0 0 auto",
+            background: t.lineSoft,
+            color: t.muted,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 14,
+            fontWeight: 800,
+          }}
+        >
+          {initial}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              color: t.muted,
+              textDecoration: "line-through",
+              letterSpacing: -0.2,
+            }}
+          >
+            {p.name}
+          </div>
+          <div style={{ fontSize: 11, color: t.danger, fontWeight: 700, marginTop: 1 }}>
+            Inscrição cancelada
+          </div>
+        </div>
+        <button
+          onClick={onCancel}
+          style={{
+            border: `1px solid ${t.line}`,
+            background: t.surface,
+            color: t.ink2,
+            padding: "6px 12px",
+            borderRadius: 8,
+            cursor: "pointer",
+            flex: "0 0 auto",
+            fontFamily: "inherit",
+            fontSize: 11,
+            fontWeight: 700,
+          }}
+        >
+          Reativar
+        </button>
+      </div>
+    );
+  }
+
+  const allSet = p.paid && p.present;
+  return (
+    <div
+      style={{
+        background: t.surface,
+        borderRadius: 12,
+        padding: 12,
+        border: `1px solid ${allSet ? t.successSoft : t.line}`,
+        transition: "border-color .15s",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 11,
+            flex: "0 0 auto",
+            background: t.accentSoft,
+            color: t.accent,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 15,
+            fontWeight: 800,
+            letterSpacing: -0.5,
+          }}
+        >
+          {initial}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: t.ink,
+                letterSpacing: -0.2,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {p.name}
+            </span>
+            {allSet && <I.check size={13} color={t.success} stroke={2.8} />}
+          </div>
+          <div style={{ fontSize: 11, color: t.muted, marginTop: 2 }}>
+            {p.type} · {p.method} ·{" "}
+            <span
+              style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: t.ink2 }}
+            >
+              R$ {p.price}
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={onCancel}
+          title="Cancelar inscrição"
+          style={{
+            border: 0,
+            background: "transparent",
+            cursor: "pointer",
+            padding: 4,
+            color: t.muted,
+            display: "flex",
+            flex: "0 0 auto",
+          }}
+        >
+          <I.x size={16} stroke={2} />
+        </button>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        <ToggleChip
+          t={t}
+          on={p.present}
+          onClick={() => onToggle("present")}
+          IconOn={I.check}
+          IconOff={I.clock}
+          labelOn="Presente"
+          labelOff="Marcar presença"
+          offTone="muted"
+        />
+        <ToggleChip
+          t={t}
+          on={p.paid}
+          onClick={() => onToggle("paid")}
+          IconOn={I.check}
+          IconOff={I.money}
+          labelOn="Pago"
+          labelOff="Pgto. pendente"
+          offTone="warn"
+        />
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { Stat, ToggleChip, PassengerCard });

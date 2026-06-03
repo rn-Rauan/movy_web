@@ -1,9 +1,8 @@
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Check, X, ChevronRight, CircleDollarSign } from "lucide-react";
+import { Check, Clock, CircleDollarSign, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { Booking, Payment } from "@/lib/types";
-import { bookingStatusLabel, enrollmentTypeLabel, paymentMethodLabel } from "@/lib/format";
+import { enrollmentTypeLabel, paymentMethodLabel } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 interface BookingRowProps {
   booking: Booking;
@@ -15,6 +14,53 @@ interface BookingRowProps {
   busy?: boolean;
 }
 
+function firstLetterOf(name?: string | null) {
+  const ch = name?.trim().charAt(0);
+  return ch ? ch.toUpperCase() : "—";
+}
+
+/** Chip de ação no estilo do protótipo. Verde quando "ativo" (confirmado, terminal e
+ *  não-clicável); off-tone clicável quando a ação ainda está disponível. */
+function ToggleChip({
+  active,
+  onClick,
+  disabled,
+  icon: Icon,
+  label,
+  offTone = "muted",
+}: {
+  active: boolean;
+  onClick?: () => void;
+  disabled?: boolean;
+  icon: LucideIcon;
+  label: string;
+  offTone?: "muted" | "warn" | "danger";
+}) {
+  const interactive = !!onClick && !disabled;
+  const tone = active
+    ? "border-transparent bg-success-soft text-success"
+    : offTone === "warn"
+      ? "border-transparent bg-warning-soft text-warning"
+      : offTone === "danger"
+        ? "border-transparent bg-danger-soft text-danger"
+        : "border-line bg-surface text-muted-foreground";
+  return (
+    <button
+      type="button"
+      onClick={interactive ? onClick : undefined}
+      disabled={!interactive}
+      className={cn(
+        "flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border px-2 py-2.5 text-[12px] font-bold tracking-[-0.1px] transition",
+        tone,
+        interactive ? "cursor-pointer hover:opacity-90" : "cursor-default",
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
+      {label}
+    </button>
+  );
+}
+
 export function BookingRow({
   booking,
   passengerName,
@@ -24,111 +70,109 @@ export function BookingRow({
   onCancel,
   busy,
 }: BookingRowProps) {
-  const isActive = booking.status === "ACTIVE";
-  const showPresence = isActive && !booking.presenceConfirmed && !!onConfirmPresence;
-  const showPayment = isActive && payment?.status === "PENDING" && !!onConfirmPayment;
-  const showCancel = isActive && !!onCancel;
+  const name = passengerName ?? "Passageiro";
+  const initial = firstLetterOf(name);
+
+  // Inscrição cancelada — card tracejado, nome riscado, sem ações (não há
+  // endpoint de reativação no backend).
+  if (booking.status !== "ACTIVE") {
+    return (
+      <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-line bg-surface-2 px-3 py-2.5">
+        <div className="flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[10px] bg-line-soft text-[14px] font-extrabold text-muted-foreground">
+          {initial}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[14px] font-bold tracking-[-0.2px] text-muted-foreground line-through">
+            {name}
+          </div>
+          <div className="mt-0.5 text-[11px] font-bold text-danger">Inscrição cancelada</div>
+        </div>
+      </div>
+    );
+  }
+
+  const presenceConfirmed = booking.presenceConfirmed;
+  const paymentStatus = payment?.status ?? null;
+  const paid = paymentStatus === "COMPLETED";
+  const allSet = presenceConfirmed && paid;
+  const showCancel = !!onCancel;
 
   return (
-    <Card className="p-3">
-      <div className="flex items-start justify-between gap-2 mb-2">
+    <div
+      className={cn(
+        "rounded-xl border bg-surface p-3 transition",
+        allSet ? "border-success-soft" : "border-line",
+      )}
+    >
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[11px] bg-accent-soft text-[15px] font-extrabold tracking-[-0.5px] text-accent">
+          {initial}
+        </div>
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium truncate">{passengerName ?? "Passageiro"}</div>
-          <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-            <span className="truncate">{booking.boardingStop}</span>
-            <ChevronRight className="h-3 w-3 shrink-0" />
-            <span className="truncate">{booking.alightingStop}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="truncate text-[14px] font-extrabold tracking-[-0.2px] text-ink">
+              {name}
+            </span>
+            {allSet && <Check className="h-3.5 w-3.5 flex-none text-success" strokeWidth={2.8} />}
+          </div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">
+            {enrollmentTypeLabel(booking.enrollmentType)}
+            {booking.paymentMethod && <> · {paymentMethodLabel(booking.paymentMethod)}</>}
+            {booking.recordedPrice != null && (
+              <>
+                {" · "}
+                <span className="font-mono font-bold text-ink-2">
+                  R$ {booking.recordedPrice.toFixed(2)}
+                </span>
+              </>
+            )}
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <Badge variant={isActive ? "default" : "destructive"} className="text-xs">
-            {bookingStatusLabel(booking.status)}
-          </Badge>
-          {booking.presenceConfirmed && (
-            <Badge variant="secondary" className="text-xs">
-              <Check className="h-3 w-3 mr-0.5" />
-              Presente
-            </Badge>
-          )}
-          {payment?.status === "COMPLETED" && (
-            <Badge className="bg-success-soft text-success hover:bg-success-soft text-xs">
-              <CircleDollarSign className="h-3 w-3 mr-0.5" />
-              Pago
-            </Badge>
-          )}
-          {payment?.status === "PENDING" && (
-            <Badge
-              variant="outline"
-              className="text-xs border-amber-500/40 text-amber-700 dark:text-amber-300"
-            >
-              Pgto. pendente
-            </Badge>
-          )}
-          {payment?.status === "FAILED" && (
-            <Badge variant="destructive" className="text-xs">
-              Pgto. falhou
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mb-2">
-        <span>{enrollmentTypeLabel(booking.enrollmentType)}</span>
-        {booking.paymentMethod && (
-          <>
-            <span>·</span>
-            <span>{paymentMethodLabel(booking.paymentMethod)}</span>
-          </>
-        )}
-        {booking.recordedPrice != null && (
-          <>
-            <span>·</span>
-            <span className="font-medium text-foreground">
-              R$ {booking.recordedPrice.toFixed(2)}
-            </span>
-          </>
+        {showCancel && (
+          <button
+            type="button"
+            onClick={() => onCancel?.(booking.id)}
+            disabled={busy}
+            title="Cancelar inscrição"
+            className="flex flex-none p-1 text-muted-foreground transition hover:text-danger disabled:opacity-50"
+          >
+            <X className="h-4 w-4" strokeWidth={2} />
+          </button>
         )}
       </div>
 
-      {(showPresence || showPayment || showCancel) && (
-        <div className="flex flex-wrap gap-2 pt-1">
-          {showPresence && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs flex-1 min-w-[120px]"
-              onClick={() => onConfirmPresence?.(booking.id)}
-              disabled={busy}
-            >
-              <Check className="h-3.5 w-3.5 mr-1" />
-              Marcar presença
-            </Button>
-          )}
-          {showPayment && payment && (
-            <Button
-              size="sm"
-              className="h-8 text-xs flex-1 min-w-[120px] bg-success text-white hover:bg-success/90"
-              onClick={() => onConfirmPayment?.(payment.id)}
-              disabled={busy}
-            >
-              <CircleDollarSign className="h-3.5 w-3.5 mr-1" />
-              Confirmar pagamento
-            </Button>
-          )}
-          {showCancel && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive flex-1 min-w-[100px]"
-              onClick={() => onCancel?.(booking.id)}
-              disabled={busy}
-            >
-              <X className="h-3.5 w-3.5 mr-1" />
-              Cancelar
-            </Button>
-          )}
-        </div>
-      )}
-    </Card>
+      <div className="mt-2.5 flex gap-2">
+        <ToggleChip
+          active={presenceConfirmed}
+          onClick={onConfirmPresence ? () => onConfirmPresence(booking.id) : undefined}
+          disabled={busy}
+          icon={presenceConfirmed ? Check : Clock}
+          label={presenceConfirmed ? "Presente" : "Marcar presença"}
+          offTone="muted"
+        />
+        <ToggleChip
+          active={paid}
+          onClick={
+            paymentStatus === "PENDING" && payment && onConfirmPayment
+              ? () => onConfirmPayment(payment.id)
+              : undefined
+          }
+          disabled={busy}
+          icon={CircleDollarSign}
+          label={
+            paid
+              ? "Pago"
+              : paymentStatus === "PENDING"
+                ? "Pgto. pendente"
+                : paymentStatus === "FAILED"
+                  ? "Pgto. falhou"
+                  : "Sem cobrança"
+          }
+          offTone={
+            paymentStatus === "PENDING" ? "warn" : paymentStatus === "FAILED" ? "danger" : "muted"
+          }
+        />
+      </div>
+    </div>
   );
 }
