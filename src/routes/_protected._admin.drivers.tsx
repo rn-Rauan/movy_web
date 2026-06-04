@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_protected/_admin/drivers")({
 });
 
 function DriversPage() {
-  const { adminOrgId } = useRole();
+  const { adminOrgId, refetchRole } = useRole();
   const { drivers, setDrivers, loading, error, refetch } = useDrivers(adminOrgId);
   const [addOpen, setAddOpen] = useState(false);
   const [removing, setRemoving] = useState<Driver | null>(null);
@@ -47,7 +47,14 @@ function DriversPage() {
         />
       )}
 
-      <AddDriverDialog open={addOpen} onOpenChange={setAddOpen} onAdded={refetch} />
+      <AddDriverDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onAdded={() => {
+          refetch();
+          refetchRole();
+        }}
+      />
       <RemoveDriverDialog
         driver={removing}
         orgId={adminOrgId}

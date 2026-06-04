@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Info, ExternalLink, Pencil } from "lucide-react";
+import { Info, ExternalLink, Pencil, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import {
 } from "@/features/drivers/components/DriverProfileForm";
 import { EditMyDriverDialog } from "@/features/drivers/components/EditMyDriverDialog";
 import { useMyDriver } from "@/features/drivers/hooks/useMyDriver";
+import { useMyDriverOrgs } from "@/features/drivers/hooks/useMyDriverOrgs";
 import { useRole } from "@/lib/role-context";
 import { driversService } from "@/services/drivers.service";
 import { handleApiError } from "@/lib/handle-error";
@@ -41,8 +42,15 @@ function DriverProfilePage() {
 function DriverProfileContent() {
   const { driver, setDriver, loading, notFound, error } = useMyDriver();
   const { isDriver, refetchRole } = useRole();
+  const { orgs: linkedOrgs, loading: orgsLoading } = useMyDriverOrgs(isDriver);
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<Driver | null>(null);
+
+  // Revalida o role ao abrir a página: se um admin acabou de vincular o motorista
+  // a uma org, `isDriver` passa a true sem precisar deslogar/logar de novo.
+  useEffect(() => {
+    refetchRole();
+  }, [refetchRole]);
 
   async function handleCreate(payload: DriverFormPayload) {
     setSubmitting(true);
@@ -134,6 +142,47 @@ function DriverProfileContent() {
               </Button>
             )}
           </Card>
+
+          {isDriver && (
+            <Card className="p-5 mb-4">
+              <h2 className="text-base font-semibold mb-1">Empresas vinculadas</h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                Organizações que vincularam você como motorista.
+              </p>
+
+              {orgsLoading ? (
+                <LoadingList count={1} />
+              ) : linkedOrgs.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma empresa vinculada no momento.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {linkedOrgs.map((org) => (
+                    <li key={org.id}>
+                      <Link
+                        to="/public/organizations/$slug"
+                        params={{ slug: org.slug }}
+                        className="flex items-center gap-3 rounded-[10px] border border-line bg-surface p-3 transition hover:bg-line-soft"
+                      >
+                        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-lg border border-line bg-surface-2 text-sm font-extrabold text-ink">
+                          {org.name ? (
+                            org.name.charAt(0).toUpperCase()
+                          ) : (
+                            <Building2 className="h-4 w-4 text-ink-2" strokeWidth={1.6} />
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
+                          {org.name}
+                        </span>
+                        <ExternalLink className="h-4 w-4 flex-none text-muted-foreground" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          )}
 
           <EditMyDriverDialog
             driver={editing}

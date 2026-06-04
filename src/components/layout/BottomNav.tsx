@@ -63,7 +63,13 @@ const guestTabs: NavItem[] = [
 
 const driverTabs: NavItem[] = [
   { to: "/public/trip-instances", icon: Compass, label: "Explorar", match: "/public" },
-  { to: "/my-trips", icon: Truck, label: "Como motorista", match: "/my-trips" },
+  {
+    to: "/organizations",
+    icon: Building2,
+    label: "Empresas",
+    match: ["/organizations", "/trips"],
+  },
+  { to: "/my-trips", icon: Truck, label: "Motorista", match: "/my-trips" },
   { to: "/my-bookings", icon: Ticket, label: "Inscrições", match: "/my-bookings" },
   { to: "/profile", icon: User, label: "Perfil", match: "/profile" },
 ];
