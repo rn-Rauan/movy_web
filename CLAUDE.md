@@ -89,8 +89,9 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
 /signup/ → cadastro de usuário comum (B2C)
 /signup/empresa → cadastro empresa + admin em uma chamada (B2B)
 
-/public/trip-instances/       → marketplace de viagens (busca + filtros: data/turno/ordenação)
-/public/trip-instances/$id/   → detalhe público (com ShareButton)
+/public/trip-instances/       → marketplace de viagens (agrupado por rota/template; busca + filtros: data/turno/ordenação)
+/public/trip-instances/$id/   → detalhe público (ShareButton + datas alternativas da mesma rota via useTripDates)
+/public/organizations/        → diretório público de organizações ativas (usePublicOrganizations + busca)
 /public/organizations/$slug/  → perfil público da organização (busca + filtros + ShareButton)
 /public/plans/                → comparativo público de planos (CTA → /signup/empresa)
 
@@ -106,7 +107,8 @@ export const Route = createFileRoute("/_protected/_driver/my-trips")({
 
   profile/driver/             → opt-in self-service de perfil de motorista (CNH + categorias múltiplas + validade)
 
-  trip/$tripId/               → detalhe da viagem — compartilhada admin+driver via prop `role` (admin: assignment + todas transições; driver: só IN_PROGRESS/FINISHED, sem edit)
+  trip/$tripId/               → detalhe da viagem — compartilhada admin+driver via prop `role` (admin: assignment + todas transições; driver: só IN_PROGRESS/FINISHED, sem edit).
+                                 Gestão de inscrições inline: por passageiro (BookingRow) confirma presença (bookingsService.confirmPresence) e pagamento (paymentsService.confirm), além de cancelar — via useAdminTripDetail.
 
   _admin/ (guard: isAdmin)
     dashboard/                → métricas (ativas/próximos 7 dias/passageiros/ocupação%) + receita prevista + próximas viagens
@@ -150,6 +152,8 @@ src/
 │   │   │   ├── useTripPassengers.ts Lista passageiros (silencia 403 se não-membro)
 │   │   │   ├── useAdminTripDetail.ts Detalhe admin + transições de status/assignment
 │   │   │   ├── useTripCreateOptions.ts Opções (templates/drivers/vehicles) p/ criar instância
+│   │   │   ├── useTripDates.ts      Saídas irmãs da mesma rota (mesmo template) → datas alternativas no detalhe
+│   │   │   ├── useTripsAvailability.ts Ocupação real por viagem (GET /bookings/availability/{id}, só logado) p/ a lista pública
 │   │   │   └── useDriverTrips.ts    Viagens atribuídas ao motorista (GET /trip-instances/driver/me)
 │   │   └── components/
 │   │       ├── TripCard.tsx         Card compacto (lista protegida)
@@ -166,13 +170,15 @@ src/
 │   │   └── components/
 │   │       ├── BookingCard.tsx
 │   │       ├── BookingsList.tsx     Lista com empty state
+│   │       ├── BookingRow.tsx       Linha de passageiro no detalhe da viagem (admin/driver): chips "Marcar presença" + pgto + cancelar; risca cancelados
 │   │       └── BookingDetailView.tsx Detalhe + AlertDialog de cancelamento
 │   │
 │   ├── organizations/
 │   │   ├── hooks/
-│   │   │   └── useOrganizations.ts  Lista organizações ativas
+│   │   │   ├── useOrganizations.ts  Lista organizações ativas (protegido)
+│   │   │   └── usePublicOrganizations.ts Diretório público (GET /public/organizations) + busca; ordena por nome
 │   │   └── components/
-│   │       ├── CompanyCard.tsx
+│   │       ├── CompanyCard.tsx      Renderiza contato/endereço quando presentes
 │   │       └── OrgsList.tsx         Lista com links para trips
 │   │
 │   ├── drivers/                Self-service (useMyDriver, DriverProfileForm, EditMyDriverDialog) + admin (DriverCard sem edit — só remove)
@@ -186,6 +192,7 @@ src/
 │   │   │   └── RemoveDriverDialog.tsx  Soft-remove via DELETE /memberships
 │   │   ├── hooks/
 │   │   │   ├── useMyDriver.ts          GET /drivers/me com notFound flag (404 ≠ erro)
+│   │   │   ├── useMyDriverOrgs.ts      Orgs onde o user tem role DRIVER (sem endpoint dedicado — itera /organizations/me + /memberships/me/role/{orgId}, igual RoleContext)
 │   │   │   ├── useDriverName.ts        Cache global + dedup inflight pra /drivers/{id}/name
 │   │   │   └── useDrivers.ts           Lista por org
 │   │   └── lib/
@@ -309,7 +316,7 @@ Usar sempre os services — nunca `api()` direto nas rotas ou componentes. A ún
 
 ```typescript
 // trips.service.ts
-tripsService.listPublic();
+tripsService.listPublic({ organizationId?, page?, limit? }); // marketplace; passa auth:true só p/ anexar token quando houver (anônimo não toma 401)
 tripsService.listByOrgId(orgId);
 tripsService.listBySlug(slug); // público, sem auth
 tripsService.getPublicById(id);
@@ -325,7 +332,10 @@ bookingsService.cancel(bookingId);
 
 // organizations.service.ts
 organizationsService.listActive();
+organizationsService.listPublic(page?, limit?); // GET /public/organizations — anônimo; lista TODAS as orgs ativas (mesmo sem viagens públicas) com contato/endereço
 organizationsService.listMine();
+organizationsService.getBySlug(slug);           // GET /public/organizations/{slug} — perfil público
+organizationsService.update(id, data);
 
 // drivers.service.ts
 driversService.createMe({ cnh, cnhCategories, cnhExpiresAt }); // self-service POST /drivers (cnhCategories: ("A"|"B"|"C"|"D"|"E")[])
@@ -356,7 +366,7 @@ driversService.restoreMembership(userId, roleId, orgId);
 
 // bookings.service.ts (continuação — adicionados em W2)
 bookingsService.listByTripInstance(tripId);
-bookingsService.confirmPresence(bookingId);
+bookingsService.confirmPresence(bookingId);  // PATCH — marca presença do passageiro no detalhe da viagem (admin/driver)
 
 // plans.service.ts
 plansService.list();      // GET /public/plans — anônimo, paginado
@@ -371,6 +381,8 @@ authService.refresh(refreshToken);          // POST /auth/refresh
 // payments.service.ts
 paymentsService.list(orgId, page?, size?);
 paymentsService.getById(orgId, id);
+paymentsService.confirm(orgId, paymentId); // PATCH .../confirm — marca pagamento COMPLETED (botão "Pgto. pendente" no BookingRow)
+paymentsService.fail(orgId, paymentId);    // PATCH .../fail
 
 // subscriptions.service.ts
 subscriptionsService.getActive(orgId);
@@ -443,7 +455,7 @@ A única configuração por org é `enabled` (master switch dos dois jobs) e `da
 
 - `/profile/driver` (rota sob `_protected/`, NÃO sob `_driver/`):
   - **Modo create** (sem perfil): form com alert amarelo + checkbox obrigatório "Confirmo que vou trabalhar para uma organização cadastrada".
-  - **Modo view** (perfil existente): Card read-only com CNH, categorias como Badges, validade. Botão pencil no header abre `EditMyDriverDialog` — padrão consistente com `/profile`, `/organization` e admin `/drivers`.
+  - **Modo view** (perfil existente): Card read-only com CNH, categorias como Badges, validade. Botão pencil no header abre `EditMyDriverDialog` — padrão consistente com `/profile`, `/organization` e admin `/drivers`. Também lista as organizações em que o user tem vínculo `DRIVER` via `useMyDriverOrgs`.
   - **Modo edit** (dentro do Dialog): `DriverProfileForm` com `cnh` readonly + checkbox group de categorias. Schema (`makeDriverSchema(initialExpiresAt)`) só exige `cnhExpiresAt` ser data **futura se o user mudou o valor** — driver com CNH vencida ainda consegue salvar mudanças em categorias deixando a data intacta.
 - `/profile` mostra card condicional: "Trabalhar como motorista" / "Aguardando vínculo com uma empresa" / "Ativo".
 - A tab "Como motorista" na BottomNav e rotas sob `_driver/` só aparecem quando `isDriver === true` (= perfil + membership). User com `hasDriverProfile && !isDriver` só acessa `/profile/driver`.
