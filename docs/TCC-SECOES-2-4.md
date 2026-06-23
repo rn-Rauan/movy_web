@@ -73,9 +73,12 @@ A aplicação cliente é uma SPA com renderização no servidor (SSR) na borda, 
 | TC17 | `canvas-confetti` | 1.9 | UX | Confirmação visual pós-inscrição (tela de sucesso) |
 | TC18 | `@cloudflare/vite-plugin` + `wrangler` | 1.25 / — | Implantação | Empacotamento e execução como Cloudflare Worker (ver Seção 4.1) |
 | TC19 | ESLint + Prettier | 9 / 3 | Qualidade estática | *Lint* e formatação verificados no CI (ver Seção 4.2) |
-| TC20 | `@tanstack/react-query`, `react-hook-form` | 5.83 / 7.71 | — (não adotado) | Presentes no `package.json`, **sem uso pelo app** (dívida declarada — ver 2.4) |
+
+> A tabela lista a pilha **efetivamente em uso**. Dependências herdadas do *scaffold* inicial e não consumidas (`@tanstack/react-query`, `react-hook-form`, `@hookform/resolvers`) foram removidas na reestruturação — ver a nota de gênese em 2.4.
 
 ## 2.4 Justificativa técnica das escolhas do cliente
+
+**Gênese da interface (desenvolvimento assistido por IA).** A aplicação cliente foi desenvolvida integralmente com apoio de ferramentas de IA, em três papéis complementares: (i) **Lovable**, usado para a **prototipação inicial** — gerar rapidamente uma base funcional navegável e validar o fluxo do produto desde cedo; (ii) **Claude**, usado para **reestruturar a interface a partir de novos protótipos de *design***, etapa em que a arquitetura em camadas (Seção 3.4.6) e os padrões de tela (Seção 3.6) foram consolidados; e (iii) **Claude Code**, usado para a **integração e o trabalho no repositório** — refatoração, implementação dos *hooks*/serviços e manutenção do código versionado. Esse percurso explica por que parte da pilha selecionada pelo *scaffold* inicial não é consumida pelo código atual: escolhas herdadas do gerador inicial convivem com as decisões da reestruturação. O único vestígio funcional que permanece dessa origem é o preset de *build* `@lovable.dev/vite-tanstack-config` (`vite.config.ts`), que segue **em uso** por encapsular toda a configuração do Vite. Os demais resíduos do *scaffold* foram saneados na reestruturação: as dependências herdadas e não adotadas (`@tanstack/react-query`, `react-hook-form`, `@hookform/resolvers`) **foram removidas do projeto** sem impacto funcional, e os metadados de marca do gerador em `__root.tsx` foram substituídos pela identidade do produto (Movy).
 
 **TanStack Router + React Start (TC03/TC04).** O roteamento *file-based* materializa o catálogo de telas da Seção 3.6 como arquivos, e os *layouts pathless* (`_protected`, `_admin`, `_driver`) concentram os *guards* de acesso por papel em um único ponto, sustentando a manutenibilidade (RNF06). A tipagem de rotas, parâmetros e *search params* (validados por Zod) estende a garantia de tipos do TypeScript até a navegação. O React Start fornece a renderização no servidor e o *server entry* consumido pelo alvo de implantação (RNF07, portabilidade via HTTP/JSON).
 
@@ -87,7 +90,7 @@ A aplicação cliente é uma SPA com renderização no servidor (SSR) na borda, 
 
 **`lib/timezone` + `date-fns` (TC14).** Sustentam a **consistência temporal** (RNF12): a API trafega horários em UTC e o cliente sempre os exibe em horário de Brasília (`America/Sao_Paulo`), com *helpers* dedicados de conversão HH:mm e de formatação de instantes/datas-calendário — evitando erros de fuso e *off-by-one*.
 
-**`@tanstack/react-query` e `react-hook-form` (TC20) — não adotados.** Ambos constam do `package.json` (o segundo apenas como dependência do primitivo shadcn `components/ui/form.tsx`), porém **nenhuma rota ou *feature* os consome**: o estado de servidor é gerido por *Context* + *hooks* (decisão ADR-002) e os formulários por estado controlado + Zod. Registram-se aqui como dívida declarada, e não como tecnologia em uso, em coerência com a transparência adotada neste documento.
+**Gestão de estado e formulários (escolha da reestruturação).** Na versão atual, o **estado de servidor** é gerido por *Context* + *hooks* (decisão ADR-002), e os **formulários** por estado controlado (`useState`) com validação Zod (`safeParse`). Por isso, as bibliotecas que o *scaffold* inicial trouxera para esses papéis — `@tanstack/react-query`, `react-hook-form` e `@hookform/resolvers` (esta última nem chegou a ser importada; `react-hook-form` vivia apenas no primitivo shadcn `components/ui/form.tsx`, sem consumidores) — foram **removidas do projeto**, eliminando dependências mortas e mantendo o `package.json` coerente com o código.
 
 ---
 
@@ -805,6 +808,8 @@ As principais regras de exclusão protegem o histórico operacional e financeiro
 A aplicação cliente é *mobile-first* (RNF10), em português do Brasil, e materializa em telas os casos de uso da Seção 3.2. Sua arquitetura em camadas — rotas finas → *hooks* de feature → serviços → cliente HTTP único — está descrita na Seção 3.4.6; esta seção cataloga as **telas** que essas camadas compõem. A navegação adapta-se ao papel do usuário (precedência admin > motorista > passageiro), e cada tela é um controlador fino que delega a um *hook* de feature.
 
 As telas seguem três contextos de acesso (Seção 3.4.6): **público** (`/public/*`, sem autenticação), **autenticado** (rotas sob o *layout* `_protected`) e **administrativo/operacional** (sub-*guards* por papel `_admin`/`_driver`). Padrões transversais de interface: barra de navegação inferior por papel (`BottomNav`), formulários e edição em `BottomSheet`, *toasts* (`sonner`) para erros normalizados (RNF11) e exibição de horários sempre em horário de Brasília (RNF12).
+
+> **Processo de prototipação.** A interface teve uma primeira versão gerada com o **Lovable**, para validação rápida do fluxo, e foi posteriormente **reestruturada a partir de protótipos gerados com o Claude** — etapa em que o catálogo de telas a seguir e os padrões de UI foram consolidados (contexto na Seção 2.4).
 
 ### 3.6.1 Mapa de navegação
 
