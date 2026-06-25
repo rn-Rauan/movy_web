@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CnhCategoriesField } from "./CnhCategoriesField";
 import { brYmdToUtcDate, startOfBrDay } from "@/lib/timezone";
+import { CNH_COMBO_MESSAGE, isValidCnhCombination } from "@/lib/cnh";
+import { zodFieldErrors } from "@/lib/handle-error";
 import type { CnhCategory, Driver } from "@/lib/types";
 
 /**
@@ -26,10 +28,17 @@ function makeDriverSchema(initialExpiresAt?: string) {
       cnhCategories: z
         .array(z.enum(["A", "B", "C", "D", "E"]))
         .min(1, "Selecione ao menos uma categoria")
-        .max(5),
+        .max(2, CNH_COMBO_MESSAGE),
       cnhExpiresAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida (AAAA-MM-DD)"),
     })
     .superRefine((data, ctx) => {
+      if (!isValidCnhCombination(data.cnhCategories)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["cnhCategories"],
+          message: CNH_COMBO_MESSAGE,
+        });
+      }
       if (initial && data.cnhExpiresAt === initial) return;
       const today = startOfBrDay();
       const expires = brYmdToUtcDate(data.cnhExpiresAt);
@@ -76,11 +85,7 @@ export function DriverProfileForm({ mode, initialData, submitting, onSubmit }: P
     const schema = makeDriverSchema(initialData?.cnhExpiresAt);
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((err) => {
-        errs[err.path.join(".")] = err.message;
-      });
-      setErrors(errs);
+      setErrors(zodFieldErrors(parsed.error));
       return;
     }
     setErrors({});

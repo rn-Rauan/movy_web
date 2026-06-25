@@ -12,6 +12,7 @@ import {
   getBrYear,
   startOfBrMonth,
 } from "@/lib/timezone";
+import { apiErrorMessage } from "@/lib/handle-error";
 import type { Payment, TripInstance } from "@/lib/types";
 
 export type FinancialReport = {
@@ -263,7 +264,7 @@ export function useFinancialReport(
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Erro ao carregar relatório");
+        setError(apiErrorMessage(err, "Erro ao carregar relatório"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

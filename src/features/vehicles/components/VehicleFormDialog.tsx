@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Bus, Plus } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { handleApiError } from "@/lib/handle-error";
+import { zodFieldErrors } from "@/lib/handle-error";
+import { FormApiError } from "@/components/feedback/FormError";
 import { vehiclesService } from "@/services/vehicles.service";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,6 +63,7 @@ export function VehicleFormDialog({
 }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -77,17 +79,15 @@ export function VehicleFormDialog({
         : EMPTY,
     );
     setFieldErrors({});
+    setSubmitError(null);
   }, [open, editing]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitError(null);
     const parsed = vehicleSchema.safeParse(form);
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((er) => {
-        errs[er.path.join(".")] = er.message;
-      });
-      setFieldErrors(errs);
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
     setFieldErrors({});
@@ -105,7 +105,7 @@ export function VehicleFormDialog({
       }
       onOpenChange(false);
     } catch (err) {
-      handleApiError(err, "Erro ao salvar veículo");
+      setSubmitError(err);
     } finally {
       setSubmitting(false);
     }
@@ -128,6 +128,7 @@ export function VehicleFormDialog({
         }
       >
         <form id="vehicle-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <FormApiError error={submitError} />
           {/* Modelo */}
           <FormField label="Modelo" error={fieldErrors.model}>
             <Input

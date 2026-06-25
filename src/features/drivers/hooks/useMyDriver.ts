@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "@/lib/api";
-import { handleApiError } from "@/lib/handle-error";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { driversService } from "@/services/drivers.service";
 import type { Driver } from "@/lib/types";
 
@@ -38,8 +38,7 @@ export function useMyDriver() {
           setNotFound(true);
           return;
         }
-        setError(err instanceof Error ? err.message : "Erro ao carregar perfil de motorista");
-        handleApiError(err, "Erro ao carregar perfil de motorista");
+        setError(apiErrorMessage(err, "Erro ao carregar perfil de motorista"));
       });
   }, []);
 

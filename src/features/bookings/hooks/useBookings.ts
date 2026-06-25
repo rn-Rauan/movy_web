@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { bookingsService } from "@/services/bookings.service";
 import type { Booking, BookingStatus } from "@/lib/types";
 
@@ -19,8 +19,7 @@ export function useBookings() {
         setBookings(list);
       })
       .catch((err) => {
-        setError(err.message);
-        toast.error(err.message);
+        setError(apiErrorMessage(err, "Erro ao carregar inscrições"));
       });
   }, []);
 

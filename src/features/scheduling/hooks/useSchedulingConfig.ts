@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "@/lib/api";
-import { handleApiError } from "@/lib/handle-error";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { schedulingService } from "@/services/scheduling.service";
 import type { TripSchedulingConfig } from "@/lib/types";
 
@@ -31,8 +31,7 @@ export function useSchedulingConfig(orgId: string | null | undefined) {
           setNotFound(true);
           return;
         }
-        setError(err instanceof Error ? err.message : "Erro ao carregar configuração");
-        handleApiError(err, "Erro ao carregar configuração de agendamento");
+        setError(apiErrorMessage(err, "Erro ao carregar configuração de agendamento"));
       });
   }, [orgId]);
 

@@ -7,7 +7,7 @@ import { driversService } from "@/services/drivers.service";
 import { vehiclesService } from "@/services/vehicles.service";
 import { paymentsService } from "@/services/payments.service";
 import { ApiError } from "@/lib/api";
-import { handleApiError, bookingCancelErrorMessage } from "@/lib/handle-error";
+import { apiErrorMessage, bookingCancelErrorMessage } from "@/lib/handle-error";
 import { statusLabel } from "@/lib/format";
 import type {
   Booking,
@@ -34,6 +34,7 @@ export function useAdminTripDetail(
   const navigate = useNavigate();
   const [trip, setTrip] = useState<TripInstance | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [passengers, setPassengers] = useState<TripPassenger[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -49,7 +50,7 @@ export function useAdminTripDetail(
     tripsService
       .getById(tripId)
       .then(setTrip)
-      .catch((err) => setError(err instanceof Error ? err.message : "Erro ao carregar viagem"));
+      .catch((err) => setError(apiErrorMessage(err, "Erro ao carregar viagem")));
   }, [tripId]);
 
   useEffect(() => {
@@ -128,6 +129,7 @@ export function useAdminTripDetail(
 
   async function transitionStatus(newStatus: TripStatus) {
     if (!trip) return;
+    setActionError(null);
     setTransitioning(true);
     try {
       const updated = await tripsService.updateStatus(trip.id, newStatus);
@@ -135,7 +137,7 @@ export function useAdminTripDetail(
       toast.success(`Viagem ${statusLabel(newStatus).toLowerCase()}`);
       if (newStatus === "CANCELED") navigate({ to: "/trips" });
     } catch (err) {
-      handleApiError(err, "Erro ao atualizar status");
+      setActionError(apiErrorMessage(err, "Erro ao atualizar status"));
     } finally {
       setTransitioning(false);
     }
@@ -143,6 +145,7 @@ export function useAdminTripDetail(
 
   async function assignDriver(driverId: string) {
     if (!trip) return;
+    setActionError(null);
     setAssigningDriver(true);
     try {
       const updated = await tripsService.assignDriver(
@@ -152,7 +155,7 @@ export function useAdminTripDetail(
       setTrip(updated);
       toast.success("Motorista atualizado");
     } catch (err) {
-      handleApiError(err, "Erro ao atribuir motorista");
+      setActionError(apiErrorMessage(err, "Erro ao atribuir motorista"));
     } finally {
       setAssigningDriver(false);
     }
@@ -160,6 +163,7 @@ export function useAdminTripDetail(
 
   async function assignVehicle(vehicleId: string) {
     if (!trip) return;
+    setActionError(null);
     setAssigningVehicle(true);
     try {
       const updated = await tripsService.assignVehicle(
@@ -169,20 +173,21 @@ export function useAdminTripDetail(
       setTrip(updated);
       toast.success("Veículo atualizado");
     } catch (err) {
-      handleApiError(err, "Erro ao atribuir veículo");
+      setActionError(apiErrorMessage(err, "Erro ao atribuir veículo"));
     } finally {
       setAssigningVehicle(false);
     }
   }
 
   async function confirmPresence(bookingId: string) {
+    setActionError(null);
     setBusyBookingId(bookingId);
     try {
       const updated = await bookingsService.confirmPresence(bookingId);
       setBookings((prev) => prev.map((b) => (b.id === bookingId ? updated : b)));
       toast.success("Presença confirmada");
     } catch (err) {
-      handleApiError(err, "Erro ao confirmar presença");
+      setActionError(apiErrorMessage(err, "Erro ao confirmar presença"));
     } finally {
       setBusyBookingId(null);
     }
@@ -190,6 +195,7 @@ export function useAdminTripDetail(
 
   async function confirmPayment(paymentId: string) {
     if (!trip?.organizationId) return;
+    setActionError(null);
     const targetBookingId = payments.find((p) => p.id === paymentId)?.enrollmentId ?? null;
     if (targetBookingId) setBusyBookingId(targetBookingId);
     try {
@@ -204,13 +210,14 @@ export function useAdminTripDetail(
         toast.warning(`Pagamento ainda está como ${fresh.status} — verifique o relatório.`);
       }
     } catch (err) {
-      handleApiError(err, "Erro ao confirmar pagamento");
+      setActionError(apiErrorMessage(err, "Erro ao confirmar pagamento"));
     } finally {
       setBusyBookingId(null);
     }
   }
 
   async function cancelBooking(bookingId: string) {
+    setActionError(null);
     setBusyBookingId(bookingId);
     try {
       const updated = await bookingsService.cancel(bookingId);
@@ -223,7 +230,7 @@ export function useAdminTripDetail(
         // silent
       }
     } catch (err) {
-      toast.error(bookingCancelErrorMessage(err));
+      setActionError(bookingCancelErrorMessage(err));
     } finally {
       setBusyBookingId(null);
     }
@@ -232,6 +239,8 @@ export function useAdminTripDetail(
   return {
     trip,
     error,
+    actionError,
+    clearActionError: () => setActionError(null),
     passengers,
     bookings,
     drivers,

@@ -26,7 +26,8 @@ function PublicOrgsListPage() {
     <AppShell title="Empresas">
       <div className="-mx-4 -mt-3.5 mb-3 border-b border-line bg-background px-4 py-3">
         <p className="mb-2.5 rounded-[10px] border border-line bg-surface-2 px-3 py-2 text-[12px] leading-[1.4] text-ink-2">
-          Encontre empresas de transporte e conheça suas viagens.
+          Encontre empresas de transporte e entre em contato. Para ver as viagens de uma empresa,
+          use o link que ela divulga.
         </p>
         <div className="relative">
           <Search
@@ -51,9 +52,7 @@ function PublicOrgsListPage() {
           variant="search"
           title="Nenhuma empresa encontrada"
           description={
-            total === 0
-              ? "Ainda não há empresas com viagens públicas."
-              : "Tente outro termo de busca."
+            total === 0 ? "Ainda não há empresas cadastradas." : "Tente outro termo de busca."
           }
         />
       ) : (

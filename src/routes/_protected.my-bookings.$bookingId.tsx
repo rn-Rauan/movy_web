@@ -25,13 +25,20 @@ function BookingDetailPage() {
 
 function BookingDetailContent() {
   const { bookingId } = Route.useParams();
-  const { booking, loading, error, cancel, cancelling } = useBookingDetail(bookingId);
+  const { booking, loading, error, cancel, cancelling, cancelError } = useBookingDetail(bookingId);
 
   function renderContent() {
     if (loading) return <LoadingList count={2} height="h-32" />;
     if (error) return <ErrorCard message={error} />;
     if (booking)
-      return <BookingDetailView booking={booking} onCancel={cancel} cancelling={cancelling} />;
+      return (
+        <BookingDetailView
+          booking={booking}
+          onCancel={cancel}
+          cancelling={cancelling}
+          cancelError={cancelError}
+        />
+      );
     return null;
   }
 

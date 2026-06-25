@@ -11,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FormApiError } from "@/components/feedback/FormError";
 import type { Vehicle } from "@/lib/types";
 
 type Props = {
@@ -21,24 +22,31 @@ type Props = {
 
 export function RemoveVehicleDialog({ vehicle, onClose, onRemoved }: Props) {
   const [removing, setRemoving] = useState(false);
+  const [submitError, setSubmitError] = useState<unknown>(null);
+
+  function handleClose() {
+    setSubmitError(null);
+    onClose();
+  }
 
   async function handleRemove() {
     if (!vehicle) return;
+    setSubmitError(null);
     setRemoving(true);
     try {
       await vehiclesService.deactivate(vehicle.id);
       onRemoved(vehicle);
       toast.success("Veículo removido");
+      handleClose();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao remover veículo");
+      setSubmitError(err);
     } finally {
       setRemoving(false);
-      onClose();
     }
   }
 
   return (
-    <AlertDialog open={!!vehicle} onOpenChange={(o) => !o && onClose()}>
+    <AlertDialog open={!!vehicle} onOpenChange={(o) => !o && handleClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Remover veículo?</AlertDialogTitle>
@@ -46,10 +54,14 @@ export function RemoveVehicleDialog({ vehicle, onClose, onRemoved }: Props) {
             {vehicle?.model} ({vehicle?.plate}) será desativado.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        <FormApiError error={submitError} />
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleRemove}
+            onClick={(e) => {
+              e.preventDefault();
+              handleRemove();
+            }}
             disabled={removing}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >

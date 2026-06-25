@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { paymentsService } from "@/services/payments.service";
 import { ApiError } from "@/lib/api";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { fetchAllPages } from "@/lib/paginate";
 import { paymentBucketDate } from "@/lib/format";
 import { addBrMonths, isoToBrYmd, startOfBrDay, startOfBrMonth } from "@/lib/timezone";
@@ -71,7 +72,7 @@ export function useOrgRevenue(orgId: string | null | undefined): Result {
           setPayments([]);
           return;
         }
-        setError(err instanceof Error ? err.message : "Erro ao carregar receita");
+        setError(apiErrorMessage(err, "Erro ao carregar receita"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

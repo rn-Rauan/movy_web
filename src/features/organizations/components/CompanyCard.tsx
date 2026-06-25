@@ -1,16 +1,17 @@
-import { Link } from "@tanstack/react-router";
 import { Building2, Mail, MapPin, Phone } from "lucide-react";
 import type { Organization } from "@/lib/types";
 
 type Props = {
   org: Organization & { city?: string; rating?: number };
-  /** Where the secondary outline action navigates (default "Ver viagens" on the org's public page). */
-  primaryHref?: string;
 };
 
-export function CompanyCard({ org, primaryHref }: Props) {
+/**
+ * Card de empresa para o diretório público e a lista logada. **Não** linka pra página de viagens
+ * da empresa: viagens privadas (e a página `/public/organizations/{slug}`) só são acessíveis por
+ * quem tem o link que a própria empresa divulga. Aqui só mostramos identidade + contato.
+ */
+export function CompanyCard({ org }: Props) {
   const initial = (org.name ?? "?").charAt(0).toUpperCase();
-  const tripsHref = `/public/organizations/${org.slug}`;
   const contactHref = org.email
     ? `mailto:${org.email}`
     : org.telephone
@@ -60,22 +61,16 @@ export function CompanyCard({ org, primaryHref }: Props) {
         </div>
       )}
 
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <Link
-          to={primaryHref ?? tripsHref}
-          className="flex h-10 items-center justify-center rounded-[10px] border border-line bg-surface text-[12px] font-bold text-ink hover:bg-line-soft"
-        >
-          Ver viagens
-        </Link>
+      <div className="mt-3">
         {contactHref ? (
           <a
             href={contactHref}
-            className="flex h-10 items-center justify-center rounded-[10px] bg-ink text-[12px] font-bold text-surface hover:bg-ink/90"
+            className="flex h-10 w-full items-center justify-center rounded-[10px] bg-ink text-[12px] font-bold text-surface hover:bg-ink/90"
           >
             Contato
           </a>
         ) : (
-          <span className="flex h-10 items-center justify-center rounded-[10px] border border-line bg-surface-2 text-[12px] font-bold text-muted-foreground">
+          <span className="flex h-10 w-full items-center justify-center rounded-[10px] border border-line bg-surface-2 text-[12px] font-bold text-muted-foreground">
             Sem contato
           </span>
         )}

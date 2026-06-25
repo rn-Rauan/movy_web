@@ -2,6 +2,7 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { FormError } from "@/components/feedback/FormError";
 import { useRole } from "@/lib/role-context";
 import { useAdminTripDetail } from "@/features/trips/hooks/useAdminTripDetail";
 import { AdminTripDetailView } from "@/features/trips/components/AdminTripDetailView";
@@ -20,6 +21,7 @@ function TripDetailPage() {
   const {
     trip,
     error,
+    actionError,
     passengers,
     bookings,
     drivers,
@@ -48,25 +50,28 @@ function TripDetailPage() {
       ) : !trip || !role ? (
         <LoadingList count={3} height="h-24" />
       ) : (
-        <AdminTripDetailView
-          role={role}
-          trip={trip}
-          passengers={passengers}
-          bookings={bookings}
-          drivers={drivers}
-          vehicles={vehicles}
-          paymentsByBookingId={paymentsByBookingId}
-          transitioning={transitioning}
-          assigningDriver={assigningDriver}
-          assigningVehicle={assigningVehicle}
-          busyBookingId={busyBookingId}
-          onTransition={transitionStatus}
-          onAssignDriver={assignDriver}
-          onAssignVehicle={assignVehicle}
-          onConfirmPresence={confirmPresence}
-          onConfirmPayment={confirmPayment}
-          onCancelBooking={cancelBooking}
-        />
+        <>
+          <FormError className="mb-3">{actionError}</FormError>
+          <AdminTripDetailView
+            role={role}
+            trip={trip}
+            passengers={passengers}
+            bookings={bookings}
+            drivers={drivers}
+            vehicles={vehicles}
+            paymentsByBookingId={paymentsByBookingId}
+            transitioning={transitioning}
+            assigningDriver={assigningDriver}
+            assigningVehicle={assigningVehicle}
+            busyBookingId={busyBookingId}
+            onTransition={transitionStatus}
+            onAssignDriver={assignDriver}
+            onAssignVehicle={assignVehicle}
+            onConfirmPresence={confirmPresence}
+            onConfirmPayment={confirmPayment}
+            onCancelBooking={cancelBooking}
+          />
+        </>
       )}
     </AppShell>
   );

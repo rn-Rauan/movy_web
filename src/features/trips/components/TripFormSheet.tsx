@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Bus, List, Plus, User } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { handleApiError } from "@/lib/handle-error";
+import { zodFieldErrors } from "@/lib/handle-error";
+import { FormApiError } from "@/components/feedback/FormError";
 import { tripsService } from "@/services/trips.service";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,12 +93,14 @@ export function TripFormSheet({
 }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
       setForm(EMPTY);
       setFieldErrors({});
+      setSubmitError(null);
     }
   }, [open]);
 
@@ -124,11 +127,7 @@ export function TripFormSheet({
     if (!orgId) return;
     const parsed = tripSchema.safeParse(form);
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => {
-        errs[e.path.join(".")] = e.message;
-      });
-      setFieldErrors(errs);
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
     if (selectedTemplate && !templateHasSchedule) {
@@ -139,6 +138,7 @@ export function TripFormSheet({
       return;
     }
     setFieldErrors({});
+    setSubmitError(null);
     setSubmitting(true);
     try {
       const { driverId, vehicleId, ...rest } = parsed.data;
@@ -151,7 +151,7 @@ export function TripFormSheet({
       onOpenChange(false);
       onCreated();
     } catch (err) {
-      handleApiError(err, "Erro ao criar viagem");
+      setSubmitError(err);
     } finally {
       setSubmitting(false);
     }
@@ -174,6 +174,7 @@ export function TripFormSheet({
         }
       >
         <form id="trip-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <FormApiError error={submitError} />
           {/* Template */}
           <FormField label="Template de rota" error={fieldErrors.tripTemplateId}>
             <Select

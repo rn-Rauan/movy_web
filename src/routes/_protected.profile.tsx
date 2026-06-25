@@ -19,9 +19,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LoginRequired } from "@/components/feedback/LoginRequired";
+import { FormError } from "@/components/feedback/FormError";
 import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
 import { api } from "@/lib/api";
+import { apiErrorMessage, zodFieldErrors } from "@/lib/handle-error";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_protected/profile")({
@@ -80,10 +82,12 @@ function ProfileIndexContent() {
 
   const [form, setForm] = useState({ name: "", email: "", telephone: "" });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [pwForm, setPwForm] = useState({ password: "", confirm: "" });
   const [pwErrors, setPwErrors] = useState<Record<string, string>>({});
+  const [pwError, setPwError] = useState<string | null>(null);
   const [pwSubmitting, setPwSubmitting] = useState(false);
 
   function openEdit() {
@@ -93,18 +97,16 @@ function ProfileIndexContent() {
       telephone: user?.telephone ?? "",
     });
     setFormErrors({});
+    setFormError(null);
     setEditOpen(true);
   }
 
   async function handleProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     const parsed = profileSchema.safeParse(form);
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => {
-        errs[e.path.join(".")] = e.message;
-      });
-      setFormErrors(errs);
+      setFormErrors(zodFieldErrors(parsed.error));
       return;
     }
     setFormErrors({});
@@ -118,7 +120,7 @@ function ProfileIndexContent() {
       toast.success("Perfil atualizado");
       setEditOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao salvar perfil");
+      setFormError(apiErrorMessage(err, "Erro ao salvar perfil"));
     } finally {
       setSubmitting(false);
     }
@@ -126,13 +128,10 @@ function ProfileIndexContent() {
 
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setPwError(null);
     const parsed = passwordSchema.safeParse(pwForm);
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => {
-        errs[e.path.join(".")] = e.message;
-      });
-      setPwErrors(errs);
+      setPwErrors(zodFieldErrors(parsed.error));
       return;
     }
     setPwErrors({});
@@ -146,7 +145,7 @@ function ProfileIndexContent() {
       setPwOpen(false);
       setPwForm({ password: "", confirm: "" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao alterar senha");
+      setPwError(apiErrorMessage(err, "Erro ao alterar senha"));
     } finally {
       setPwSubmitting(false);
     }
@@ -214,6 +213,7 @@ function ProfileIndexContent() {
               onClick={() => {
                 setPwForm({ password: "", confirm: "" });
                 setPwErrors({});
+                setPwError(null);
                 setPwOpen(true);
               }}
               last
@@ -238,6 +238,7 @@ function ProfileIndexContent() {
             <DialogTitle>Editar perfil</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleProfileSubmit} className="mt-2 space-y-3">
+            <FormError>{formError}</FormError>
             <div className="space-y-1">
               <Label>Nome</Label>
               <Input
@@ -277,6 +278,7 @@ function ProfileIndexContent() {
             <DialogTitle>Alterar senha</DialogTitle>
           </DialogHeader>
           <form onSubmit={handlePasswordSubmit} className="mt-2 space-y-3">
+            <FormError>{pwError}</FormError>
             <div className="space-y-1">
               <Label>Nova senha</Label>
               <Input

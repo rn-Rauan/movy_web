@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
 import { plansService } from "@/services/plans.service";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { formatPrice, isUnlimitedPlanLimit } from "@/lib/format";
 import type { Plan, Paginated } from "@/lib/types";
 
@@ -37,7 +38,7 @@ function PublicPlansPage() {
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err.message);
+        setError(apiErrorMessage(err, "Erro ao carregar planos"));
       });
     return () => {
       cancelled = true;

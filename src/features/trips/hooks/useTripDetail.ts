@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { tripsService } from "@/services/trips.service";
 import { bookingsService } from "@/services/bookings.service";
 import type { TripInstance, BookingAvailability } from "@/lib/types";
@@ -29,8 +29,7 @@ export function useTripDetail(tripId: string, opts: Options = {}) {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err.message);
-          toast.error(err.message);
+          setError(apiErrorMessage(err, "Erro ao carregar viagem"));
         }
       });
 

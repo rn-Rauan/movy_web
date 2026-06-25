@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
-import { toast } from "sonner";
 import { ArrowRight, Banknote, Calendar, CreditCard, Smartphone, Zap } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/feedback/FormError";
 import {
   Select,
   SelectContent,
@@ -70,7 +70,7 @@ function BookContent() {
   const navigate = useNavigate();
   const { trip } = useTripDetail(tripId, { authenticated: true });
   const { booking: existingBooking, loading: checkingExisting } = useUserBookingForTrip(tripId);
-  const { form, setForm, prefill, submit, submitting } = useBookingForm(tripId);
+  const { form, setForm, prefill, submit, submitting, error, fieldErrors } = useBookingForm(tripId);
 
   useEffect(() => {
     if (trip) prefill(trip);
@@ -78,7 +78,6 @@ function BookContent() {
 
   useEffect(() => {
     if (existingBooking) {
-      toast.info("Você já está inscrito nesta viagem.");
       navigate({
         to: "/my-bookings/$bookingId",
         params: { bookingId: existingBooking.id },
@@ -150,6 +149,7 @@ function BookContent() {
           }}
           className="flex flex-col gap-3.5"
         >
+          <FormError>{error}</FormError>
           <FieldGroup label="Tipo de viagem">
             <Select
               value={form.enrollmentType}
@@ -172,7 +172,7 @@ function BookContent() {
             </Select>
           </FieldGroup>
 
-          <FieldGroup label="Parada de embarque">
+          <FieldGroup label="Parada de embarque" error={fieldErrors.boardingStop}>
             <Select
               value={form.boardingStop}
               onValueChange={(v) => setForm((f) => ({ ...f, boardingStop: v }))}
@@ -191,7 +191,7 @@ function BookContent() {
             </Select>
           </FieldGroup>
 
-          <FieldGroup label="Parada de desembarque">
+          <FieldGroup label="Parada de desembarque" error={fieldErrors.alightingStop}>
             <Select
               value={form.alightingStop}
               onValueChange={(v) => setForm((f) => ({ ...f, alightingStop: v }))}
@@ -248,13 +248,22 @@ function BookContent() {
   );
 }
 
-function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+function FieldGroup({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <Label className="mb-1.5 block text-[11px] font-bold tracking-[0.1px] text-ink-2">
         {label}
       </Label>
       {children}
+      {error && <p className="mt-1 text-[11px] font-semibold text-danger">{error}</p>}
     </div>
   );
 }

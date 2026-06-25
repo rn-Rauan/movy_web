@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { vehiclesService } from "@/services/vehicles.service";
 import type { Paginated, Vehicle } from "@/lib/types";
 
@@ -18,9 +18,7 @@ export function useVehicles(orgId: string | null | undefined) {
         setVehicles(list);
       })
       .catch((err) => {
-        const msg = err instanceof Error ? err.message : "Erro ao carregar veículos";
-        setError(msg);
-        toast.error(msg);
+        setError(apiErrorMessage(err, "Erro ao carregar veículos"));
       });
   }, [orgId]);
 

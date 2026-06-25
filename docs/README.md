@@ -8,12 +8,12 @@ Bem-vindo à documentação do projeto **movy_web**, um SaaS de transporte — s
 
 ### 📘 Comece por aqui
 
-| Documento                            | Descrição                                                                                                |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| **[FRONTEND.md](./FRONTEND.md)**     | **Doc técnica abrangente do frontend — fonte canônica pra v1.0.** Stack, fluxos, padrões, anti-patterns. |
-| **[TCC_FRONTEND.md](./TCC_FRONTEND.md)** | Capítulo de TCC em prosa acadêmica sobre o frontend — autocontido, com seção de integração com a API. |
-| [E2E_MANUAL.md](./E2E_MANUAL.md)     | 97 cenários de teste manuais pré-deploy (happy paths + cross-flows + edge cases).                        |
-| [API_FRONTEND.md](./API_FRONTEND.md) | Contrato completo da API backend (endpoints, schemas, errorCodes).                                       |
+| Documento                                | Descrição                                                                                                |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **[FRONTEND.md](./FRONTEND.md)**         | **Doc técnica abrangente do frontend — fonte canônica pra v1.0.** Stack, fluxos, padrões, anti-patterns. |
+| **[TCC_FRONTEND.md](./TCC_FRONTEND.md)** | Capítulo de TCC em prosa acadêmica sobre o frontend — autocontido, com seção de integração com a API.    |
+| [E2E_MANUAL.md](./E2E_MANUAL.md)         | 97 cenários de teste manuais pré-deploy (happy paths + cross-flows + edge cases).                        |
+| [API_FRONTEND.md](./API_FRONTEND.md)     | Contrato completo da API backend (endpoints, schemas, errorCodes).                                       |
 
 ### 🔍 Deep-dives por área (legacy — podem ter trechos desatualizados)
 

@@ -1,14 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { toast } from "sonner";
 import { Building2 } from "lucide-react";
 import { api, tokenStorage, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
+import { apiErrorMessage, zodFieldErrors } from "@/lib/handle-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/feedback/FormError";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { SignupAudienceToggle } from "@/components/passenger/SignupAudienceToggle";
 import type { AuthUser } from "@/lib/types";
@@ -74,9 +75,13 @@ function SignupEmpresaPage() {
   });
   const [slugTouched, setSlugTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function update<K extends keyof typeof form>(k: K, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
+    setFormError(null);
+    setFieldErrors((e) => (e[k] ? { ...e, [k]: "" } : e));
   }
 
   function onOrgNameChange(v: string) {
@@ -85,6 +90,8 @@ function SignupEmpresaPage() {
       organizationName: v,
       slug: slugTouched ? f.slug : slugify(v),
     }));
+    setFormError(null);
+    setFieldErrors((e) => (e.organizationName ? { ...e, organizationName: "" } : e));
   }
 
   function onSlugChange(v: string) {
@@ -92,11 +99,26 @@ function SignupEmpresaPage() {
     update("slug", sanitizeSlug(v));
   }
 
+  function handleConflict(err: ApiError) {
+    const msg = String(
+      (err.data as { message?: string } | null)?.message ?? err.message ?? "",
+    ).toLowerCase();
+    if (msg.includes("slug")) {
+      setFieldErrors({ slug: "Esse slug já está em uso, escolha outro." });
+    } else if (msg.includes("email") || msg.includes("e-mail") || msg.includes("user")) {
+      setFieldErrors({ userEmail: "Já existe uma conta com esse e-mail." });
+    } else {
+      setFormError("E-mail ou slug já cadastrado.");
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
+    setFieldErrors({});
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
     setSubmitting(true);
@@ -112,18 +134,9 @@ function SignupEmpresaPage() {
       navigate({ to: "/dashboard" });
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        const msg = String(
-          (err.data as { message?: string } | null)?.message ?? err.message ?? "",
-        ).toLowerCase();
-        if (msg.includes("slug")) {
-          toast.error("Esse slug já está em uso, escolha outro");
-        } else if (msg.includes("email") || msg.includes("e-mail") || msg.includes("user")) {
-          toast.error("Já existe conta com esse e-mail");
-        } else {
-          toast.error("E-mail ou slug já cadastrado");
-        }
+        handleConflict(err);
       } else {
-        toast.error(err instanceof Error ? err.message : "Falha ao cadastrar empresa");
+        setFormError(apiErrorMessage(err, "Falha ao cadastrar empresa"));
       }
     } finally {
       setSubmitting(false);
@@ -148,9 +161,10 @@ function SignupEmpresaPage() {
         <SignupAudienceToggle current="company" />
 
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
+          <FormError>{formError}</FormError>
           <section className="flex flex-col gap-3">
             <SectionLabel>Responsável</SectionLabel>
-            <FieldGroup label="Nome completo" htmlFor="userName">
+            <FieldGroup label="Nome completo" htmlFor="userName" error={fieldErrors.userName}>
               <Input
                 id="userName"
                 value={form.userName}
@@ -159,7 +173,7 @@ function SignupEmpresaPage() {
                 required
               />
             </FieldGroup>
-            <FieldGroup label="E-mail" htmlFor="userEmail">
+            <FieldGroup label="E-mail" htmlFor="userEmail" error={fieldErrors.userEmail}>
               <Input
                 id="userEmail"
                 type="email"
@@ -170,7 +184,7 @@ function SignupEmpresaPage() {
                 required
               />
             </FieldGroup>
-            <FieldGroup label="Telefone" htmlFor="userTelephone">
+            <FieldGroup label="Telefone" htmlFor="userTelephone" error={fieldErrors.userTelephone}>
               <Input
                 id="userTelephone"
                 type="tel"
@@ -181,7 +195,12 @@ function SignupEmpresaPage() {
                 required
               />
             </FieldGroup>
-            <FieldGroup label="Senha" htmlFor="userPassword" hint="Mínimo 8 caracteres">
+            <FieldGroup
+              label="Senha"
+              htmlFor="userPassword"
+              hint="Mínimo 8 caracteres"
+              error={fieldErrors.userPassword}
+            >
               <Input
                 id="userPassword"
                 type="password"
@@ -195,7 +214,11 @@ function SignupEmpresaPage() {
 
           <section className="flex flex-col gap-3">
             <SectionLabel>Empresa</SectionLabel>
-            <FieldGroup label="Nome da empresa" htmlFor="organizationName">
+            <FieldGroup
+              label="Nome da empresa"
+              htmlFor="organizationName"
+              error={fieldErrors.organizationName}
+            >
               <Input
                 id="organizationName"
                 value={form.organizationName}
@@ -203,7 +226,7 @@ function SignupEmpresaPage() {
                 required
               />
             </FieldGroup>
-            <FieldGroup label="CNPJ" htmlFor="cnpj">
+            <FieldGroup label="CNPJ" htmlFor="cnpj" error={fieldErrors.cnpj}>
               <Input
                 id="cnpj"
                 value={form.cnpj}
@@ -211,7 +234,11 @@ function SignupEmpresaPage() {
                 required
               />
             </FieldGroup>
-            <FieldGroup label="E-mail comercial" htmlFor="organizationEmail">
+            <FieldGroup
+              label="E-mail comercial"
+              htmlFor="organizationEmail"
+              error={fieldErrors.organizationEmail}
+            >
               <Input
                 id="organizationEmail"
                 type="email"
@@ -221,7 +248,11 @@ function SignupEmpresaPage() {
                 required
               />
             </FieldGroup>
-            <FieldGroup label="Telefone comercial" htmlFor="organizationTelephone">
+            <FieldGroup
+              label="Telefone comercial"
+              htmlFor="organizationTelephone"
+              error={fieldErrors.organizationTelephone}
+            >
               <Input
                 id="organizationTelephone"
                 type="tel"
@@ -231,7 +262,7 @@ function SignupEmpresaPage() {
                 required
               />
             </FieldGroup>
-            <FieldGroup label="Endereço" htmlFor="address">
+            <FieldGroup label="Endereço" htmlFor="address" error={fieldErrors.address}>
               <Input
                 id="address"
                 value={form.address}
@@ -243,6 +274,7 @@ function SignupEmpresaPage() {
               label="Slug (URL pública)"
               htmlFor="slug"
               hint={`Sua URL: /public/organizations/${form.slug || "minha-empresa"}`}
+              error={fieldErrors.slug}
             >
               <Input
                 id="slug"
@@ -286,11 +318,13 @@ function FieldGroup({
   label,
   htmlFor,
   hint,
+  error,
   children,
 }: {
   label: string;
   htmlFor: string;
   hint?: string;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -302,7 +336,11 @@ function FieldGroup({
         {label}
       </Label>
       {children}
-      {hint && <p className="mt-1 pl-0.5 text-[10px] text-muted-foreground">{hint}</p>}
+      {error ? (
+        <p className="mt-1 text-[11px] font-semibold text-danger">{error}</p>
+      ) : (
+        hint && <p className="mt-1 pl-0.5 text-[10px] text-muted-foreground">{hint}</p>
+      )}
     </div>
   );
 }

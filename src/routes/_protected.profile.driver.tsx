@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { FormError } from "@/components/feedback/FormError";
 import { LoginRequired } from "@/components/feedback/LoginRequired";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -19,7 +20,7 @@ import { useMyDriver } from "@/features/drivers/hooks/useMyDriver";
 import { useMyDriverOrgs } from "@/features/drivers/hooks/useMyDriverOrgs";
 import { useRole } from "@/lib/role-context";
 import { driversService } from "@/services/drivers.service";
-import { handleApiError } from "@/lib/handle-error";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { formatDateOnly } from "@/lib/format";
 import type { Driver } from "@/lib/types";
 
@@ -44,6 +45,7 @@ function DriverProfileContent() {
   const { isDriver, refetchRole } = useRole();
   const { orgs: linkedOrgs, loading: orgsLoading } = useMyDriverOrgs(isDriver);
   const [submitting, setSubmitting] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Driver | null>(null);
 
   // Revalida o role ao abrir a página: se um admin acabou de vincular o motorista
@@ -54,13 +56,14 @@ function DriverProfileContent() {
 
   async function handleCreate(payload: DriverFormPayload) {
     setSubmitting(true);
+    setCreateError(null);
     try {
       const created = await driversService.createMe(payload);
       setDriver(created);
       refetchRole();
       toast.success("Perfil de motorista ativado");
     } catch (err) {
-      handleApiError(err, "Erro ao ativar perfil de motorista");
+      setCreateError(apiErrorMessage(err, "Erro ao ativar perfil de motorista"));
     } finally {
       setSubmitting(false);
     }
@@ -79,6 +82,7 @@ function DriverProfileContent() {
             Preencha os dados da sua CNH abaixo. Você só vai ver as funcionalidades de motorista
             depois que um admin vincular você à organização dele.
           </p>
+          <FormError className="mb-3">{createError}</FormError>
           <DriverProfileForm mode="create" submitting={submitting} onSubmit={handleCreate} />
         </Card>
       ) : driver ? (

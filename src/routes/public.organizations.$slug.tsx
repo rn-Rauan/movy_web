@@ -118,7 +118,6 @@ function PublicOrgPage() {
               name: typeof orgName === "string" ? orgName : slug,
             }
           }
-          primaryHref={`/public/organizations/${slug}`}
         />
       </div>
 

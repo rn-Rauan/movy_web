@@ -48,9 +48,7 @@ function VerifyEmailPage() {
         setErrorMessage(
           code === "INVALID_OR_EXPIRED_VERIFICATION_TOKEN_BAD_REQUEST"
             ? "Link de verificação expirou ou já foi usado."
-            : err instanceof Error
-              ? err.message
-              : "Não foi possível verificar o e-mail.",
+            : "Não foi possível verificar o e-mail.",
         );
         setState("error");
       }

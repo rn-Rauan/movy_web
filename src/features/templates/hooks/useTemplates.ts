@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { handleApiError } from "@/lib/handle-error";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { templatesService } from "@/services/templates.service";
 import type { TripTemplate } from "@/lib/types";
 
@@ -18,8 +18,7 @@ export function useTemplates(orgId: string | null | undefined) {
         setTemplates(list);
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Erro ao carregar templates");
-        handleApiError(err, "Erro ao carregar templates");
+        setError(apiErrorMessage(err, "Erro ao carregar templates"));
       });
   }, [orgId]);
 

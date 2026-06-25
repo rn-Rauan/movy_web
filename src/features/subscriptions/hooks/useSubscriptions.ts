@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { subscriptionsService } from "@/services/subscriptions.service";
 import { plansService } from "@/services/plans.service";
+import { apiErrorMessage } from "@/lib/handle-error";
 import type { Plan, Subscription } from "@/lib/types";
 
 /**
@@ -32,7 +33,7 @@ export function useSubscriptions(orgId: string | null | undefined) {
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Erro ao carregar assinaturas");
+        setError(apiErrorMessage(err, "Erro ao carregar assinaturas"));
         setSubscriptions([]);
       })
       .finally(() => {

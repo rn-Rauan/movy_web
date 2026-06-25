@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { tripsService } from "@/services/trips.service";
 import { isInDateRange, type DateRange } from "@/lib/date-filters";
 import { getBrHour } from "@/lib/timezone";
@@ -61,8 +61,7 @@ export function usePublicTrips() {
     (tripsService.listPublic({ limit: 50 }) as Promise<Paginated<PublicTrip>>)
       .then((res) => setTrips(Array.isArray(res) ? res : (res.data ?? [])))
       .catch((err) => {
-        setError(err.message);
-        toast.error(err.message);
+        setError(apiErrorMessage(err, "Erro ao carregar viagens"));
       });
   }, []);
 

@@ -12,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import type { BookingDetails } from "@/lib/types";
+import { FormError } from "@/components/feedback/FormError";
 import {
   bookingStatusLabel,
   enrollmentTypeLabel,
@@ -28,9 +29,15 @@ interface BookingDetailViewProps {
   booking: BookingDetails;
   onCancel: () => void;
   cancelling: boolean;
+  cancelError?: string | null;
 }
 
-export function BookingDetailView({ booking, onCancel, cancelling }: BookingDetailViewProps) {
+export function BookingDetailView({
+  booking,
+  onCancel,
+  cancelling,
+  cancelError,
+}: BookingDetailViewProps) {
   const isActive = booking.status === "ACTIVE";
   const departure = booking.tripDepartureTime || booking.enrollmentDate;
   const { name: driverName } = useDriverName(booking.tripInstance?.driverId);
@@ -109,6 +116,8 @@ export function BookingDetailView({ booking, onCancel, cancelling }: BookingDeta
           </div>
         )}
       </article>
+
+      <FormError className="mb-3">{cancelError}</FormError>
 
       {isActive && (
         <AlertDialog>

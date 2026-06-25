@@ -4,9 +4,11 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { X, Plus } from "lucide-react";
 import { api, tokenStorage } from "@/lib/api";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { useAuth } from "@/lib/auth-context";
 import { useRole } from "@/lib/role-context";
 import { AppShell } from "@/components/layout/AppShell";
+import { FormError } from "@/components/feedback/FormError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,6 +75,7 @@ function SetupPage() {
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [submitting, setSubmitting] = useState(false);
+  const [stepError, setStepError] = useState<string | null>(null);
 
   const [orgId, setOrgId] = useState<string | null>(null);
   const [templateId, setTemplateId] = useState<string | null>(null);
@@ -115,9 +118,10 @@ function SetupPage() {
 
   async function handleStep1(e: React.FormEvent) {
     e.preventDefault();
+    setStepError(null);
     const parsed = step1Schema.safeParse(form1);
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+      setStepError(parsed.error.issues[0].message);
       return;
     }
     setSubmitting(true);
@@ -132,7 +136,7 @@ function SetupPage() {
       const orgsRes = await api<Paginated<Organization>>("/organizations/me");
       const id = orgsRes.data?.[0]?.id ?? null;
       if (!id) {
-        toast.error("Não foi possível obter o ID da organização criada.");
+        setStepError("Não foi possível obter o ID da organização criada.");
         return;
       }
       setOrgId(id);
@@ -140,7 +144,7 @@ function SetupPage() {
       toast.success("Organização criada!");
       setStep(2);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Erro ao criar organização");
+      setStepError(apiErrorMessage(err, "Erro ao criar organização"));
     } finally {
       setSubmitting(false);
     }
@@ -148,6 +152,7 @@ function SetupPage() {
 
   async function handleStep2(e: React.FormEvent) {
     e.preventDefault();
+    setStepError(null);
     const payload = {
       ...form2,
       defaultCapacity: form2.defaultCapacity !== "" ? Number(form2.defaultCapacity) : undefined,
@@ -156,13 +161,13 @@ function SetupPage() {
     };
     const parsed = step2Schema.safeParse(payload);
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+      setStepError(parsed.error.issues[0].message);
       return;
     }
     const departureUtc = brHourToUtc(parsed.data.departureTimeOfDay);
     const arrivalUtc = brHourToUtc(parsed.data.arrivalTimeOfDay);
     if (!departureUtc || !arrivalUtc) {
-      toast.error("Use o formato HH:mm (24h) nos horários");
+      setStepError("Use o formato HH:mm (24h) nos horários");
       return;
     }
     setSubmitting(true);
@@ -179,7 +184,7 @@ function SetupPage() {
       toast.success("Roteiro criado!");
       setStep(3);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Erro ao criar roteiro");
+      setStepError(apiErrorMessage(err, "Erro ao criar roteiro"));
     } finally {
       setSubmitting(false);
     }
@@ -187,9 +192,10 @@ function SetupPage() {
 
   async function handleStep3(e: React.FormEvent) {
     e.preventDefault();
+    setStepError(null);
     const parsed = step3Schema.safeParse(form3);
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+      setStepError(parsed.error.issues[0].message);
       return;
     }
     setSubmitting(true);
@@ -206,7 +212,7 @@ function SetupPage() {
       toast.success("Viagem criada!");
       setStep(4);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Erro ao criar viagem");
+      setStepError(apiErrorMessage(err, "Erro ao criar viagem"));
     } finally {
       setSubmitting(false);
     }
@@ -214,9 +220,10 @@ function SetupPage() {
 
   async function handleStep4(e: React.FormEvent) {
     e.preventDefault();
+    setStepError(null);
     const parsed = step4Schema.safeParse(form4);
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+      setStepError(parsed.error.issues[0].message);
       return;
     }
     setSubmitting(true);
@@ -228,7 +235,7 @@ function SetupPage() {
       toast.success("Motorista associado!");
       navigate({ to: "/organizations" });
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Erro ao associar motorista");
+      setStepError(apiErrorMessage(err, "Erro ao associar motorista"));
     } finally {
       setSubmitting(false);
     }
@@ -250,6 +257,7 @@ function SetupPage() {
         {step === 1 && (
           <form onSubmit={handleStep1} className="space-y-4">
             <h2 className="text-lg font-semibold">Criar organização</h2>
+            <FormError>{stepError}</FormError>
 
             <div className="space-y-2">
               <Label htmlFor="orgName">Nome da organização</Label>
@@ -335,6 +343,7 @@ function SetupPage() {
         {step === 2 && (
           <form onSubmit={handleStep2} className="space-y-4">
             <h2 className="text-lg font-semibold">Criar roteiro de viagem</h2>
+            <FormError>{stepError}</FormError>
 
             <div className="space-y-2">
               <Label htmlFor="depPoint">Ponto de partida</Label>
@@ -502,6 +511,7 @@ function SetupPage() {
         {step === 3 && (
           <form onSubmit={handleStep3} className="space-y-4">
             <h2 className="text-lg font-semibold">Criar instância de viagem</h2>
+            <FormError>{stepError}</FormError>
 
             <div className="space-y-2">
               <Label htmlFor="depDate">Data de partida</Label>
@@ -557,6 +567,7 @@ function SetupPage() {
         {step === 4 && (
           <form onSubmit={handleStep4} className="space-y-4">
             <h2 className="text-lg font-semibold">Associar motorista</h2>
+            <FormError>{stepError}</FormError>
             <p className="text-sm text-muted-foreground">
               Informe o e-mail e a CNH do motorista para vinculá-lo à organização.
             </p>

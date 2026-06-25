@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import type { ZodError } from "zod";
 import { ApiError } from "./api";
 
 function isPlanLimit403(err: ApiError): boolean {
@@ -49,9 +50,17 @@ const DRIVER_AND_AUTH_MESSAGES: Record<string, string> = {
   INVALID_OR_EXPIRED_VERIFICATION_TOKEN_BAD_REQUEST: "Link de verificação expirou. Solicite outro.",
 };
 
+export const PLAN_LIMIT_MESSAGE = "Você atingiu o limite do seu plano";
+
+/** True when the error is a 403 caused by a plan limit / missing subscription. */
+export function isPlanLimitError(err: unknown): boolean {
+  return err instanceof ApiError && isPlanLimit403(err);
+}
+
 /**
  * Map a booking-cancel error to user-facing copy. Prefers the stable `errorCode` from the
- * backend (see API_FRONTEND.md → Booking Cancellation Error Codes); falls back to `err.message`.
+ * backend (see API_FRONTEND.md → Booking Cancellation Error Codes). Nunca expõe a mensagem
+ * crua do backend (vem em inglês) — cai no `fallback` em português.
  */
 export function bookingCancelErrorMessage(
   err: unknown,
@@ -60,28 +69,85 @@ export function bookingCancelErrorMessage(
   if (err instanceof ApiError && err.errorCode && BOOKING_CANCEL_MESSAGES[err.errorCode]) {
     return BOOKING_CANCEL_MESSAGES[err.errorCode];
   }
-  return err instanceof Error ? err.message : fallback;
+  return fallback;
+}
+
+/**
+ * Mensagem de falha de login. Para **não revelar se a conta existe** (anti-enumeração), todas
+ * as falhas de credencial — senha errada (401), e-mail inexistente (404), payload inválido (400) —
+ * mostram a MESMA mensagem. Só erros de servidor/conexão recebem cópia distinta.
+ */
+export function loginErrorMessage(err: unknown): string {
+  if (err instanceof ApiError && [400, 401, 404].includes(err.status)) {
+    return "E-mail ou senha incorretos.";
+  }
+  return "Não foi possível entrar. Verifique sua conexão e tente novamente.";
+}
+
+/** All errorCode → PT-BR maps, searched in order. */
+function mappedErrorCode(errorCode: string | null): string | undefined {
+  if (!errorCode) return undefined;
+  return (
+    BOOKING_CANCEL_MESSAGES[errorCode] ??
+    TRIP_SCHEDULING_MESSAGES[errorCode] ??
+    DRIVER_AND_AUTH_MESSAGES[errorCode]
+  );
+}
+
+/** Copy for a 409 conflict (signup / register-organization) — slug vs e-mail heuristic. */
+function conflictMessage(err: ApiError): string {
+  const raw = String(
+    (err.data as { message?: string } | null)?.message ?? err.message ?? "",
+  ).toLowerCase();
+  if (raw.includes("slug")) return "Esse slug já está em uso, escolha outro.";
+  if (raw.includes("email") || raw.includes("e-mail") || raw.includes("user")) {
+    return "Já existe uma conta com esse e-mail.";
+  }
+  return "E-mail ou slug já cadastrado.";
+}
+
+/**
+ * Resolve an error to user-facing PT-BR copy **without** showing a toast. This is the single
+ * source of truth for error text — feed the result into an inline `<FormError>` / `ErrorCard`,
+ * or into `handleApiError` (which just wraps this in a toast). Prefers the stable `errorCode`;
+ * adds auth fallbacks (login 401, signup/org 409) that have no dedicated errorCode.
+ *
+ * **Nunca retorna a mensagem crua do backend** — ela costuma vir em inglês e pode vazar detalhes
+ * (ex.: "User with id ... not found"). Quando não há mapeamento, usa o `fallback` (sempre em PT).
+ */
+export function apiErrorMessage(
+  err: unknown,
+  fallback = "Algo deu errado. Tente novamente.",
+): string {
+  if (err instanceof ApiError) {
+    if (isPlanLimit403(err)) return PLAN_LIMIT_MESSAGE;
+    const mapped = mappedErrorCode(err.errorCode);
+    if (mapped) return mapped;
+    if (err.status === 401) return "E-mail ou senha incorretos.";
+    if (err.status === 409) return conflictMessage(err);
+  }
+  return fallback;
+}
+
+/** Convert a ZodError into a `{ "path.to.field": message }` map for inline rendering. */
+export function zodFieldErrors(error: ZodError): Record<string, string> {
+  const errs: Record<string, string> = {};
+  error.issues.forEach((issue) => {
+    const key = issue.path.join(".");
+    if (!errs[key]) errs[key] = issue.message;
+  });
+  return errs;
 }
 
 export function handleApiError(err: unknown, fallbackMsg: string) {
-  if (err instanceof ApiError) {
-    if (isPlanLimit403(err)) {
-      toast.error("Você atingiu o limite do seu plano", {
-        action: {
-          label: "Ver planos",
-          onClick: () => window.location.assign("/organization"),
-        },
-      });
-      return;
-    }
-    if (err.errorCode && TRIP_SCHEDULING_MESSAGES[err.errorCode]) {
-      toast.error(TRIP_SCHEDULING_MESSAGES[err.errorCode]);
-      return;
-    }
-    if (err.errorCode && DRIVER_AND_AUTH_MESSAGES[err.errorCode]) {
-      toast.error(DRIVER_AND_AUTH_MESSAGES[err.errorCode]);
-      return;
-    }
+  if (isPlanLimitError(err)) {
+    toast.error(PLAN_LIMIT_MESSAGE, {
+      action: {
+        label: "Ver planos",
+        onClick: () => window.location.assign("/organization"),
+      },
+    });
+    return;
   }
-  toast.error(err instanceof Error ? err.message : fallbackMsg);
+  toast.error(apiErrorMessage(err, fallbackMsg));
 }

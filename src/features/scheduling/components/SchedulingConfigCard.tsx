@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { LoadingList } from "@/components/feedback/LoadingList";
+import { FormError, FormApiError } from "@/components/feedback/FormError";
 import { useSchedulingConfig } from "@/features/scheduling/hooks/useSchedulingConfig";
-import { handleApiError } from "@/lib/handle-error";
 import { schedulingService } from "@/services/scheduling.service";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,8 @@ export function SchedulingConfigCard({ orgId }: Props) {
   const [enabled, setEnabled] = useState<boolean>(false);
   const [daysAhead, setDaysAhead] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<unknown>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -74,9 +76,11 @@ export function SchedulingConfigCard({ orgId }: Props) {
 
   async function handleSave() {
     if (!orgId || !config) return;
+    setValidationError(null);
+    setSubmitError(null);
     const days = Number(daysAhead);
     if (!Number.isInteger(days) || days < 1 || days > 90) {
-      toast.error("Janela de geração deve estar entre 1 e 90 dias");
+      setValidationError("Janela de geração deve estar entre 1 e 90 dias");
       return;
     }
     const patch: Record<string, unknown> = {};
@@ -88,7 +92,7 @@ export function SchedulingConfigCard({ orgId }: Props) {
       setConfig(updated);
       toast.success("Agendamento atualizado");
     } catch (err) {
-      handleApiError(err, "Erro ao salvar configuração");
+      setSubmitError(err);
     } finally {
       setSubmitting(false);
     }
@@ -187,6 +191,9 @@ export function SchedulingConfigCard({ orgId }: Props) {
               </div>
             </>
           )}
+
+          <FormError>{validationError}</FormError>
+          <FormApiError error={submitError} />
 
           <div className="flex justify-end pt-1">
             <Button size="sm" onClick={handleSave} disabled={!dirty || submitting}>

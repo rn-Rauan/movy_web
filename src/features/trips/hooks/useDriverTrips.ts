@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { tripsService } from "@/services/trips.service";
 import { fetchAllPages } from "@/lib/paginate";
-import { handleApiError } from "@/lib/handle-error";
+import { apiErrorMessage } from "@/lib/handle-error";
 import type { TripInstance, TripStatus } from "@/lib/types";
 
 export function useDriverTrips(status?: TripStatus) {
@@ -21,8 +21,7 @@ export function useDriverTrips(status?: TripStatus) {
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : "Erro ao carregar viagens");
-        handleApiError(err, "Erro ao carregar viagens");
+        setError(apiErrorMessage(err, "Erro ao carregar viagens"));
       });
 
     return () => {

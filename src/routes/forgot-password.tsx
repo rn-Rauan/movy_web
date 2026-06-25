@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
-import { handleApiError } from "@/lib/handle-error";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { PublicShell } from "@/components/layout/PublicShell";
 
 export const Route = createFileRoute("/forgot-password")({
@@ -34,7 +34,7 @@ function ForgotPasswordPage() {
       await authService.forgotPassword(parsed.data.email);
       setSent(true);
     } catch (err) {
-      handleApiError(err, "Erro ao solicitar recuperação");
+      setError(apiErrorMessage(err, "Erro ao solicitar recuperação"));
     } finally {
       setSubmitting(false);
     }

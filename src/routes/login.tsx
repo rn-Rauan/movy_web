@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { toast } from "sonner";
 import { Bus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { loginErrorMessage, zodFieldErrors } from "@/lib/handle-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/feedback/FormError";
 import { PublicShell } from "@/components/layout/PublicShell";
 
 const searchSchema = z.object({
@@ -30,12 +31,16 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
+    setFieldErrors({});
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
     setSubmitting(true);
@@ -43,7 +48,7 @@ function LoginPage() {
       await login(email, password);
       navigate({ to: redirect ? (redirect as string) : "/" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao entrar");
+      setFormError(loginErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -63,20 +68,25 @@ function LoginPage() {
         </div>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
-          <FieldGroup label="E-mail" htmlFor="email">
+          <FormError>{formError}</FormError>
+          <FieldGroup label="E-mail" htmlFor="email" error={fieldErrors.email}>
             <Input
               id="email"
               type="email"
               autoComplete="email"
               inputMode="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setFormError(null);
+              }}
               required
             />
           </FieldGroup>
           <FieldGroup
             label="Senha"
             htmlFor="password"
+            error={fieldErrors.password}
             rightLink={
               <Link
                 to="/forgot-password"
@@ -91,7 +101,10 @@ function LoginPage() {
               type="password"
               autoComplete="current-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setFormError(null);
+              }}
               required
             />
           </FieldGroup>
@@ -120,11 +133,13 @@ function FieldGroup({
   label,
   htmlFor,
   rightLink,
+  error,
   children,
 }: {
   label: string;
   htmlFor: string;
   rightLink?: React.ReactNode;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -136,6 +151,7 @@ function FieldGroup({
         {rightLink}
       </div>
       {children}
+      {error && <p className="mt-1 text-[11px] font-semibold text-danger">{error}</p>}
     </div>
   );
 }

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Bus, Check as CheckIcon, Plus, User, X } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { handleApiError } from "@/lib/handle-error";
+import { zodFieldErrors } from "@/lib/handle-error";
+import { FormApiError } from "@/components/feedback/FormError";
 import { HHMM_REGEX, brHourToUtc, utcHourToBr } from "@/lib/timezone";
 import { templatesService } from "@/services/templates.service";
 import { driversService } from "@/services/drivers.service";
@@ -191,6 +192,7 @@ export function TemplateFormSheet({
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<unknown>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
@@ -198,6 +200,7 @@ export function TemplateFormSheet({
     if (open) {
       setForm(editing ? templateToForm(editing) : EMPTY_FORM);
       setFieldErrors({});
+      setSubmitError(null);
     }
   }, [open, editing]);
 
@@ -236,14 +239,11 @@ export function TemplateFormSheet({
     };
     const parsed = templateSchema.safeParse(payload);
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => {
-        errs[e.path.join(".")] = e.message;
-      });
-      setFieldErrors(errs);
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
     setFieldErrors({});
+    setSubmitError(null);
     setSubmitting(true);
     const departureUtc = brHourToUtc(parsed.data.departureTimeOfDay);
     const arrivalUtc = brHourToUtc(parsed.data.arrivalTimeOfDay);
@@ -270,7 +270,7 @@ export function TemplateFormSheet({
       }
       onOpenChange(false);
     } catch (err) {
-      handleApiError(err, "Erro ao salvar template");
+      setSubmitError(err);
     } finally {
       setSubmitting(false);
     }
@@ -296,6 +296,7 @@ export function TemplateFormSheet({
         }
       >
         <form id="template-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <FormApiError error={submitError} />
           {/* Origem / destino */}
           <div className="grid grid-cols-2 gap-2.5">
             <FormField label="Origem" error={fieldErrors.departurePoint}>

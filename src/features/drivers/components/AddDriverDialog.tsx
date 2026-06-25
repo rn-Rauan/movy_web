@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Info, Plus } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { handleApiError } from "@/lib/handle-error";
+import { zodFieldErrors } from "@/lib/handle-error";
+import { FormApiError } from "@/components/feedback/FormError";
 import { driversService } from "@/services/drivers.service";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,24 +28,23 @@ type Props = {
 export function AddDriverDialog({ open, onOpenChange, onAdded }: Props) {
   const [form, setForm] = useState({ userEmail: "", cnh: "" });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
       setForm({ userEmail: "", cnh: "" });
       setFieldErrors({});
+      setSubmitError(null);
     }
   }, [open]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setSubmitError(null);
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => {
-        errs[e.path.join(".")] = e.message;
-      });
-      setFieldErrors(errs);
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
     setFieldErrors({});
@@ -55,7 +55,7 @@ export function AddDriverDialog({ open, onOpenChange, onAdded }: Props) {
       onOpenChange(false);
       onAdded();
     } catch (err) {
-      handleApiError(err, "Erro ao adicionar motorista");
+      setSubmitError(err);
     } finally {
       setSubmitting(false);
     }
@@ -78,6 +78,7 @@ export function AddDriverDialog({ open, onOpenChange, onAdded }: Props) {
         }
       >
         <form id="add-driver-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <FormApiError error={submitError} />
           {/* Aviso explicativo */}
           <div className="flex items-start gap-2 rounded-[10px] border border-info/20 bg-info-soft px-3 py-2.5">
             <Info className="mt-0.5 h-3.5 w-3.5 flex-none text-info" strokeWidth={2} />

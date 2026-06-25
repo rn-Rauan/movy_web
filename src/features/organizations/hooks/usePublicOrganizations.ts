@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { apiErrorMessage } from "@/lib/handle-error";
 import { organizationsService } from "@/services/organizations.service";
 import type { Organization, Paginated } from "@/lib/types";
 
@@ -23,8 +23,7 @@ export function usePublicOrganizations() {
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err.message);
-        toast.error(err.message);
+        setError(apiErrorMessage(err, "Erro ao carregar organizações"));
       });
     return () => {
       cancelled = true;

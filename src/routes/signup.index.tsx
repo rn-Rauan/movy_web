@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { toast } from "sonner";
 import { Bus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { apiErrorMessage, zodFieldErrors } from "@/lib/handle-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormError } from "@/components/feedback/FormError";
 import { PublicShell } from "@/components/layout/PublicShell";
 import { SignupAudienceToggle } from "@/components/passenger/SignupAudienceToggle";
 
@@ -31,16 +32,22 @@ function SignupPage() {
     telephone: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function update<K extends keyof typeof form>(k: K, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
+    setFormError(null);
+    setFieldErrors((e) => (e[k] ? { ...e, [k]: "" } : e));
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
+    setFieldErrors({});
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
     setSubmitting(true);
@@ -48,7 +55,7 @@ function SignupPage() {
       await signup(parsed.data);
       navigate({ to: "/" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao cadastrar");
+      setFormError(apiErrorMessage(err, "Falha ao cadastrar"));
     } finally {
       setSubmitting(false);
     }
@@ -68,7 +75,8 @@ function SignupPage() {
         <SignupAudienceToggle current="passenger" />
 
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
-          <FieldGroup label="Nome completo" htmlFor="name">
+          <FormError>{formError}</FormError>
+          <FieldGroup label="Nome completo" htmlFor="name" error={fieldErrors.name}>
             <Input
               id="name"
               value={form.name}
@@ -77,7 +85,7 @@ function SignupPage() {
               required
             />
           </FieldGroup>
-          <FieldGroup label="E-mail" htmlFor="email">
+          <FieldGroup label="E-mail" htmlFor="email" error={fieldErrors.email}>
             <Input
               id="email"
               type="email"
@@ -88,7 +96,7 @@ function SignupPage() {
               required
             />
           </FieldGroup>
-          <FieldGroup label="Telefone" htmlFor="telephone">
+          <FieldGroup label="Telefone" htmlFor="telephone" error={fieldErrors.telephone}>
             <Input
               id="telephone"
               type="tel"
@@ -99,7 +107,12 @@ function SignupPage() {
               required
             />
           </FieldGroup>
-          <FieldGroup label="Senha" htmlFor="password" hint="Mínimo 8 caracteres">
+          <FieldGroup
+            label="Senha"
+            htmlFor="password"
+            hint="Mínimo 8 caracteres"
+            error={fieldErrors.password}
+          >
             <Input
               id="password"
               type="password"
@@ -134,11 +147,13 @@ function FieldGroup({
   label,
   htmlFor,
   hint,
+  error,
   children,
 }: {
   label: string;
   htmlFor: string;
   hint?: string;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -150,7 +165,11 @@ function FieldGroup({
         {label}
       </Label>
       {children}
-      {hint && <p className="mt-1 pl-0.5 text-[10px] text-muted-foreground">{hint}</p>}
+      {error ? (
+        <p className="mt-1 text-[11px] font-semibold text-danger">{error}</p>
+      ) : (
+        hint && <p className="mt-1 pl-0.5 text-[10px] text-muted-foreground">{hint}</p>
+      )}
     </div>
   );
 }

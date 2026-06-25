@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BottomSheet, BottomSheetContent } from "@/components/visual/BottomSheet";
-import { handleApiError } from "@/lib/handle-error";
+import { FormApiError } from "@/components/feedback/FormError";
 import { templatesService } from "@/services/templates.service";
 import { cn } from "@/lib/utils";
 import type { TripTemplate } from "@/lib/types";
@@ -23,6 +23,7 @@ export function GenerateInstancesDialog({ template, defaultDaysAhead, onClose }:
   const [daysAhead, setDaysAhead] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<unknown>(null);
 
   const placeholder = String(defaultDaysAhead ?? 14);
 
@@ -30,11 +31,13 @@ export function GenerateInstancesDialog({ template, defaultDaysAhead, onClose }:
     if (template) {
       setDaysAhead("");
       setError(null);
+      setSubmitError(null);
     }
   }, [template]);
 
   async function handleGenerate() {
     if (!template) return;
+    setSubmitError(null);
     let daysAheadValue: number | undefined;
     if (daysAhead.trim()) {
       const n = Number(daysAhead);
@@ -53,7 +56,7 @@ export function GenerateInstancesDialog({ template, defaultDaysAhead, onClose }:
       );
       onClose();
     } catch (err) {
-      handleApiError(err, "Erro ao gerar viagens");
+      setSubmitError(err);
     } finally {
       setSubmitting(false);
     }
@@ -76,6 +79,7 @@ export function GenerateInstancesDialog({ template, defaultDaysAhead, onClose }:
         }
       >
         <div className="flex flex-col gap-4">
+          <FormApiError error={submitError} />
           <p className="text-[12px] leading-[1.5] text-muted-foreground">
             Cria as próximas viagens deste template recorrente. Dias passados, fora da frequência ou
             já existentes são ignorados.

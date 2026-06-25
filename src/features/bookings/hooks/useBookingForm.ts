@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { z } from "zod";
 import { bookingsService } from "@/services/bookings.service";
+import { apiErrorMessage, zodFieldErrors } from "@/lib/handle-error";
 import { canEnroll } from "@/lib/format";
 import type { TripInstance, EnrollmentType, PaymentMethod } from "@/lib/types";
 
@@ -21,6 +22,8 @@ const schema = z
 export function useBookingForm(tripId: string) {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     enrollmentType: "ONE_WAY" as EnrollmentType,
     boardingStop: "",
@@ -36,14 +39,21 @@ export function useBookingForm(tripId: string) {
     }));
   }, []);
 
+  const clearErrors = useCallback(() => {
+    setError(null);
+    setFieldErrors({});
+  }, []);
+
   async function submit(trip: TripInstance | null) {
+    setError(null);
+    setFieldErrors({});
     if (trip && !canEnroll(trip.tripStatus)) {
-      toast.error("Esta viagem não aceita inscrições no momento.");
+      setError("Esta viagem não aceita inscrições no momento.");
       return;
     }
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+      setFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
     setSubmitting(true);
@@ -60,11 +70,11 @@ export function useBookingForm(tripId: string) {
         navigate({ to: "/my-bookings" });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha na inscrição");
+      setError(apiErrorMessage(err, "Falha na inscrição"));
     } finally {
       setSubmitting(false);
     }
   }
 
-  return { form, setForm, prefill, submit, submitting };
+  return { form, setForm, prefill, submit, submitting, error, fieldErrors, clearErrors };
 }

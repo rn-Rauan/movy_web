@@ -28,7 +28,7 @@
 
 O transporte fretado — o deslocamento recorrente de grupos de passageiros entre pontos fixos, como o trajeto casa–universidade ou casa–trabalho — é tradicionalmente operado por pequenas e médias empresas que dependem de processos manuais para divulgar rotas, controlar a lotação dos veículos e registrar pagamentos. Esse modelo apresenta atritos em ambos os lados: o passageiro tem dificuldade de localizar uma vaga e de acompanhar sua reserva, enquanto a empresa carece de uma visão consolidada de ocupação, receita e operação diária.
 
-O **Movy** é uma plataforma, no modelo *Software as a Service* (SaaS), concebida para reduzir esse atrito. Pelo lado da empresa, permite cadastrar rotas recorrentes, gerar automaticamente as viagens correspondentes e gerenciar motoristas, veículos e inscrições. Pelo lado do passageiro, oferece um catálogo público pesquisável, no qual é possível localizar uma viagem, reservar uma vaga e acompanhar a inscrição. O sistema é dividido em duas partes: uma **interface de programação de aplicações (API)**, responsável pela lógica de domínio e pela persistência, e uma **aplicação web cliente**, responsável por toda a interação com o usuário. Este relatório trata da segunda.
+O **Movy** é uma plataforma, no modelo _Software as a Service_ (SaaS), concebida para reduzir esse atrito. Pelo lado da empresa, permite cadastrar rotas recorrentes, gerar automaticamente as viagens correspondentes e gerenciar motoristas, veículos e inscrições. Pelo lado do passageiro, oferece um catálogo público pesquisável, no qual é possível localizar uma viagem, reservar uma vaga e acompanhar a inscrição. O sistema é dividido em duas partes: uma **interface de programação de aplicações (API)**, responsável pela lógica de domínio e pela persistência, e uma **aplicação web cliente**, responsável por toda a interação com o usuário. Este relatório trata da segunda.
 
 A motivação para documentar especificamente o frontend está em que ele concentra a experiência do usuário e materializa, em telas e fluxos, as regras expostas pela API. Um princípio condutor de todo o projeto é que o cliente **não detém regras de negócio autoritativas**: ele orquestra a interação, valida entradas localmente para fornecer retorno imediato, traduz os estados do domínio em elementos visuais e delega toda decisão definitiva ao backend. Compreender como essa orquestração é estruturada — em camadas, com controle de acesso por papel e comunicação resiliente com a API — é o objetivo central deste documento.
 
@@ -38,7 +38,7 @@ A motivação para documentar especificamente o frontend está em que ele concen
 
 #### 1.1.1 Geral
 
-Desenvolver a aplicação web cliente do Movy, *mobile-first*, que disponibilize aos passageiros a descoberta e a reserva de viagens de transporte fretado e às empresas a gestão operacional de rotas, viagens, motoristas e veículos, consumindo a API do sistema e garantindo controle de acesso por papel, comunicação resiliente e experiência de uso consistente.
+Desenvolver a aplicação web cliente do Movy, _mobile-first_, que disponibilize aos passageiros a descoberta e a reserva de viagens de transporte fretado e às empresas a gestão operacional de rotas, viagens, motoristas e veículos, consumindo a API do sistema e garantindo controle de acesso por papel, comunicação resiliente e experiência de uso consistente.
 
 #### 1.1.2 Específicos
 
@@ -48,7 +48,7 @@ Os objetivos específicos correspondem aos requisitos funcionais implementados n
 
 - **RF01** — Apresentar a página inicial de divulgação com chamadas à ação para cadastro de passageiro e de empresa.
 - **RF02** — Exibir o catálogo público de viagens, agrupado por rota, com busca e filtros por data, turno e ordenação.
-- **RF03** — Exibir o detalhe público de uma viagem, com datas alternativas da mesma rota e compartilhamento por *link*.
+- **RF03** — Exibir o detalhe público de uma viagem, com datas alternativas da mesma rota e compartilhamento por _link_.
 - **RF04** — Exibir o diretório de organizações ativas e o perfil público de cada organização.
 - **RF05** — Exibir o comparativo público de planos comerciais.
 
@@ -81,25 +81,25 @@ Os objetivos específicos correspondem aos requisitos funcionais implementados n
 
 ## 2. Tecnologias Envolvidas
 
-A seleção tecnológica buscou equilibrar produtividade, segurança de tipos e adequação ao caráter *mobile-first* do produto. A Tabela 1 resume as principais tecnologias e o papel de cada uma.
+A seleção tecnológica buscou equilibrar produtividade, segurança de tipos e adequação ao caráter _mobile-first_ do produto. A Tabela 1 resume as principais tecnologias e o papel de cada uma.
 
 **Tabela 1 — Tecnologias utilizadas no frontend**
 
-| Tecnologia | Descrição / Papel |
-| --- | --- |
-| React 19 | Biblioteca de interface; modelo declarativo baseado em componentes e *hooks*. |
-| TypeScript (*strict*) | Linguagem; contratos de dados explícitos com a API e verificação em tempo de compilação. |
-| TanStack Router / Start | Roteamento baseado em arquivos, com segurança de tipos e *layouts* aninhados. |
-| Tailwind CSS v4 | Estilização *utility-first* com sistema de design próprio por *tokens*. |
-| shadcn/ui (Radix UI) | Componentes de interface acessíveis, sob modelo de *ownership*. |
-| Zod + React Hook Form | Validação declarativa de formulários, reaproveitada como tipos por inferência. |
-| `fetch` nativo encapsulado | Cliente HTTP único, com renovação de sessão e normalização de erros. |
-| Sonner | Notificações transitórias (*toasts*). |
-| Lucide React | Conjunto de ícones otimizável por *tree-shaking*. |
-| Vite (preset Lovable) | Ferramenta de construção; o preset encapsula plugins e o adaptador de implantação. |
-| Cloudflare Workers | Plataforma de implantação em execução de borda (*edge*). |
+| Tecnologia                 | Descrição / Papel                                                                        |
+| -------------------------- | ---------------------------------------------------------------------------------------- |
+| React 19                   | Biblioteca de interface; modelo declarativo baseado em componentes e _hooks_.            |
+| TypeScript (_strict_)      | Linguagem; contratos de dados explícitos com a API e verificação em tempo de compilação. |
+| TanStack Router / Start    | Roteamento baseado em arquivos, com segurança de tipos e _layouts_ aninhados.            |
+| Tailwind CSS v4            | Estilização _utility-first_ com sistema de design próprio por _tokens_.                  |
+| shadcn/ui (Radix UI)       | Componentes de interface acessíveis, sob modelo de _ownership_.                          |
+| Zod + React Hook Form      | Validação declarativa de formulários, reaproveitada como tipos por inferência.           |
+| `fetch` nativo encapsulado | Cliente HTTP único, com renovação de sessão e normalização de erros.                     |
+| Sonner                     | Notificações transitórias (_toasts_).                                                    |
+| Lucide React               | Conjunto de ícones otimizável por _tree-shaking_.                                        |
+| Vite (preset Lovable)      | Ferramenta de construção; o preset encapsula plugins e o adaptador de implantação.       |
+| Cloudflare Workers         | Plataforma de implantação em execução de borda (_edge_).                                 |
 
-Registra-se que a biblioteca TanStack React Query consta entre as dependências, porém **não é consumida** por nenhuma rota: o gerenciamento de estado de servidor é feito, no estágio atual, por *hooks* próprios sobre a Context API do React. A não adoção imediata é uma decisão consciente, retomada na Seção 5.
+Registra-se que a biblioteca TanStack React Query consta entre as dependências, porém **não é consumida** por nenhuma rota: o gerenciamento de estado de servidor é feito, no estágio atual, por _hooks_ próprios sobre a Context API do React. A não adoção imediata é uma decisão consciente, retomada na Seção 5.
 
 > **» Junção com o backend.** Esta tabela pode ser fundida com a tabela de tecnologias do backend (linguagem, framework, banco de dados, contêineres), formando um único quadro do sistema; recomenda-se, nesse caso, separar visualmente as linhas por camada (cliente e servidor).
 
@@ -111,9 +111,9 @@ Registra-se que a biblioteca TanStack React Query consta entre as dependências,
 
 Os requisitos funcionais do frontend foram enumerados na Seção 1.1.2, por corresponderem aos objetivos específicos do trabalho. Esta seção registra os **requisitos não funcionais** que orientaram as decisões de projeto da camada de apresentação.
 
-- **RNF01 (Usabilidade)** — A interface é *mobile-first*, priorizando o uso em telas pequenas e mantendo legibilidade em telas maiores por meio de largura de conteúdo limitada.
+- **RNF01 (Usabilidade)** — A interface é _mobile-first_, priorizando o uso em telas pequenas e mantendo legibilidade em telas maiores por meio de largura de conteúdo limitada.
 - **RNF02 (Localização)** — Toda a interface é em português do Brasil; datas e valores monetários seguem as convenções locais.
-- **RNF03 (Confiabilidade de tipos)** — O código é escrito em TypeScript no modo *strict*, com contratos de dados explícitos para as respostas da API.
+- **RNF03 (Confiabilidade de tipos)** — O código é escrito em TypeScript no modo _strict_, com contratos de dados explícitos para as respostas da API.
 - **RNF04 (Resiliência de sessão)** — A expiração de credenciais é tratada de forma transparente, com renovação automática e única (deduplicada) diante de respostas de autorização negada.
 - **RNF05 (Tratamento uniforme de erros)** — As mensagens ao usuário derivam de códigos de erro estáveis fornecidos pelo backend, e não do texto das mensagens.
 - **RNF06 (Segurança de acesso)** — O acesso às telas é controlado por papel, de forma centralizada, antes da renderização.
@@ -168,15 +168,15 @@ A arquitetura do frontend espelha, no cliente, a separação em camadas adotada 
                           ╚═══════════════╝
 ```
 
-> *Sugestão de produção da figura:* o diagrama acima pode ser redesenhado em ferramenta vetorial ou gerado a partir de fonte Mermaid/PlantUML para exportar como imagem no LaTeX (`\includegraphics`). O conteúdo essencial são as quatro camadas e o sentido único das setas.
+> _Sugestão de produção da figura:_ o diagrama acima pode ser redesenhado em ferramenta vetorial ou gerado a partir de fonte Mermaid/PlantUML para exportar como imagem no LaTeX (`\includegraphics`). O conteúdo essencial são as quatro camadas e o sentido único das setas.
 
-A camada de **apresentação** compõe-se das rotas e dos componentes. As rotas são deliberadamente finas — controladores enxutos cuja função é instanciar um *hook* de caso de uso e repassar seus dados aos componentes. Os componentes recebem dados apenas por propriedades e não realizam requisições próprias, mantendo-se puramente apresentacionais e reutilizáveis. A camada de **casos de uso** materializa-se nos *hooks de feature*, que encapsulam a obtenção de dados, o estado associado (carregamento, erro, conteúdo) e os efeitos colaterais de uma operação de domínio. A camada de **serviços** implementa o padrão *repository*: cada arquivo agrupa as chamadas a um conjunto coeso de *endpoints* e esconde detalhes de transporte. Por fim, o **cliente HTTP** é o ponto único de comunicação com o backend, responsável por anexar credenciais, interpretar respostas, normalizar erros e renovar a sessão de forma transparente.
+A camada de **apresentação** compõe-se das rotas e dos componentes. As rotas são deliberadamente finas — controladores enxutos cuja função é instanciar um _hook_ de caso de uso e repassar seus dados aos componentes. Os componentes recebem dados apenas por propriedades e não realizam requisições próprias, mantendo-se puramente apresentacionais e reutilizáveis. A camada de **casos de uso** materializa-se nos _hooks de feature_, que encapsulam a obtenção de dados, o estado associado (carregamento, erro, conteúdo) e os efeitos colaterais de uma operação de domínio. A camada de **serviços** implementa o padrão _repository_: cada arquivo agrupa as chamadas a um conjunto coeso de _endpoints_ e esconde detalhes de transporte. Por fim, o **cliente HTTP** é o ponto único de comunicação com o backend, responsável por anexar credenciais, interpretar respostas, normalizar erros e renovar a sessão de forma transparente.
 
-Essa estratificação confere ao sistema três propriedades. A **localidade de mudança** faz com que alterações no contrato de um *endpoint* afetem somente o serviço correspondente, e mudanças visuais não toquem a obtenção de dados. A **previsibilidade** decorre da convenção de que nenhum componente ou rota chama o cliente HTTP diretamente — toda comunicação passa pelos serviços. A **coesão por domínio** é reforçada pela organização em *módulos de feature*: cada domínio (viagens, inscrições, organizações, motoristas, modelos de rota, veículos, agendamento, assinaturas e financeiro) reúne, em um único diretório, seus *hooks* e componentes.
+Essa estratificação confere ao sistema três propriedades. A **localidade de mudança** faz com que alterações no contrato de um _endpoint_ afetem somente o serviço correspondente, e mudanças visuais não toquem a obtenção de dados. A **previsibilidade** decorre da convenção de que nenhum componente ou rota chama o cliente HTTP diretamente — toda comunicação passa pelos serviços. A **coesão por domínio** é reforçada pela organização em _módulos de feature_: cada domínio (viagens, inscrições, organizações, motoristas, modelos de rota, veículos, agendamento, assinaturas e financeiro) reúne, em um único diretório, seus _hooks_ e componentes.
 
-Sobre essa base, dois mecanismos transversais completam a arquitetura. O **controle de acesso** é realizado por *layouts* de rota sem caminho próprio (*pathless layouts*): um *layout* verifica a autenticação uma única vez para todas as rotas protegidas, e outros dois, aninhados sob ele, verificam os papéis de administrador e de motorista. A composição resulta em uma cadeia de verificações, sem que os segmentos de proteção apareçam na URL. O **estado global de sessão** — identidade e papéis do usuário — é provido por dois contextos encadeados na raiz da aplicação: o de autenticação envolve o de papel, garantindo que a determinação de papel só ocorra quando a identidade já está disponível.
+Sobre essa base, dois mecanismos transversais completam a arquitetura. O **controle de acesso** é realizado por _layouts_ de rota sem caminho próprio (_pathless layouts_): um _layout_ verifica a autenticação uma única vez para todas as rotas protegidas, e outros dois, aninhados sob ele, verificam os papéis de administrador e de motorista. A composição resulta em uma cadeia de verificações, sem que os segmentos de proteção apareçam na URL. O **estado global de sessão** — identidade e papéis do usuário — é provido por dois contextos encadeados na raiz da aplicação: o de autenticação envolve o de papel, garantindo que a determinação de papel só ocorra quando a identidade já está disponível.
 
-> **» Junção com o backend.** Esta subseção descreve a arquitetura do cliente. A arquitetura do servidor (camadas de domínio, aplicação e infraestrutura, segundo *Clean Architecture* e DDD) e o diagrama de implantação completo (cliente em borda + API + banco) devem vir do relatório do backend. Sugere-se uma figura de visão geral do sistema que posicione o frontend como consumidor da API.
+> **» Junção com o backend.** Esta subseção descreve a arquitetura do cliente. A arquitetura do servidor (camadas de domínio, aplicação e infraestrutura, segundo _Clean Architecture_ e DDD) e o diagrama de implantação completo (cliente em borda + API + banco) devem vir do relatório do backend. Sugere-se uma figura de visão geral do sistema que posicione o frontend como consumidor da API.
 
 ### 3.5 Diagrama Entidade-Relacionamento
 
@@ -204,7 +204,7 @@ O ambiente de desenvolvimento é estabelecido a partir de um arquivo de exemplo 
 2. Copiar o arquivo `.env.example` para `.env` e ajustar `VITE_API_URL` (valor padrão: `http://localhost:5701`).
 3. Executar o servidor de desenvolvimento (`npm run dev`).
 
-Os demais comandos cobrem a construção de produção (`npm run build`), a construção em modo de desenvolvimento (`npm run build:dev`), a verificação de estilo (`npm run lint`) e a formatação automática (`npm run format`). A configuração de construção apoia-se em um preset que encapsula os plugins necessários (roteamento, React, Tailwind, resolução de *aliases* e adaptador de implantação); por convenção, não se adicionam plugins manualmente ao arquivo de configuração, sob pena de duplicação. A aplicação é implantada em ambiente de execução de borda, por meio da plataforma de *workers* da Cloudflare, para a qual o processo de construção gera os artefatos.
+Os demais comandos cobrem a construção de produção (`npm run build`), a construção em modo de desenvolvimento (`npm run build:dev`), a verificação de estilo (`npm run lint`) e a formatação automática (`npm run format`). A configuração de construção apoia-se em um preset que encapsula os plugins necessários (roteamento, React, Tailwind, resolução de _aliases_ e adaptador de implantação); por convenção, não se adicionam plugins manualmente ao arquivo de configuração, sob pena de duplicação. A aplicação é implantada em ambiente de execução de borda, por meio da plataforma de _workers_ da Cloudflare, para a qual o processo de construção gera os artefatos.
 
 > **» Junção com o backend.** As instruções de implantação do servidor (contêineres, variáveis de ambiente, migração de banco) e o roteiro de execução conjunta (subir a API antes do cliente) devem ser consolidados com este, formando um único guia de implantação do sistema.
 
@@ -237,7 +237,9 @@ export async function api<T = unknown>(
   // Tenta uma única renovação de token em caso de 401 e repete a requisição.
   if (res.status === 401 && auth && !_retry) {
     if (!refreshPromise) {
-      refreshPromise = doRefresh().finally(() => { refreshPromise = null; });
+      refreshPromise = doRefresh().finally(() => {
+        refreshPromise = null;
+      });
     }
     try {
       await refreshPromise;
@@ -252,14 +254,16 @@ export async function api<T = unknown>(
     const errorCode = data && typeof data.error === "string" ? data.error : null;
     throw new ApiError(
       Array.isArray(message) ? message.join(", ") : String(message),
-      res.status, data, errorCode,
+      res.status,
+      data,
+      errorCode,
     );
   }
   return data as T;
 }
 ```
 
-A **camada de serviços** organiza os *endpoints* por domínio. O serviço de inscrições, por exemplo, expõe operações de alto nível que escondem o método HTTP e a serialização:
+A **camada de serviços** organiza os _endpoints_ por domínio. O serviço de inscrições, por exemplo, expõe operações de alto nível que escondem o método HTTP e a serialização:
 
 **Código 2 — Serviço de inscrições (`services/bookings.service.ts`)**
 
@@ -277,12 +281,11 @@ export const bookingsService = {
     method: PaymentMethod;
   }) => api("/bookings", { method: "POST", body: JSON.stringify(data) }),
 
-  cancel: (bookingId: string) =>
-    api<Booking>(`/bookings/${bookingId}/cancel`, { method: "PATCH" }),
+  cancel: (bookingId: string) => api<Booking>(`/bookings/${bookingId}/cancel`, { method: "PATCH" }),
 };
 ```
 
-A **camada de casos de uso** combina serviço, estado e lógica de apresentação. O *hook* de inscrições do usuário obtém a lista e ainda oferece busca e filtragem por estado, derivando o estado de carregamento da ausência simultânea de conteúdo e erro:
+A **camada de casos de uso** combina serviço, estado e lógica de apresentação. O _hook_ de inscrições do usuário obtém a lista e ainda oferece busca e filtragem por estado, derivando o estado de carregamento da ausência simultânea de conteúdo e erro:
 
 **Código 3 — Hook de caso de uso (`features/bookings/hooks/useBookings.ts`)**
 
@@ -297,7 +300,10 @@ export function useBookings() {
     bookingsService
       .listForUser()
       .then((res) => setBookings(Array.isArray(res) ? res : (res.data ?? [])))
-      .catch((err) => { setError(err.message); toast.error(err.message); });
+      .catch((err) => {
+        setError(err.message);
+        toast.error(err.message);
+      });
   }, []);
 
   const filtered = useMemo(() => {
@@ -305,18 +311,30 @@ export function useBookings() {
     const q = search.trim().toLowerCase();
     return list.filter((b) => {
       if (statusFilter !== "ALL" && b.status !== statusFilter) return false;
-      if (q && !b.boardingStop?.toLowerCase().includes(q)
-            && !b.alightingStop?.toLowerCase().includes(q)) return false;
+      if (
+        q &&
+        !b.boardingStop?.toLowerCase().includes(q) &&
+        !b.alightingStop?.toLowerCase().includes(q)
+      )
+        return false;
       return true;
     });
   }, [bookings, search, statusFilter]);
 
-  return { bookings, filtered, search, setSearch, statusFilter, setStatusFilter,
-           loading: bookings === null && !error, error };
+  return {
+    bookings,
+    filtered,
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    loading: bookings === null && !error,
+    error,
+  };
 }
 ```
 
-Por fim, a **camada de apresentação** consome o *hook* em uma rota fina, cuja responsabilidade é apenas decidir entre os estados (não autenticado, carregando, erro, vazio, conteúdo) e delegar a renderização aos componentes:
+Por fim, a **camada de apresentação** consome o _hook_ em uma rota fina, cuja responsabilidade é apenas decidir entre os estados (não autenticado, carregando, erro, vazio, conteúdo) e delegar a renderização aos componentes:
 
 **Código 4 — Rota fina (`routes/_protected.my-bookings.tsx`)**
 
@@ -326,8 +344,8 @@ export const Route = createFileRoute("/_protected/my-bookings")({
 });
 
 function MyBookingsContent() {
-  const { filtered, search, setSearch, statusFilter, setStatusFilter,
-          loading, error } = useBookings();
+  const { filtered, search, setSearch, statusFilter, setStatusFilter, loading, error } =
+    useBookings();
 
   return (
     <AppShell title="Minhas inscrições">
@@ -344,22 +362,22 @@ function MyBookingsContent() {
 }
 ```
 
-Em conjunto, os quatro trechos evidenciam o fluxo unidirecional: a rota consome o *hook*, que chama o serviço, que atravessa o cliente HTTP até a API — sem que nenhuma camada superior conheça os detalhes da inferior.
+Em conjunto, os quatro trechos evidenciam o fluxo unidirecional: a rota consome o _hook_, que chama o serviço, que atravessa o cliente HTTP até a API — sem que nenhuma camada superior conheça os detalhes da inferior.
 
 ### 4.3 Testes
 
-Em coerência com o estágio do produto e o tamanho reduzido da equipe, a estratégia de verificação do frontend é, no momento, **predominantemente manual**, estruturada em um roteiro de dezenas de cenários que cobrem os caminhos principais, os fluxos que cruzam contextos de acesso e os casos de borda. A integração contínua executa a verificação de estilo, a análise estática e a construção, deixando a verificação funcional a cargo do roteiro manual. A adoção de testes automatizados (provavelmente Vitest com *Testing Library* para *hooks* e serviços, e uma ferramenta de ponta a ponta para os fluxos) está condicionada à aproximação da operação comercial, tendo o fluxo de reserva como primeiro candidato à cobertura. A Tabela 2 ilustra o formato dos casos de teste manuais.
+Em coerência com o estágio do produto e o tamanho reduzido da equipe, a estratégia de verificação do frontend é, no momento, **predominantemente manual**, estruturada em um roteiro de dezenas de cenários que cobrem os caminhos principais, os fluxos que cruzam contextos de acesso e os casos de borda. A integração contínua executa a verificação de estilo, a análise estática e a construção, deixando a verificação funcional a cargo do roteiro manual. A adoção de testes automatizados (provavelmente Vitest com _Testing Library_ para _hooks_ e serviços, e uma ferramenta de ponta a ponta para os fluxos) está condicionada à aproximação da operação comercial, tendo o fluxo de reserva como primeiro candidato à cobertura. A Tabela 2 ilustra o formato dos casos de teste manuais.
 
 **Tabela 2 — Exemplos de casos de teste manuais**
 
-| Caso | Resultado esperado | Status |
-| --- | --- | --- |
-| Login com credenciais válidas | Sessão criada e redirecionamento por papel | OK |
-| Login com credenciais inválidas | Mensagem de erro, sem sessão | OK |
-| Expiração do *token* durante navegação | Renovação transparente, ação concluída | OK |
-| Reserva com mesmo ponto de embarque e desembarque | Bloqueio com mensagem de validação | OK |
-| Cancelamento fora da janela permitida | Bloqueio com mensagem do *errorCode* | OK |
-| Acesso a rota administrativa sem papel de admin | Redirecionamento para a raiz | OK |
+| Caso                                              | Resultado esperado                         | Status |
+| ------------------------------------------------- | ------------------------------------------ | ------ |
+| Login com credenciais válidas                     | Sessão criada e redirecionamento por papel | OK     |
+| Login com credenciais inválidas                   | Mensagem de erro, sem sessão               | OK     |
+| Expiração do _token_ durante navegação            | Renovação transparente, ação concluída     | OK     |
+| Reserva com mesmo ponto de embarque e desembarque | Bloqueio com mensagem de validação         | OK     |
+| Cancelamento fora da janela permitida             | Bloqueio com mensagem do _errorCode_       | OK     |
+| Acesso a rota administrativa sem papel de admin   | Redirecionamento para a raiz               | OK     |
 
 > **» Junção com o backend.** Os testes de unidade e de integração da API (e suas evidências) devem ser incorporados a partir do relatório do backend; os cenários de ponta a ponta listados aqui exercitam ambos os lados e podem ser apresentados como verificação integrada do sistema.
 
@@ -367,7 +385,7 @@ Em coerência com o estágio do produto e o tamanho reduzido da equipe, a estrat
 
 ## 5. Considerações Finais
 
-O frontend do Movy demonstra a aplicação de princípios de separação de responsabilidades análogos aos do backend. A estratificação em rotas finas, *hooks* de caso de uso, serviços e um cliente HTTP único confere ao sistema localidade de mudança e previsibilidade; o roteamento baseado em arquivos, combinado a *layouts* sem caminho, fornece um mecanismo centralizado de controle de acesso por papel; e a concentração da comunicação com a API em um ponto único permite tratar de forma uniforme questões transversais como a renovação de sessão e a normalização de erros.
+O frontend do Movy demonstra a aplicação de princípios de separação de responsabilidades análogos aos do backend. A estratificação em rotas finas, _hooks_ de caso de uso, serviços e um cliente HTTP único confere ao sistema localidade de mudança e previsibilidade; o roteamento baseado em arquivos, combinado a _layouts_ sem caminho, fornece um mecanismo centralizado de controle de acesso por papel; e a concentração da comunicação com a API em um ponto único permite tratar de forma uniforme questões transversais como a renovação de sessão e a normalização de erros.
 
 Igualmente relevante, do ponto de vista de engenharia, é a maturidade com que o projeto registra suas limitações conscientes, documentadas como decisões arquiteturais com critérios objetivos de revisão. As principais são: o suporte, no estágio atual, a apenas uma organização por administrador; a não adoção imediata de uma biblioteca de estado de servidor, com a consequente coexistência de dois estilos de obtenção de dados entre rotas de passageiro e de administrador; a ausência de testes automatizados; e o armazenamento de credenciais no `localStorage`, aceito em troca de simplicidade e marcado para reavaliação antes da operação comercial. Em todos os casos, trata-se de escolhas datadas e revisáveis, e não de omissões.
 

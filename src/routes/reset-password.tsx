@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
 import { useAuth } from "@/lib/auth-context";
-import { handleApiError } from "@/lib/handle-error";
+import { apiErrorMessage, zodFieldErrors } from "@/lib/handle-error";
+import { FormError } from "@/components/feedback/FormError";
 import { PublicShell } from "@/components/layout/PublicShell";
 
 const searchSchema = z.object({ token: z.string().optional() });
@@ -35,19 +36,17 @@ function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const missingToken = !token;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     const parsed = schema.safeParse({ newPassword, confirm });
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.issues.forEach((i) => {
-        errs[i.path.join(".")] = i.message;
-      });
-      setErrors(errs);
+      setErrors(zodFieldErrors(parsed.error));
       return;
     }
     if (!token) return;
@@ -59,7 +58,7 @@ function ResetPasswordPage() {
       toast.success("Senha redefinida com sucesso");
       navigate({ to: "/" });
     } catch (err) {
-      handleApiError(err, "Erro ao redefinir senha");
+      setFormError(apiErrorMessage(err, "Erro ao redefinir senha"));
     } finally {
       setSubmitting(false);
     }
@@ -92,6 +91,7 @@ function ResetPasswordPage() {
           </div>
         ) : (
           <form onSubmit={onSubmit} className="flex flex-col gap-3">
+            <FormError>{formError}</FormError>
             <FieldGroup label="Nova senha" htmlFor="newPassword" error={errors.newPassword}>
               <Input
                 id="newPassword"

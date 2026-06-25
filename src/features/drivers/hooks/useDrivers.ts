@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { driversService } from "@/services/drivers.service";
-import { handleApiError } from "@/lib/handle-error";
+import { apiErrorMessage } from "@/lib/handle-error";
 import type { Driver, Paginated } from "@/lib/types";
 
 export const DRIVER_ROLE_ID = 2;
@@ -20,8 +20,7 @@ export function useDrivers(orgId: string | null | undefined) {
         setDrivers(list);
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Erro ao carregar motoristas");
-        handleApiError(err, "Erro ao carregar motoristas");
+        setError(apiErrorMessage(err, "Erro ao carregar motoristas"));
       });
   }, [orgId]);
 

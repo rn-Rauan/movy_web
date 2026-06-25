@@ -22,13 +22,14 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { handleApiError } from "@/lib/handle-error";
+import { apiErrorMessage, zodFieldErrors } from "@/lib/handle-error";
 import { AppShell } from "@/components/layout/AppShell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BottomSheet, BottomSheetContent } from "@/components/visual/BottomSheet";
 import { LoadingList } from "@/components/feedback/LoadingList";
 import { ErrorCard } from "@/components/feedback/ErrorCard";
+import { FormError } from "@/components/feedback/FormError";
 import { organizationsService } from "@/services/organizations.service";
 import { vehiclesService } from "@/services/vehicles.service";
 import { driversService } from "@/services/drivers.service";
@@ -93,6 +94,7 @@ function OrganizationPage() {
     slug: "",
   });
   const [orgFieldErrors, setOrgFieldErrors] = useState<Record<string, string>>({});
+  const [orgFormError, setOrgFormError] = useState<string | null>(null);
   const [orgSubmitting, setOrgSubmitting] = useState(false);
 
   const [vehicles, setVehicles] = useState<Vehicle[] | null>(null);
@@ -142,9 +144,7 @@ function OrganizationPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          const msg = err instanceof Error ? err.message : "Erro ao carregar empresa";
-          setOrgError(msg);
-          toast.error(msg);
+          setOrgError(apiErrorMessage(err, "Erro ao carregar empresa"));
         }
       });
     return () => {
@@ -176,19 +176,17 @@ function OrganizationPage() {
       slug: org.slug ?? "",
     });
     setOrgFieldErrors({});
+    setOrgFormError(null);
     setOrgDialogOpen(true);
   }
 
   async function handleOrgSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!org) return;
+    setOrgFormError(null);
     const parsed = orgSchema.safeParse(orgForm);
     if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.errors.forEach((e) => {
-        errs[e.path.join(".")] = e.message;
-      });
-      setOrgFieldErrors(errs);
+      setOrgFieldErrors(zodFieldErrors(parsed.error));
       return;
     }
     setOrgFieldErrors({});
@@ -199,7 +197,7 @@ function OrganizationPage() {
       toast.success("Empresa atualizada");
       setOrgDialogOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao salvar");
+      setOrgFormError(apiErrorMessage(err, "Erro ao salvar"));
     } finally {
       setOrgSubmitting(false);
     }
@@ -334,6 +332,7 @@ function OrganizationPage() {
           }
         >
           <form id="org-form" onSubmit={handleOrgSubmit} className="flex flex-col gap-4">
+            <FormError>{orgFormError}</FormError>
             <Field2 label="Nome" error={orgFieldErrors.name}>
               <Input
                 value={orgForm.name}
@@ -749,25 +748,27 @@ function UpgradePlanDialog({
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [selectedId, setSelectedId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setSelectedId(currentPlanId ?? "");
     setPlans(null);
+    setError(null);
     plansService
       .list()
       .then((res) => {
         const list = Array.isArray(res) ? res : ((res as Paginated<Plan>).data ?? []);
         setPlans(list.filter((p) => p.isActive));
       })
-      .catch((err) => {
-        toast.error(err instanceof Error ? err.message : "Erro ao carregar planos");
+      .catch(() => {
         setPlans([]);
       });
   }, [open, currentPlanId]);
 
   async function handleConfirm() {
     if (!orgId || !selectedId || selectedId === currentPlanId) return;
+    setError(null);
     setSubmitting(true);
     try {
       if (currentSubscriptionId) {
@@ -779,7 +780,7 @@ function UpgradePlanDialog({
       onOpenChange(false);
       onSuccess();
     } catch (err) {
-      handleApiError(err, "Erro ao atualizar plano");
+      setError(apiErrorMessage(err, "Erro ao atualizar plano"));
     } finally {
       setSubmitting(false);
     }
@@ -802,6 +803,7 @@ function UpgradePlanDialog({
           </button>
         }
       >
+        <FormError className="mb-3">{error}</FormError>
         {plans === null ? (
           <LoadingList count={3} height="h-20" />
         ) : plans.length === 0 ? (
