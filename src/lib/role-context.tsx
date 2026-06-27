@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import { useAuth } from "./auth-context";
 import type { Organization, Paginated } from "./types";
@@ -21,6 +21,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [hasDriverProfile, setHasDriverProfile] = useState(false);
   const [adminOrgId, setAdminOrgId] = useState<string | null>(null);
   const [roleLoading, setRoleLoading] = useState(true);
+  const lastFetchRef = useRef(0);
 
   const detectRoles = useCallback(async () => {
     if (!isAuthenticated) {
@@ -32,6 +33,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    lastFetchRef.current = Date.now();
     setRoleLoading(true);
     try {
       const [driverResult, orgsResult] = await Promise.allSettled([
@@ -82,6 +84,25 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!authLoading) detectRoles();
   }, [authLoading, detectRoles]);
+
+  // Revalida os roles quando o usuário volta para a aba. Cobre o caso de um admin
+  // vincular um motorista enquanto a sessão dele já está aberta: ao retornar para
+  // o app, `isDriver`/orgs atualizam sem precisar deslogar e logar de novo.
+  // Throttle de 10s evita refetch redundante em focos consecutivos.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const maybeRefetch = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastFetchRef.current < 10_000) return;
+      detectRoles();
+    };
+    window.addEventListener("focus", maybeRefetch);
+    document.addEventListener("visibilitychange", maybeRefetch);
+    return () => {
+      window.removeEventListener("focus", maybeRefetch);
+      document.removeEventListener("visibilitychange", maybeRefetch);
+    };
+  }, [isAuthenticated, detectRoles]);
 
   return (
     <RoleContext.Provider

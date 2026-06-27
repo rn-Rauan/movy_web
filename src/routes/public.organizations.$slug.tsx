@@ -14,6 +14,7 @@ import { ShareButton } from "@/components/ShareButton";
 import { CompanyCard } from "@/features/organizations/components/CompanyCard";
 import { PublicTripCard } from "@/features/trips/components/PublicTripCard";
 import { SegmentFilter, type SegmentOption } from "@/components/passenger/SegmentFilter";
+import { useAuth } from "@/lib/auth-context";
 import type { Organization } from "@/lib/types";
 
 type Shift = "ALL" | "MORNING" | "AFTERNOON" | "EVENING";
@@ -47,6 +48,7 @@ export const Route = createFileRoute("/public/organizations/$slug")({
 
 function PublicOrgPage() {
   const { slug } = Route.useParams();
+  const { isAuthenticated } = useAuth();
   const { trips, loading, error } = useTrips({ orgId: "", slug });
   const [org, setOrg] = useState<Organization | null>(null);
   const [shift, setShift] = useState<Shift>("ALL");
@@ -123,9 +125,11 @@ function PublicOrgPage() {
 
       <div className="mb-3 flex items-center justify-between px-0.5">
         <h3 className="text-[14px] font-extrabold tracking-[-0.2px] text-ink">Próximas viagens</h3>
-        <Link to="/login" className="text-[12px] font-bold text-accent hover:underline">
-          Entrar para reservar
-        </Link>
+        {!isAuthenticated && (
+          <Link to="/login" className="text-[12px] font-bold text-accent hover:underline">
+            Entrar para reservar
+          </Link>
+        )}
       </div>
 
       {hasTrips && (
