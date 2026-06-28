@@ -144,7 +144,11 @@ export function BookingRow({
       <div className="mt-2.5 flex gap-2">
         <ToggleChip
           active={presenceConfirmed}
-          onClick={onConfirmPresence ? () => onConfirmPresence(booking.id) : undefined}
+          onClick={
+            !presenceConfirmed && onConfirmPresence
+              ? () => onConfirmPresence(booking.id)
+              : undefined
+          }
           disabled={busy}
           icon={presenceConfirmed ? Check : Clock}
           label={presenceConfirmed ? "Presente" : "Marcar presença"}

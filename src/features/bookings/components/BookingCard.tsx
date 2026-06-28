@@ -12,20 +12,25 @@ export function BookingCard({ booking }: BookingCardProps) {
   const isActive = booking.status === "ACTIVE";
   const isCancelled = booking.status === "INACTIVE";
   const trip = booking.tripInstance;
-  const departureIso = trip?.departureTime ?? booking.enrollmentDate;
+  // Viagem finalizada vira histórico: card estático (sem navegação) — não há mais nada
+  // a fazer/ver na inscrição depois que a viagem terminou. `tripStatus`/`tripDepartureTime`
+  // vêm achatados no item de /bookings/user (ver BookingListItemResponseDto no backend).
+  const tripFinished = booking.tripStatus === "FINISHED";
+  const clickable = !tripFinished;
+  const departureIso = booking.tripDepartureTime ?? trip?.departureTime ?? booking.enrollmentDate;
   const orgName = trip?.organizationName;
   const price = booking.recordedPrice;
   const shortId = booking.id.slice(0, 8).toUpperCase();
 
-  return (
-    <Link
-      to="/my-bookings/$bookingId"
-      params={{ bookingId: booking.id }}
-      className={cn(
-        "block rounded-[14px] border border-line bg-surface p-3.5 transition-colors hover:border-ink-2",
-        isCancelled && "opacity-70",
-      )}
-    >
+  const cardClass = cn(
+    "block rounded-[14px] border border-line bg-surface p-3.5",
+    clickable && "transition-colors hover:border-ink-2",
+    isCancelled && "opacity-70",
+    tripFinished && "opacity-90",
+  );
+
+  const content = (
+    <>
       <div className="flex items-center justify-between gap-2.5">
         <div className="flex items-center gap-2 text-ink">
           <Calendar className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.6} />
@@ -37,16 +42,20 @@ export function BookingCard({ booking }: BookingCardProps) {
           <span
             className={cn(
               "rounded-full px-2.5 py-[3px] text-[10px] font-bold",
-              isActive
-                ? "bg-ink text-surface"
-                : isCancelled
-                  ? "bg-danger-soft text-danger line-through"
-                  : "bg-line-soft text-ink-2",
+              isCancelled
+                ? "bg-danger-soft text-danger line-through"
+                : tripFinished
+                  ? "bg-line-soft text-ink-2"
+                  : isActive
+                    ? "bg-ink text-surface"
+                    : "bg-line-soft text-ink-2",
             )}
           >
-            {bookingStatusLabel(booking.status)}
+            {tripFinished && !isCancelled ? "Realizada" : bookingStatusLabel(booking.status)}
           </span>
-          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.6} />
+          {clickable && (
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.6} />
+          )}
         </div>
       </div>
 
@@ -66,6 +75,16 @@ export function BookingCard({ booking }: BookingCardProps) {
           <span className="font-mono font-bold text-ink">{formatPrice(price)}</span>
         )}
       </div>
+    </>
+  );
+
+  if (!clickable) {
+    return <div className={cardClass}>{content}</div>;
+  }
+
+  return (
+    <Link to="/my-bookings/$bookingId" params={{ bookingId: booking.id }} className={cardClass}>
+      {content}
     </Link>
   );
 }

@@ -205,13 +205,14 @@ CANCELED & -- & -- & -- & -- & -- \\
 \item ConfirmPresenceUseCase: Confirma presença do passageiro (apenas org members; owner bloqueado).
 \item FindBookingByIdUseCase: Busca com isolamento de tenant.
 \item FindBookingsByOrganizationUseCase: Listagem paginada por organização.
-\item FindBookingsByTripInstanceUseCase: Lista passageiros de uma viagem (apenas org members).
-\item FindBookingsByUserUseCase: Bookings do próprio usuário com filtro de status opcional.
+\item FindBookingsByTripInstanceUseCase: Lista as inscrições (\textit{bookings}) de uma viagem (apenas org members).
+\item FindTripPassengersUseCase: Lista os passageiros ativos de uma viagem (projeção nome + ponto de embarque); acessível a quem tem inscrição ativa na viagem ou é membro da organização.
+\item FindBookingsByUserUseCase: Bookings do próprio usuário com filtro de status opcional; cada item é enriquecido com o status e o horário de partida da viagem (para exibir viagens finalizadas como histórico).
 \item FindBookingDetailsUseCase: Detalhe enriquecido com dados da \texttt{TripInstance} (horário, capacidade, vagas disponíveis).
 \item GetBookingAvailabilityUseCase: Verifica disponibilidade de vagas antes da inscrição.
 \end{enumerate}
 
-\textbf{Endpoints}: 10 rotas. Exemplos: \texttt{POST /bookings} (preço \textit{server-side}), \texttt{GET /bookings/availability/:tripInstanceId} (vagas), \texttt{GET /bookings/:id/details} (detalhe enriquecido), \texttt{PATCH /bookings/:id/cancel} e \texttt{.../confirm-presence} (confirmação restrita a \textit{org members}).
+\textbf{Endpoints}: 10 rotas. Exemplos: \texttt{POST /bookings} (preço \textit{server-side}), \texttt{GET /bookings/user} (inscrições do usuário, com status/partida da viagem), \texttt{GET /bookings/availability/:tripInstanceId} (vagas), \texttt{GET /bookings/trip-instance/:tripInstanceId/passengers} (passageiros ativos), \texttt{GET /bookings/:id/details} (detalhe enriquecido), \texttt{PATCH /bookings/:id/cancel} e \texttt{.../confirm-presence} (confirmação restrita a \textit{org members}).
 
 \textbf{Erros de Domínio}: \texttt{BookingNotFoundError} (404), \texttt{BookingAlreadyExistsError} (409), \texttt{TripInstanceFullError} (409), \texttt{TripInstanceNotBookableError} (400), \texttt{BookingCancellationNotAllowedError} (400), \texttt{BookingCancellationDeadlineError} (400), \texttt{BookingAlreadyInactiveError} (400), \texttt{BookingAccessForbiddenError} (403), entre outros.
 

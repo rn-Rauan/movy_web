@@ -882,7 +882,7 @@ List the current user's bookings (paginated).
 | `limit` | number | |
 | `status` | `"ACTIVE"`\|`"INACTIVE"` | Optional filter |
 
-**Response `200`** → Paginated [[BookingResponse](#bookingresponse)]
+**Response `200`** → Paginated [[BookingListItemResponse](#bookinglistitemresponse)] — each item is a `BookingResponse` enriched with the parent trip's `tripStatus` + `tripDepartureTime` (single JOIN, no N+1). Lets the FE render finished trips as read-only history and show the real departure time without a per-booking `/details` call.
 
 ---
 
@@ -1337,6 +1337,18 @@ Typical flow: user clicks "Forgot password" → FE polls or fetches this endpoin
 ```
 
 > `paymentMethod` is `null` when the booking was created before this field was introduced or if not resolved from the payment record.
+
+### BookingListItemResponse
+
+Returned by `GET /bookings/user` (one per list item). Same as `BookingResponse` plus the parent trip instance's status and departure time:
+
+```json
+{
+  "...": "all BookingResponse fields",
+  "tripStatus": "FINISHED",
+  "tripDepartureTime": "2026-06-15T07:30:00.000Z"
+}
+```
 
 ### TripPassengerResponse
 

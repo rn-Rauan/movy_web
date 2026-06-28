@@ -186,6 +186,10 @@ export function AdminTripDetailView({
   const stops = (trip.template?.stops ?? []).map((s) => ({ name: s }));
   const assignedDriver = drivers.find((d) => d.id === trip.driverId) ?? null;
   const assignedVehicle = vehicles.find((v) => v.id === trip.vehicleId) ?? null;
+  // Quando o motorista atribuído não é o próprio usuário (visão driver), só temos o nome
+  // — GET /drivers/{id} é admin-only. `cnh` vazio sinaliza esse stub: escondemos
+  // status/CNH e exibimos apenas o nome.
+  const hasDriverDetails = !!assignedDriver?.cnh;
 
   const dep = new Date(trip.departureTime);
   const depValid = !Number.isNaN(dep.getTime());
@@ -265,21 +269,24 @@ export function AdminTripDetailView({
                 <div className="truncate text-[15px] font-extrabold tracking-[-0.2px] text-ink">
                   <DriverDisplayName driver={assignedDriver} />
                 </div>
-                {assignedDriver.driverStatus === "ACTIVE" ? (
-                  <span className="inline-flex flex-none items-center gap-1 rounded-full bg-success-soft px-1.5 py-0.5 text-[10px] font-bold tracking-[0.2px] text-success">
-                    <span className="h-[5px] w-[5px] rounded-full bg-success" />
-                    Ativo
-                  </span>
-                ) : (
-                  <span className="inline-flex flex-none items-center rounded-full bg-line-soft px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-                    {DRIVER_STATUS_LABEL[assignedDriver.driverStatus]}
-                  </span>
-                )}
+                {hasDriverDetails &&
+                  (assignedDriver.driverStatus === "ACTIVE" ? (
+                    <span className="inline-flex flex-none items-center gap-1 rounded-full bg-success-soft px-1.5 py-0.5 text-[10px] font-bold tracking-[0.2px] text-success">
+                      <span className="h-[5px] w-[5px] rounded-full bg-success" />
+                      Ativo
+                    </span>
+                  ) : (
+                    <span className="inline-flex flex-none items-center rounded-full bg-line-soft px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                      {DRIVER_STATUS_LABEL[assignedDriver.driverStatus]}
+                    </span>
+                  ))}
               </div>
-              <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">
-                CNH {assignedDriver.cnh} · Cat. {assignedDriver.cnhCategories.join(", ")} · Val.{" "}
-                {formatDateOnly(assignedDriver.cnhExpiresAt)}
-              </div>
+              {hasDriverDetails && (
+                <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+                  CNH {assignedDriver.cnh} · Cat. {assignedDriver.cnhCategories.join(", ")} · Val.{" "}
+                  {formatDateOnly(assignedDriver.cnhExpiresAt)}
+                </div>
+              )}
             </div>
             {canEdit && (
               <button

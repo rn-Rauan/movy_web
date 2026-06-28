@@ -25,6 +25,15 @@ type Options = {
   role?: "admin" | "driver" | null;
 };
 
+/**
+ * Stub para exibir apenas o nome de um motorista que NÃO é o próprio usuário.
+ * `GET /drivers/{id}` é admin-only, então o driver não acessa CNH/categorias de colegas;
+ * o nome é resolvido por `useDriverName` (GET /drivers/{id}/name) no componente.
+ */
+function nameOnlyDriver(id: string): Driver {
+  return { id, userId: "", cnh: "", cnhCategories: [], cnhExpiresAt: "", driverStatus: "ACTIVE" };
+}
+
 export function useAdminTripDetail(
   tripId: string,
   orgId: string | null | undefined,
@@ -78,6 +87,49 @@ export function useAdminTripDetail(
       .then((res) => setVehicles(Array.isArray(res) ? res : (res.data ?? [])))
       .catch(() => {});
   }, [orgId, role]);
+
+  // Driver: as listas por org são admin-only, então resolvemos só o motorista e o
+  // veículo atribuídos. O veículo vem de GET /vehicles/{id} (liberado pra driver da
+  // própria org). Pro motorista, GET /drivers/{id} continua admin-only: se o atribuído
+  // é o próprio user, mostramos os dados completos via /drivers/me; se for outro,
+  // exibimos só o nome (resolvido via /drivers/{id}/name no componente) com um stub,
+  // sem expor a CNH de colegas. Erros viram lista vazia (a UI mostra "sem atribuído").
+  const driverId = trip?.driverId ?? null;
+  const vehicleId = trip?.vehicleId ?? null;
+  useEffect(() => {
+    if (role !== "driver") return;
+    let cancelled = false;
+
+    (async () => {
+      if (!driverId) {
+        if (!cancelled) setDrivers([]);
+        return;
+      }
+      try {
+        const me = await driversService.getMe();
+        if (!cancelled) setDrivers([me.id === driverId ? me : nameOnlyDriver(driverId)]);
+      } catch {
+        if (!cancelled) setDrivers([nameOnlyDriver(driverId)]);
+      }
+    })();
+
+    (async () => {
+      if (!vehicleId) {
+        if (!cancelled) setVehicles([]);
+        return;
+      }
+      try {
+        const v = await vehiclesService.getById(vehicleId);
+        if (!cancelled) setVehicles([v]);
+      } catch {
+        if (!cancelled) setVehicles([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [role, driverId, vehicleId]);
 
   // Carrega payments da org da própria trip (funciona pra admin e — quando o
   // backend liberar — pra driver). Silenciosamente ignora 403/404 enquanto a

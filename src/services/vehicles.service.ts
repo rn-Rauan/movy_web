@@ -14,6 +14,8 @@ export const vehiclesService = {
   listByOrgId: (orgId: string) =>
     api<Vehicle[] | Paginated<Vehicle>>(`/vehicles/organization/${orgId}`),
 
+  getById: (id: string) => api<Vehicle>(`/vehicles/${id}`),
+
   create: (orgId: string, data: VehicleCreatePayload) =>
     api<Vehicle>(`/vehicles/organization/${orgId}`, {
       method: "POST",

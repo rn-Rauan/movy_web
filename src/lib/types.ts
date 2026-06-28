@@ -87,6 +87,9 @@ export type Booking = {
   createdAt?: string;
   updatedAt?: string;
   tripInstance?: TripInstance;
+  /** Enriched on GET /bookings/user — status + departure of the parent trip instance. */
+  tripStatus?: TripStatus;
+  tripDepartureTime?: string;
 };
 
 /** Returned by GET /bookings/{id}/details */
