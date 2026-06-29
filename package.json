@@ -2,7 +2,8 @@
   "name": "tanstack_start_ts",
   "private": true,
   "sideEffects": false,
-  "type": "module",
+  "author": "Rauan",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
