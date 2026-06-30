@@ -1,0 +1,182 @@
+// DER completo do Movy — formato DBML para https://dbdiagram.io
+// Cole este conteúdo no editor do dbdiagram.io, arraste as caixas para um layout
+// compacto (alto em vez de largo) e exporte em PDF/SVG/PNG.
+// Tipos enum estão anotados em [note: ...] para não criar caixas extras no diagrama.
+
+Project Movy {
+  database_type: 'PostgreSQL'
+  Note: 'Modelo de dados multi-tenant (isolamento por organizationId).'
+}
+
+Table Role {
+  id int [pk, increment]
+  name varchar [not null, note: 'ADMIN/DRIVER']
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table User {
+  id uuid [pk]
+  name varchar [not null]
+  email varchar [unique, not null]
+  passwordHash varchar [not null]
+  telephone varchar
+  status varchar [note: 'ACTIVE/INACTIVE (soft delete)']
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Organization {
+  id uuid [pk]
+  name varchar [not null]
+  cnpj varchar [unique, not null]
+  email varchar [unique]
+  telephone varchar
+  address varchar
+  slug varchar [unique, not null]
+  status varchar [note: 'ACTIVE/INACTIVE (soft delete)']
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table OrganizationMembership {
+  userId uuid [ref: > User.id]
+  roleId int [ref: > Role.id]
+  organizationId uuid [ref: > Organization.id]
+  assignedAt timestamp
+  removedAt timestamp [note: 'NULL = ativo (soft delete)']
+
+  indexes {
+    (userId, roleId, organizationId) [pk]
+  }
+}
+
+Table Driver {
+  userId uuid [pk, ref: - User.id, note: 'PK = FK p/ User (1:1)']
+  cnh varchar [unique, not null]
+  cnhCategories varchar [note: 'coleção A..E']
+  cnhExpiresAt timestamp
+  status varchar [note: 'ACTIVE/INACTIVE/SUSPENDED']
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Vehicle {
+  id uuid [pk]
+  plate varchar [unique, not null, note: 'ABC1234 / ABC1D23']
+  model varchar
+  type varchar [note: 'VAN/BUS/MINIBUS/CAR']
+  maxCapacity int
+  status varchar [note: 'ACTIVE/INACTIVE']
+  organizationId uuid [ref: > Organization.id]
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Plan {
+  id int [pk, increment]
+  name varchar [not null, note: 'FREE/BASIC/PRO/PREMIUM']
+  price decimal
+  description varchar
+  maxVehicles int
+  maxDrivers int
+  maxMonthlyTrips int
+  durationDays int [note: 'padrão 30']
+  isActive boolean
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Subscription {
+  id uuid [pk]
+  organizationId uuid [ref: > Organization.id]
+  planId int [ref: > Plan.id]
+  status varchar [note: 'ACTIVE/PAST_DUE/CANCELED']
+  startDate timestamp
+  expiresAt timestamp [note: 'startDate + plan.durationDays']
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table TripTemplate {
+  id uuid [pk]
+  departurePoint varchar
+  destination varchar
+  departureTimeOfDay varchar [note: 'HH:mm UTC']
+  arrivalTimeOfDay varchar [note: 'HH:mm UTC']
+  priceOneWay decimal
+  priceReturn decimal
+  priceRoundTrip decimal
+  isRecurring boolean
+  frequency varchar [note: 'array DayOfWeek']
+  shift varchar [note: 'MORNING/AFTERNOON/EVENING']
+  stops varchar [note: 'array de paradas']
+  defaultCapacity int
+  autoCancelEnabled boolean
+  minRevenue decimal
+  autoCancelOffset int
+  status varchar [note: 'ACTIVE/INACTIVE']
+  organizationId uuid [ref: > Organization.id]
+  isPublic boolean
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table TripInstance {
+  id uuid [pk]
+  driverId uuid [ref: > Driver.userId, note: 'nullable']
+  vehicleId uuid [ref: > Vehicle.id, note: 'nullable']
+  totalCapacity int
+  tripStatus varchar [note: 'DRAFT/SCHEDULED/CONFIRMED/IN_PROGRESS/FINISHED/CANCELED']
+  tripTemplateId uuid [ref: > TripTemplate.id]
+  departureTime timestamp
+  arrivalEstimate timestamp
+  organizationId uuid [ref: > Organization.id]
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Booking {
+  id uuid [pk]
+  enrollmentDate timestamp
+  status varchar [note: 'ACTIVE/INACTIVE (soft delete)']
+  presenceConfirmed boolean
+  enrollmentType varchar [note: 'ONE_WAY/RETURN/ROUND_TRIP']
+  recordedPrice decimal [note: 'imutável']
+  userId uuid [ref: > User.id]
+  tripInstanceId uuid [ref: > TripInstance.id]
+  boardingStop varchar
+  alightingStop varchar
+  organizationId uuid [ref: > Organization.id]
+  activeKey varchar [unique, note: '1 inscrição ativa por (userId, tripInstanceId)']
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table Payment {
+  id uuid [pk]
+  organizationId uuid [ref: > Organization.id]
+  method varchar [note: 'MONEY/PIX/CREDIT_CARD/DEBIT_CARD']
+  amount decimal
+  status varchar [note: 'PENDING/COMPLETED/FAILED']
+  enrollmentId uuid [unique, ref: - Booking.id, note: '1:1 com Booking']
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table TripSchedulingConfig {
+  id uuid [pk]
+  organizationId uuid [unique, ref: - Organization.id]
+  daysAhead int [note: '1..90 (padrão 14)']
+  enabled boolean
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table AuditLog {
+  id uuid [pk]
+  organizationId uuid [ref: > Organization.id]
+  userId uuid [ref: > User.id]
+  action varchar
+  timestamp timestamp
+}

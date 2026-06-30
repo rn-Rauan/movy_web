@@ -1,0 +1,58 @@
+%% DER COMPLETO — Parte C: Reservas/Pagamentos + Auditoria (Anexo B).
+%% 6 entidades. USER, TRIPINSTANCE e ORGANIZATION aparecem como conectores. Render:
+%% npx -p @mermaid-js/mermaid-cli mmdc -i der-completo-c.mmd -o ../imagens/der-completo-c.pdf --pdfFit
+erDiagram
+  TRIPINSTANCE ||--o{ BOOKING : recebe
+  USER ||--o{ BOOKING : faz
+  ORGANIZATION ||--o{ BOOKING : escopo
+  BOOKING ||--|| PAYMENT : possui
+  ORGANIZATION ||--o{ PAYMENT : escopo
+  ORGANIZATION ||--o{ AUDITLOG : registra
+  USER ||--o{ AUDITLOG : autor
+
+  ORGANIZATION {
+    uuid id PK
+    string slug UK
+  }
+  USER {
+    uuid id PK
+    string email UK
+  }
+  TRIPINSTANCE {
+    uuid id PK
+    enum tripStatus "DRAFT..CANCELED"
+    uuid organizationId FK
+  }
+  BOOKING {
+    uuid id PK
+    datetime enrollmentDate
+    enum status "ACTIVE/INACTIVE"
+    boolean presenceConfirmed
+    enum enrollmentType "ONE_WAY/RETURN/ROUND_TRIP"
+    decimal recordedPrice
+    uuid userId FK
+    uuid tripInstanceId FK
+    string boardingStop
+    string alightingStop
+    uuid organizationId FK
+    string activeKey UK "1 ativa por user+trip"
+    datetime createdAt
+    datetime updatedAt
+  }
+  PAYMENT {
+    uuid id PK
+    uuid organizationId FK
+    enum method "MONEY/PIX/CREDIT_CARD/DEBIT_CARD"
+    decimal amount
+    enum status "PENDING/COMPLETED/FAILED"
+    uuid enrollmentId FK "UK 1:1 Booking"
+    datetime createdAt
+    datetime updatedAt
+  }
+  AUDITLOG {
+    uuid id PK
+    uuid organizationId FK
+    uuid userId FK
+    string action
+    datetime timestamp
+  }

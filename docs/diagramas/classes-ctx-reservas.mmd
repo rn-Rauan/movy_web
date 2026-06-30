@@ -1,0 +1,78 @@
+%% Diagrama de Classes (Seção 3.3) — EXEMPLO detalhado: bounded context "Reservas e Pagamentos".
+%% Mostra atributos, métodos de fábrica (create/restore), Value Objects e enums — o padrão DDD.
+%% Render: npx -p @mermaid-js/mermaid-cli mmdc -i classes-ctx-reservas.mmd -o ../imagens/classes-ctx-reservas.pdf
+classDiagram
+  direction LR
+
+  class Booking {
+    +UUID id
+    +Date enrollmentDate
+    +BookingStatus status
+    +bool presenceConfirmed
+    +EnrollmentType enrollmentType
+    +Money recordedPrice
+    +UUID userId
+    +UUID tripInstanceId
+    +String boardingStop
+    +String alightingStop
+    +UUID organizationId
+    +create()$ Booking
+    +restore()$ Booking
+    +confirmPresence()
+    +cancel()
+  }
+
+  class Payment {
+    +UUID id
+    +MethodPayment method
+    +Money amount
+    +PaymentStatus status
+    +UUID enrollmentId
+    +UUID organizationId
+    +create()$ Payment
+    +complete()
+    +fail()
+  }
+
+  class Money {
+    <<Value Object>>
+    +int cents
+    +String currency
+    +add(Money) Money
+  }
+
+  class BookingStatus {
+    <<enumeration>>
+    ACTIVE
+    INACTIVE
+  }
+
+  class EnrollmentType {
+    <<enumeration>>
+    ONE_WAY
+    RETURN
+    ROUND_TRIP
+  }
+
+  class MethodPayment {
+    <<enumeration>>
+    MONEY
+    PIX
+    CREDIT_CARD
+    DEBIT_CARD
+  }
+
+  class PaymentStatus {
+    <<enumeration>>
+    PENDING
+    COMPLETED
+    FAILED
+  }
+
+  Booking "1" --> "1" Payment : possui
+  Booking ..> Money : recordedPrice
+  Payment ..> Money : amount
+  Booking ..> BookingStatus
+  Booking ..> EnrollmentType
+  Payment ..> MethodPayment
+  Payment ..> PaymentStatus

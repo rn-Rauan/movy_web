@@ -1,0 +1,76 @@
+%% DER (Seção 3.5) — versão SIMPLIFICADA para o corpo do texto.
+%% Apenas entidades principais com PK/FK (sem todas as colunas) — legível em retrato.
+%% O DER completo (todas as colunas) vai no Anexo B (ver der-completo.mmd).
+%% Render: npx -p @mermaid-js/mermaid-cli mmdc -i der-simplificado.mmd -o ../imagens/der-simplificado.pdf
+erDiagram
+  ORGANIZATION ||--o{ MEMBERSHIP : tem
+  USER ||--o{ MEMBERSHIP : participa
+  ROLE ||--o{ MEMBERSHIP : define
+  USER ||--o| DRIVER : perfil
+  ORGANIZATION ||--o{ VEHICLE : possui
+  ORGANIZATION ||--o{ TRIPTEMPLATE : define
+  TRIPTEMPLATE ||--o{ TRIPINSTANCE : gera
+  DRIVER ||--o{ TRIPINSTANCE : conduz
+  VEHICLE ||--o{ TRIPINSTANCE : atende
+  TRIPINSTANCE ||--o{ BOOKING : recebe
+  USER ||--o{ BOOKING : faz
+  BOOKING ||--|| PAYMENT : possui
+  ORGANIZATION ||--o{ SUBSCRIPTION : assina
+  PLAN ||--o{ SUBSCRIPTION : referencia
+  ORGANIZATION ||--o| TRIPSCHEDULINGCONFIG : configura
+
+  ORGANIZATION {
+    uuid id PK
+    string slug UK
+  }
+  USER {
+    uuid id PK
+    string email UK
+  }
+  ROLE {
+    int id PK
+    string name
+  }
+  MEMBERSHIP {
+    uuid userId PK "FK"
+    int roleId PK "FK"
+    uuid organizationId PK "FK"
+  }
+  DRIVER {
+    uuid userId PK "FK p/ User"
+    string cnh UK
+  }
+  TRIPTEMPLATE {
+    uuid id PK
+    uuid organizationId FK
+  }
+  TRIPINSTANCE {
+    uuid id PK
+    uuid tripTemplateId FK
+    uuid driverId FK
+    uuid vehicleId FK
+    uuid organizationId FK
+  }
+  BOOKING {
+    uuid id PK
+    uuid userId FK
+    uuid tripInstanceId FK
+    uuid organizationId FK
+  }
+  PAYMENT {
+    uuid id PK
+    uuid enrollmentId FK "UK 1:1"
+  }
+  SUBSCRIPTION {
+    uuid id PK
+    uuid organizationId FK
+    int planId FK
+  }
+  PLAN {
+    int id PK
+    string name
+  }
+  TRIPSCHEDULINGCONFIG {
+    uuid id PK
+    uuid organizationId FK "UK"
+  }

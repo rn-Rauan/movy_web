@@ -44,7 +44,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Descrição}: Gerenciamento completo de usuários e autenticação via JWT (Status: Implementado).
 
-\textbf{Use Cases Implementados}:
+\textbf{Principais casos de uso}:
 \begin{enumerate}
 \item CreateUserUseCase: Cadastro com validação de email único e hash de senha Bcrypt.
 \item FindAllUsersUseCase: Listagem paginada de usuários ativos.
@@ -66,7 +66,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Descrição}: Gerenciamento de organizações de transporte com multi-tenancy (Status: Implementado).
 
-\textbf{Use Cases Implementados}:
+\textbf{Principais casos de uso}:
 \begin{enumerate}
 \item CreateOrganizationUseCase: Criação com slug auto-gerado e validação CNPJ.
 \item FindAllOrganizationsUseCase: Listagem paginada de todas (ativas e inativas).
@@ -87,7 +87,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Estrutura}: Tabela de junção \textit{OrganizationMembership} com chave composta (userId, roleId, organizationId).
 
-\textbf{Use Cases Implementados}:
+\textbf{Principais casos de uso}:
 \begin{enumerate}
 \item CreateMembershipUseCase: O \texttt{organizationId} vem exclusivamente do JWT, eliminando o vetor de ataque cross-tenant. Valida pré-requisito de perfil Driver antes de criar membership com role DRIVER.
 \item FindMembershipByCompositeKeyUseCase: Busca específica.
@@ -113,7 +113,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 \item Admin vincula à organização via \texttt{POST /memberships} com \texttt{roleId=DRIVER}.
 \end{enumerate}
 
-\textbf{Use Cases Implementados (9 total)}:
+\textbf{Principais casos de uso}:
 \begin{enumerate}
 \item CreateDriverUseCase: Criação self-service com check de duplicata (\texttt{DriverAlreadyExistsError} HTTP 409).
 \item UpdateDriverUseCase: Atualização (fluxo admin) com verificação de ownership.
@@ -134,7 +134,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Descrição}: Gerenciamento de frota de veículos com Value Object para placa e proteção IDOR (Status: Implementado).
 
-\textbf{Use Cases Implementados (5 total)}:
+\textbf{Principais casos de uso}:
 \begin{enumerate}
 \item CreateVehicleUseCase: Criação com validação de placa única (\texttt{PlateAlreadyInUseError} HTTP 409).
 \item FindVehicleByIdUseCase: Busca com proteção IDOR via \texttt{organizationId} do JWT.
@@ -151,7 +151,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Descrição}: Módulo de viagens com separação entre templates (configuração recorrente) e instâncias (execuções reais), máquina de estados e atribuição de motorista/veículo (Status: Implementado).
 
-\textbf{TripTemplate --- Use Cases (5 total)}:
+\textbf{TripTemplate --- principais casos de uso}:
 \begin{enumerate}
 \item CreateTripTemplateUseCase: Cria template com configuração de preços por tipo de trajeto.
 \item FindTripTemplateByIdUseCase: Busca com proteção IDOR.
@@ -160,7 +160,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 \item DeactivateTripTemplateUseCase: Soft-deactivation via \texttt{status = INACTIVE}.
 \end{enumerate}
 
-\textbf{TripInstance --- Use Cases (7 total)}:
+\textbf{TripInstance --- principais casos de uso}:
 \begin{enumerate}
 \item CreateTripInstanceUseCase: Criação a partir de template com propagação de campos.
 \item FindTripInstanceByIdUseCase: Busca individual com proteção IDOR.
@@ -198,7 +198,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{Descrição}: Gerenciamento completo de inscrições de passageiros em viagens, com controle de capacidade, preço registrado server-side e proteção contra race conditions (Status: Implementado).
 
-\textbf{Use Cases Implementados (10 total)}:
+\textbf{Principais casos de uso}:
 \begin{enumerate}
 \item CreateBookingUseCase: Inscreve passageiro com validação de status da viagem, controle de capacidade e preço calculado server-side a partir do template. Todo o fluxo é executado atomicamente via \texttt{UnitOfWork} com isolamento \texttt{Serializable}, prevenindo race conditions clássicas de sistemas de reservas.
 \item CancelBookingUseCase: Cancela inscrição com bloqueio para viagens \texttt{IN\_PROGRESS}/\texttt{FINISHED} e prazo de 30 minutos antes da partida.
@@ -220,7 +220,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{Descrição}: Gerenciamento dos planos de assinatura disponíveis na plataforma. Escritas restritas a desenvolvedores via \texttt{DevGuard} (Status: Implementado).
 
-\textbf{Use Cases (5 total)}: \texttt{CreatePlanUseCase}, \texttt{UpdatePlanUseCase}, \texttt{DeactivatePlanUseCase}, \texttt{FindPlanByIdUseCase}, \texttt{FindAllPlansUseCase}.
+\textbf{Principais casos de uso}: \texttt{CreatePlanUseCase}, \texttt{UpdatePlanUseCase}, \texttt{DeactivatePlanUseCase}, \texttt{FindPlanByIdUseCase}, \texttt{FindAllPlansUseCase}.
 
 \textbf{Endpoints}: 6 rotas. Escritas restritas a \texttt{@Dev()} (\texttt{POST /plans}, \texttt{PATCH /plans/:id}, \texttt{.../deactivate}); leitura autenticada (\texttt{GET /plans}, \texttt{/plans/:id}) e endpoint público \texttt{GET /public/plans} para a tela de \textit{onboarding}.
 
@@ -232,7 +232,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{PlanLimitService}: Centraliza verificação de limites de plano (veículos, motoristas, viagens/mês). Injetável em qualquer use case que precise bloquear criação de recursos além da cota.
 
-\textbf{Use Cases (4 total)}:
+\textbf{Principais casos de uso}:
 \begin{enumerate}
 \item SubscribeToPlanUseCase: Valida plano ativo e ausência de assinatura ACTIVE. Calcula \texttt{expiresAt = startDate + plan.durationDays}.
 \item CancelSubscriptionUseCase: Transita para CANCELED.
@@ -246,7 +246,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{Descrição}: Registro e simulação de pagamentos associados a inscrições. A criação de pagamentos é responsabilidade do \texttt{CreateBookingUseCase} — cada inscrição gera automaticamente um registro de pagamento com status \texttt{PENDING}. Os endpoints de simulação permitem demonstrar o fluxo completo sem gateway externo (Status: Implementado). Além do ADMIN, o motorista pode confirmar/falhar pagamentos de viagens atribuídas a ele (\texttt{PaymentNotAssignedToDriverError}, HTTP 403). A resposta inclui \texttt{tripInstanceId} e \texttt{tripDepartureTime} (\textit{snapshots} de leitura), permitindo ao cliente agregar receita por data da viagem.
 
-\textbf{Use Cases (4 total)}: \texttt{FindPaymentByIdUseCase}, \texttt{FindPaymentsByOrganizationUseCase}, \texttt{ConfirmPaymentUseCase} (\texttt{PENDING → COMPLETED}), \texttt{FailPaymentUseCase} (\texttt{PENDING → FAILED}).
+\textbf{Principais casos de uso}: \texttt{FindPaymentByIdUseCase}, \texttt{FindPaymentsByOrganizationUseCase}, \texttt{ConfirmPaymentUseCase} (\texttt{PENDING → COMPLETED}), \texttt{FailPaymentUseCase} (\texttt{PENDING → FAILED}).
 
 \textbf{Endpoints}: 4 rotas sob \texttt{/organizations/:orgId/payments}. \texttt{GET /:id} e \texttt{GET} (listagem paginada); \texttt{PATCH /:id/confirm} (\texttt{PENDING → COMPLETED}) e \texttt{.../fail} (\texttt{PENDING → FAILED}), simulando o ciclo sem gateway externo.
 
@@ -268,7 +268,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{Descrição}: Exposição consolidada do consumo de recursos da organização frente aos limites do plano vigente, para alimentar painéis administrativos (Status: Implementado).
 
-\textbf{Use Case (1 total)}: \texttt{FindPlanUsageUseCase} --- agrega contagem de veículos, motoristas e viagens (estas contadas dentro do \textbf{período de assinatura} corrente, \texttt{[startDate, expiresAt)}, e não por mês-calendário) e confronta com \texttt{maxVehicles}, \texttt{maxDrivers} e \texttt{maxMonthlyTrips}.
+\textbf{Caso de uso principal}: \texttt{FindPlanUsageUseCase} --- agrega contagem de veículos, motoristas e viagens (estas contadas dentro do \textbf{período de assinatura} corrente, \texttt{[startDate, expiresAt)}, e não por mês-calendário) e confronta com \texttt{maxVehicles}, \texttt{maxDrivers} e \texttt{maxMonthlyTrips}.
 
 \textbf{Endpoints}: 1 rota --- \texttt{GET /organizations/:id/plan-usage}.
 

@@ -1,7 +1,14 @@
 \subsection{Arquitetura do Sistema}
 \label{sec:arquitetura}
 
-Em alto nível, o sistema é composto por três elementos: a \textbf{aplicação cliente}, executada no navegador (e implantada em ambiente de borda); a \textbf{API REST}, que concentra a lógica de domínio; e o \textbf{banco de dados} relacional. O cliente comunica-se com a API exclusivamente via HTTP/JSON, e somente a API acessa o banco. Tanto o servidor quanto o cliente foram estruturados segundo o mesmo princípio --- separação de responsabilidades em camadas com fluxo de dados unidirecional ---, de modo que a arquitetura do cliente \textbf{espelha} a do servidor. As subseções a seguir descrevem cada lado.
+Em alto nível, o sistema é composto por três elementos: a \textbf{aplicação cliente}, executada no navegador (e implantada em ambiente de borda); a \textbf{API REST}, que concentra a lógica de domínio; e o \textbf{banco de dados} relacional. O cliente comunica-se com a API exclusivamente via HTTP/JSON, e somente a API acessa o banco. Tanto o servidor quanto o cliente foram estruturados segundo o mesmo princípio --- separação de responsabilidades em camadas com fluxo de dados unidirecional ---, de modo que a arquitetura do cliente \textbf{espelha} a do servidor. A Figura~\ref{fig:arquitetura} sintetiza essa organização em camadas e o sentido único do fluxo de dados, do cliente até o banco; as subseções a seguir descrevem cada lado.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{imagens/arquitetura.png}
+\caption{Arquitetura em camadas do sistema --- aplicação cliente, API REST e banco de dados.}
+\label{fig:arquitetura}
+\end{figure}
 
 \subsubsection{Backend --- Clean Architecture e DDD}
 

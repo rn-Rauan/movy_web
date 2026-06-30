@@ -1,0 +1,40 @@
+%% Diagrama de Classes (Seção 3.3) — MAPA PANORÂMICO.
+%% Só entidades e associações (sem atributos/métodos) para manter legível no corpo.
+%% O detalhe de cada bounded context vai em figuras próprias (ver classes-ctx-*.mmd).
+%% Render: npx -p @mermaid-js/mermaid-cli mmdc -i classes-mapa.mmd -o ../imagens/classes-mapa.pdf
+classDiagram
+  direction LR
+
+  class User
+  class Role
+  class Membership
+  class Organization
+  class Driver
+  class Vehicle
+  class TripTemplate
+  class TripInstance
+  class Booking
+  class Payment
+  class Plan
+  class Subscription
+  class TripSchedulingConfig
+  class AuditLog
+
+  Organization "1" --> "0..*" Membership : tem
+  User "1" --> "0..*" Membership : participa
+  Role "1" --> "0..*" Membership : define
+  User "1" --> "0..1" Driver : perfil
+  Organization "1" --> "0..*" Vehicle : possui
+  Organization "1" --> "0..*" TripTemplate : define
+  Organization "1" --> "0..*" TripInstance : opera
+  TripTemplate "1" --> "0..*" TripInstance : gera
+  Driver "0..1" --> "0..*" TripInstance : conduz
+  Vehicle "0..1" --> "0..*" TripInstance : atende
+  TripInstance "1" --> "0..*" Booking : recebe
+  User "1" --> "0..*" Booking : faz
+  Booking "1" --> "1" Payment : possui
+  Organization "1" --> "0..*" Subscription : assina
+  Plan "1" --> "0..*" Subscription : referencia
+  Organization "1" --> "0..1" TripSchedulingConfig : configura
+  Organization "1" --> "0..*" AuditLog : registra
+  User "1" --> "0..*" AuditLog : autor

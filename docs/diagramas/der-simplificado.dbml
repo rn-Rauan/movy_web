@@ -1,0 +1,81 @@
+// DER SIMPLIFICADO do Movy — formato DBML para https://dbdiagram.io
+// Visão de overview para o CORPO do texto (Seção 3.5): só entidades e chaves (PK/FK).
+// Sem colunas de dados e sem enums, para manter compacto e legível em uma figura.
+// Cole no dbdiagram.io, arraste as caixas para um arranjo compacto e exporte em PDF/SVG.
+
+Project Movy_DER_Simplificado {
+  database_type: 'PostgreSQL'
+  Note: 'Visão simplificada do DER — entidades e chaves principais (multi-tenant via organizationId).'
+}
+
+Table User {
+  id uuid [pk]
+  email varchar [unique]
+}
+
+Table Role {
+  id int [pk]
+  name varchar
+}
+
+Table Organization {
+  id uuid [pk]
+  slug varchar [unique]
+}
+
+Table OrganizationMembership {
+  userId uuid [ref: > User.id]
+  roleId int [ref: > Role.id]
+  organizationId uuid [ref: > Organization.id]
+
+  indexes {
+    (userId, roleId, organizationId) [pk]
+  }
+}
+
+Table Driver {
+  userId uuid [pk, ref: - User.id]
+  cnh varchar [unique]
+}
+
+Table Vehicle {
+  id uuid [pk]
+  organizationId uuid [ref: > Organization.id]
+}
+
+Table Plan {
+  id int [pk]
+  name varchar
+}
+
+Table Subscription {
+  id uuid [pk]
+  organizationId uuid [ref: > Organization.id]
+  planId int [ref: > Plan.id]
+}
+
+Table TripTemplate {
+  id uuid [pk]
+  organizationId uuid [ref: > Organization.id]
+}
+
+Table TripInstance {
+  id uuid [pk]
+  tripTemplateId uuid [ref: > TripTemplate.id]
+  driverId uuid [ref: > Driver.userId]
+  vehicleId uuid [ref: > Vehicle.id]
+  organizationId uuid [ref: > Organization.id]
+}
+
+Table Booking {
+  id uuid [pk]
+  userId uuid [ref: > User.id]
+  tripInstanceId uuid [ref: > TripInstance.id]
+  organizationId uuid [ref: > Organization.id]
+}
+
+Table Payment {
+  id uuid [pk]
+  enrollmentId uuid [unique, ref: - Booking.id]
+  organizationId uuid [ref: > Organization.id]
+}

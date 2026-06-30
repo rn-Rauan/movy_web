@@ -80,7 +80,6 @@
 \newcommand{\Titulo}{MOVY: PLATAFORMA SAAS PARA GERENCIAMENTO DE TRANSPORTE UNIVERSITÁRIO INTERMUNICIPAL COM ARQUITETURA MULTITENANCY}
 \newcommand{\Autor}{Rauan dos Santos Bandeira}
 \newcommand{\Orientador}{Jeferson Soares}
-\newcommand{\CoOrientador}{Nome do(a) Coorientador(a) (opcional)}
 \newcommand{\Cidade}{Piripiri – PI}
 \newcommand{\Ano}{2026}
 
@@ -96,7 +95,7 @@
 \textbf{\Curso} \\[3cm]
 
 \textbf{\Autor} \\[2.5cm]
-\textbf{\Titulo} \\[6cm]
+\textbf{\Titulo} \\[5cm]
 
 \Cidade\\
 \Ano
@@ -113,7 +112,6 @@
 \begin{flushright}
 Relatório Técnico de Software apresentado ao curso de \Curso{}, como requisito parcial para a conclusão do Trabalho de Conclusão de Curso (TCC). \\
 Orientador(a): \Orientador \\
-Coorientador(a): \CoOrientador
 \end{flushright}
 
 \vfill
@@ -184,7 +182,7 @@ Diversos estudos têm abordado o uso de sistemas de informação no gerenciament
 O trabalho PickBus, proposto por Pretto et al. \cite{pickbus2021}, apresenta uma solução multiplataforma (web e mobile) voltada ao gerenciamento de transporte fretado de passageiros, com foco em eventos e deslocamentos coletivos. O sistema permite a criação e o gerenciamento de viagens, controle de passageiros, organização de pagamentos e centralização da comunicação entre organizadores e usuários. O estudo fundamenta-se em conceitos de mobilidade urbana e empreendedorismo, demonstrando a viabilidade da solução por meio de pesquisa de mercado e testes com usuários reais. Os resultados indicam boa aceitação do sistema e evidenciam a carência de ferramentas digitais específicas para o gerenciamento de transporte fretado.
 
 
-O trabalho intitulado "Sistema para Gerenciamento de Transportes", desenvolvido por Anderson et al. \cite{anderson2020}, apresenta uma solução voltada à modernização do processo de solicitação e gerenciamento de transportes no contexto de uma instituição acadêmica. A proposta surge da necessidade de substituir métodos manuais baseados em troca de e-mails, os quais são suscetíveis a falhas de comunicação e perda de informações. O sistema permite o cadastro e a gestão de veículos, motoristas e setores, bem como a solicitação de viagens, verificação de disponibilidade, fluxo de aprovação hierárquico e alocação de recursos. Além disso, a solução contempla funcionalidades de monitoramento por meio de painéis e geração de relatórios, contribuindo para maior transparência e apoio à tomada de decisão. O estudo evidencia que a informatização do processo de gestão de transportes institucionais promove maior organização, eficiência operacional e confiabilidade das informações.
+O trabalho intitulado "Sistema para Gerenciamento de Transportes", desenvolvido por Paiva \cite{anderson2020}, apresenta uma solução voltada à modernização do processo de solicitação e gerenciamento de transportes no contexto de uma instituição acadêmica. A proposta surge da necessidade de substituir métodos manuais baseados em troca de e-mails, os quais são suscetíveis a falhas de comunicação e perda de informações. O sistema permite o cadastro e a gestão de veículos, motoristas e setores, bem como a solicitação de viagens, verificação de disponibilidade, fluxo de aprovação hierárquico e alocação de recursos. Além disso, a solução contempla funcionalidades de monitoramento por meio de painéis e geração de relatórios, contribuindo para maior transparência e apoio à tomada de decisão. O estudo evidencia que a informatização do processo de gestão de transportes institucionais promove maior organização, eficiência operacional e confiabilidade das informações.
 
 
 Outro trabalho relevante é o de Reis et al. \cite{reis2021transporte}, que apresenta a modelagem de um software voltado ao gerenciamento do transporte escolar público municipal. A proposta tem como foco o levantamento de requisitos e a utilização de técnicas de Engenharia de Software e UML para organizar informações relacionadas a alunos, rotas, veículos, motoristas e monitores. O estudo evidencia que a ausência de sistemas informatizados compromete a eficiência operacional e a tomada de decisão, especialmente em contextos com grande volume de usuários e necessidade de relatórios precisos. Diferentemente do presente projeto, que se concentra no transporte universitário intermunicipal e na oferta de uma API escalável para integração com diferentes aplicações cliente, o trabalho de Reis et al. (2021) enfatiza a modelagem conceitual e o contexto do ensino básico municipal, reforçando, contudo, a importância da informatização como fator essencial para a organização e confiabilidade dos serviços de transporte educacional.
@@ -197,7 +195,7 @@ Adicionalmente, ao ser concebido como uma API escalável com modelo SaaS multi-t
 
 
 % ------------------------------
-\section{Tecnologias Implementadas}
+\section{Tecnologias Envolvidas}
 
 A seleção tecnológica foi orientada pelos requisitos de escalabilidade, segurança e manutenibilidade no servidor, e por produtividade, segurança de tipos e caráter \textit{mobile-first} no cliente. As duas camadas compartilham a linguagem TypeScript, o que estabelece contratos de dados explícitos entre elas. As subseções a seguir apresentam, separadamente, a \textit{stack} de cada camada e a justificativa das principais escolhas.
 
@@ -249,7 +247,7 @@ Os atores do sistema correspondem aos papéis previstos no controle de acesso, e
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.6\textwidth]{imagens/usecases_diagram.png}
+\includegraphics[width=\textwidth]{imagens/diagrama de casos de uso.png}
 \caption{Diagrama de caso de uso.}
 \label{fig:Diagrama de caso de uso.}
 \end{figure}
@@ -261,7 +259,7 @@ O modelo de domínio foi modelado segundo os princípios do \textit{Domain-Drive
 \begin{figure}[H]
 \centering
 % TODO: exportar de docs/DIAGRAMA_CLASSES.md (Fig. 1) e salvar em imagens/
-\includegraphics[width=\textwidth]{imagens/diagrama de classes (mapa geral).png}
+\includegraphics[width=\textwidth]{imagens/classes-mapa.png}
 \caption{Mapa geral de entidades do modelo de domínio (Movy API).}
 \label{fig:diagrama}
 \end{figure}
@@ -277,11 +275,11 @@ O Diagrama Entidade-Relacionamento (DER) foi elaborado com o objetivo de represe
 
 A modelagem reflete um design de multi-tenancy, onde cada organização possui isolamento lógico de dados através do campo \textit{organizationId}. As principais entidades implementadas incluem: Usuário, Organização, Roles, Memberships, Motoristas, Veículos, Templates de Viagem, Instâncias de Viagem, Inscrições, Pagamentos, Planos e Assinaturas, além de registros de Auditoria.
 
-Para preservar a legibilidade no formato impresso, a Figura~\ref{fig:der} apresenta uma \textbf{versão simplificada} do DER, com as entidades e suas associações principais. O diagrama completo, com todos os atributos e relacionamentos, é apresentado em orientação paisagem no Apêndice~B.
+Para preservar a legibilidade no formato impresso, a Figura~\ref{fig:der} apresenta o DER do sistema com as entidades e suas associações principais; o detalhamento campo a campo de cada entidade consta no Apêndice~A.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{imagens/Subscription Payment-2026-06-05-152616.png}
+\includegraphics[width=1\textwidth]{imagens/der-simplificado.png}
 \caption{Diagrama Entidade-Relacionamento do sistema --- versão simplificada (Movy API).}
 \label{fig:der}
 \end{figure}
@@ -348,7 +346,7 @@ A Figura~\ref{fig:fe_fluxo_reserva} sintetiza a jornada principal do passageiro,
 As principais interfaces da aplicação cliente são descritas conceitualmente nesta seção. As capturas de tela correspondentes podem ser incluídas como material ilustrativo complementar.
 
 % ------------------------------
-\section{Implementação e Resultados Alcançados}
+\section{Software: Implementação e Resultados Alcançados}
 
 O desenvolvimento contemplou os treze módulos funcionais previstos para o sistema, todos seguindo rigorosamente os padrões de \textit{Clean Architecture} e estruturados com casos de uso, \textit{value objects}, repositórios e tratamento de erros específicos de domínio. Esta seção descreve primeiro a implementação do \textit{backend} (módulos e \textit{endpoints}), em seguida a da aplicação cliente que o consome e, por fim, os temas transversais ao sistema --- autenticação e RBAC, multi-tenancy, transações, tratamento de erros e verificação.
 
@@ -424,7 +422,7 @@ Prisma gerencia histórico completo de mudanças no esquema com migrations versi
 
 \subsection{Síntese dos Resultados}
 
-O projeto alcançou os objetivos estabelecidos, com a implementação completa dos treze módulos funcionais planejados (93 \textit{endpoints} REST e 93 casos de uso) e da aplicação cliente que os consome. O sistema demonstra uma arquitetura sólida baseada em \textit{Clean Architecture} e \textit{Domain-Driven Design} no servidor, espelhada por uma arquitetura em camadas no cliente. Entre os resultados de maior relevância de engenharia, destacam-se:
+O projeto alcançou os objetivos estabelecidos, entregando um \textbf{MVP funcional} com os treze módulos planejados (93 \textit{endpoints} REST e 93 casos de uso) e a aplicação cliente que os consome. O sistema demonstra uma arquitetura sólida baseada em \textit{Clean Architecture} e \textit{Domain-Driven Design} no servidor, espelhada por uma arquitetura em camadas no cliente. Entre os resultados de maior relevância de engenharia, destacam-se:
 
 \begin{enumerate}
 \item \textbf{Arquitetura Modular Espelhada}: Cada módulo do servidor segue o padrão Application → Domain → Infrastructure → Presentation; o cliente reproduz a separação em rotas finas, \textit{hooks} de caso de uso, serviços e cliente HTTP único, conferindo localidade de mudança e previsibilidade a ambos os lados.
@@ -514,7 +512,7 @@ O sistema cobre o escopo de módulos planejado, mas mantém limitações conscie
 
 O sistema Movy demonstra viabilidade técnica e arquitetural para operar como uma plataforma SaaS de gerenciamento de transporte universitário intermunicipal. Os princípios de \textit{Clean Architecture} e DDD forneceram, no servidor, uma fundação sólida que antecipa o crescimento futuro sem sacrificar manutenibilidade; e a aplicação cliente, ao espelhar essa estratificação e ao concentrar a comunicação com a API em um ponto único, materializa os requisitos do sistema com controle de acesso por papel e comunicação resiliente.
 
-Com os treze módulos funcionais implementados --- autenticação, usuários, organizações, papéis, \textit{memberships}, motoristas, veículos, viagens, inscrições, planos, assinaturas, pagamentos e agendamento ---, um sistema robusto de RBAC, multi-tenancy e proteção IDOR, e 458 testes unitários no \textit{backend}, o projeto entrega uma plataforma funcional ponta a ponta. As limitações registradas --- gateway de pagamento, notificações, relatórios, \textit{caching} e a maturação da camada de testes do cliente --- delineiam um roteiro de evolução claro, cujos pontos de inserção já estão previstos na arquitetura atual.
+Com os treze módulos funcionais implementados --- autenticação, usuários, organizações, papéis, \textit{memberships}, motoristas, veículos, viagens, inscrições, planos, assinaturas, pagamentos e agendamento ---, um sistema robusto de RBAC, multi-tenancy e proteção IDOR, e 458 testes unitários no \textit{backend}, o projeto entrega um MVP funcional, cobrindo os fluxos principais de ponta a ponta. As limitações registradas --- gateway de pagamento, notificações, relatórios, \textit{caching} e a maturação da camada de testes do cliente --- delineiam um roteiro de evolução claro, cujos pontos de inserção já estão previstos na arquitetura atual.
 
 % ------------------------------
 \newpage
@@ -533,34 +531,19 @@ Este apêndice detalha, campo a campo, as entidades do domínio sintetizadas na 
 
 \input{sections/apendice-entidades}
 
-\newpage
-\begin{landscape}
-\section*{Apêndice B --- Diagrama Entidade-Relacionamento Completo}
-\addcontentsline{toc}{section}{Apêndice B --- Diagrama Entidade-Relacionamento Completo}
-
-A Figura~\ref{fig:der-completo} apresenta o Diagrama Entidade-Relacionamento (DER) completo do sistema, em orientação paisagem para preservar a legibilidade dos atributos e relacionamentos. A versão simplificada, exibida no corpo do texto (Figura~\ref{fig:der}), destaca apenas as entidades e suas associações.
-
-\begin{figure}[H]
-\centering
-% TODO (autor): exportar o DER completo e salvar como imagens/der-completo.png
-\includegraphics[width=\linewidth,height=0.9\textheight,keepaspectratio]{imagens/der-completo.png}
-\caption{Diagrama Entidade-Relacionamento completo do sistema (Movy API).}
-\label{fig:der-completo}
-\end{figure}
-\end{landscape}
 % ------------------------------
 \newpage
 \section*{Anexos}
 
 \subsection*{Declaração de Entrega do Código-Fonte}
-Declaro que o código-fonte foi entregue à coordenação do curso xxxxx
+Declaro que o código-fonte do software foi entregue à coordenação do curso, sob o processo SUAP nº \rule{4cm}{0.4pt}.
 
 Assinatura: \rule{10cm}{0.4pt}
 
 Data: \rule{1cm}{0.4pt}/\rule{1cm}{0.4pt}/\rule{2cm}{0.4pt}
 
 \subsection*{Declaração de Submissão ao NIT}
-Declaro que o software foi submetido ao NIT – IFPI xxxxx
+Declaro que o software foi submetido ao Núcleo de Inovação Tecnológica (NIT) do IFPI, sob o processo SUAP nº \rule{4cm}{0.4pt}.
 
 Assinatura: \rule{10cm}{0.4pt}
 

@@ -85,19 +85,19 @@ A seleção tecnológica buscou equilibrar produtividade, segurança de tipos e 
 
 **Tabela 1 — Tecnologias utilizadas no frontend**
 
-| Tecnologia                 | Descrição / Papel                                                                        |
-| -------------------------- | ---------------------------------------------------------------------------------------- |
-| React 19                   | Biblioteca de interface; modelo declarativo baseado em componentes e _hooks_.            |
-| TypeScript (_strict_)      | Linguagem; contratos de dados explícitos com a API e verificação em tempo de compilação. |
-| TanStack Router / Start    | Roteamento baseado em arquivos, com segurança de tipos e _layouts_ aninhados.            |
-| Tailwind CSS v4            | Estilização _utility-first_ com sistema de design próprio por _tokens_.                  |
-| shadcn/ui (Radix UI)       | Componentes de interface acessíveis, sob modelo de _ownership_.                          |
+| Tecnologia                 | Descrição / Papel                                                                                           |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| React 19                   | Biblioteca de interface; modelo declarativo baseado em componentes e _hooks_.                               |
+| TypeScript (_strict_)      | Linguagem; contratos de dados explícitos com a API e verificação em tempo de compilação.                    |
+| TanStack Router / Start    | Roteamento baseado em arquivos, com segurança de tipos e _layouts_ aninhados.                               |
+| Tailwind CSS v4            | Estilização _utility-first_ com sistema de design próprio por _tokens_.                                     |
+| shadcn/ui (Radix UI)       | Componentes de interface acessíveis, sob modelo de _ownership_.                                             |
 | Zod                        | Validação declarativa de formulários (estado controlado no React), reaproveitada como tipos por inferência. |
-| `fetch` nativo encapsulado | Cliente HTTP único, com renovação de sessão e normalização de erros.                     |
-| Sonner                     | Notificações transitórias (_toasts_).                                                    |
-| Lucide React               | Conjunto de ícones otimizável por _tree-shaking_.                                        |
-| Vite (preset Lovable)      | Ferramenta de construção; o preset encapsula plugins e o adaptador de implantação.       |
-| Cloudflare Workers         | Plataforma de implantação em execução de borda (_edge_).                                 |
+| `fetch` nativo encapsulado | Cliente HTTP único, com renovação de sessão e normalização de erros.                                        |
+| Sonner                     | Notificações transitórias (_toasts_).                                                                       |
+| Lucide React               | Conjunto de ícones otimizável por _tree-shaking_.                                                           |
+| Vite (preset Lovable)      | Ferramenta de construção; o preset encapsula plugins e o adaptador de implantação.                          |
+| Cloudflare Workers         | Plataforma de implantação em execução de borda (_edge_).                                                    |
 
 Registra-se que a biblioteca TanStack React Query consta entre as dependências, porém **não é consumida** por nenhuma rota: o gerenciamento de estado de servidor é feito, no estágio atual, por _hooks_ próprios sobre a Context API do React. A não adoção imediata é uma decisão consciente, retomada na Seção 5.
 

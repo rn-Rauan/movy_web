@@ -1,0 +1,79 @@
+%% DER COMPLETO — Parte B: Frota + Viagens (Anexo B).
+%% 6 entidades. ORGANIZATION e DRIVER aparecem como conectores. Render:
+%% npx -p @mermaid-js/mermaid-cli mmdc -i der-completo-b.mmd -o ../imagens/der-completo-b.pdf --pdfFit
+erDiagram
+  ORGANIZATION ||--o{ VEHICLE : possui
+  ORGANIZATION ||--o{ TRIPTEMPLATE : define
+  ORGANIZATION ||--o| TRIPSCHEDULINGCONFIG : configura
+  TRIPTEMPLATE ||--o{ TRIPINSTANCE : gera
+  DRIVER ||--o{ TRIPINSTANCE : conduz
+  VEHICLE ||--o{ TRIPINSTANCE : atende
+
+  ORGANIZATION {
+    uuid id PK
+    string slug UK
+  }
+  DRIVER {
+    uuid userId PK "FK p/ User"
+    string cnh UK
+    array cnhCategories "A..E"
+    datetime cnhExpiresAt
+    enum status "ACTIVE/INACTIVE/SUSPENDED"
+    datetime createdAt
+    datetime updatedAt
+  }
+  VEHICLE {
+    uuid id PK
+    string plate UK
+    string model
+    enum type "VAN/BUS/MINIBUS/CAR"
+    int maxCapacity
+    enum status "ACTIVE/INACTIVE"
+    uuid organizationId FK
+    datetime createdAt
+    datetime updatedAt
+  }
+  TRIPTEMPLATE {
+    uuid id PK
+    string departurePoint
+    string destination
+    string departureTimeOfDay "HH:mm UTC"
+    string arrivalTimeOfDay "HH:mm UTC"
+    decimal priceOneWay
+    decimal priceReturn
+    decimal priceRoundTrip
+    boolean isRecurring
+    array frequency "DayOfWeek"
+    enum shift "MORNING/AFTERNOON/EVENING"
+    array stops
+    int defaultCapacity
+    boolean autoCancelEnabled
+    decimal minRevenue
+    int autoCancelOffset
+    enum status "ACTIVE/INACTIVE"
+    uuid organizationId FK
+    boolean isPublic
+    datetime createdAt
+    datetime updatedAt
+  }
+  TRIPINSTANCE {
+    uuid id PK
+    uuid driverId FK "nullable"
+    uuid vehicleId FK "nullable"
+    int totalCapacity
+    enum tripStatus "DRAFT..CANCELED"
+    uuid tripTemplateId FK
+    datetime departureTime
+    datetime arrivalEstimate
+    uuid organizationId FK
+    datetime createdAt
+    datetime updatedAt
+  }
+  TRIPSCHEDULINGCONFIG {
+    uuid id PK
+    uuid organizationId FK "UK"
+    int daysAhead "1..90"
+    boolean enabled
+    datetime createdAt
+    datetime updatedAt
+  }

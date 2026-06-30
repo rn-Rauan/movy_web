@@ -1,0 +1,26 @@
+%% Arquitetura do Sistema (Seção 3.4) — diagrama de camadas.
+%% Render: npx -p @mermaid-js/mermaid-cli mmdc -i arquitetura.mmd -o ../imagens/arquitetura.pdf
+flowchart TB
+  subgraph FE["Aplicação Cliente (Frontend) — arquitetura em camadas"]
+    direction TB
+    A1["Apresentação<br/>Rotas (controladores finos) + Componentes"]
+    A2["Casos de uso<br/>Hooks de feature (estado + efeitos)"]
+    A3["Serviços<br/>padrão Repositório (1 arquivo por domínio)"]
+    A4["Cliente HTTP<br/>lib/api.ts (auth · refresh · erros)"]
+    A1 --> A2 --> A3 --> A4
+  end
+
+  A4 -->|HTTP/JSON| B1
+
+  subgraph BE["API REST (Backend) — Clean Architecture + DDD"]
+    direction TB
+    B1["Presentation<br/>Controllers + DTOs + Guards"]
+    B2["Application<br/>Use Cases"]
+    B3["Domain<br/>Entities + Value Objects"]
+    B4["Infrastructure<br/>Repositories (Prisma)"]
+    B1 --> B2
+    B2 --> B3
+    B2 --> B4
+  end
+
+  B4 -->|"SQL (Prisma)"| DB[("PostgreSQL")]

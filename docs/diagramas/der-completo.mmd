@@ -1,0 +1,180 @@
+%% DER COMPLETO (Anexo B) — todas as entidades com todas as colunas.
+%% Pensado para impressão em PAISAGEM (Apêndice/Anexo). No corpo use der-simplificado.mmd.
+%% Render: npx -p @mermaid-js/mermaid-cli mmdc -i der-completo.mmd -o ../imagens/der-completo.pdf
+erDiagram
+  ORGANIZATION ||--o{ ORGANIZATIONMEMBERSHIP : tem
+  USER ||--o{ ORGANIZATIONMEMBERSHIP : participa
+  ROLE ||--o{ ORGANIZATIONMEMBERSHIP : define
+  USER ||--o| DRIVER : perfil
+  ORGANIZATION ||--o{ VEHICLE : possui
+  ORGANIZATION ||--o{ TRIPTEMPLATE : define
+  ORGANIZATION ||--o{ TRIPINSTANCE : opera
+  TRIPTEMPLATE ||--o{ TRIPINSTANCE : gera
+  DRIVER ||--o{ TRIPINSTANCE : conduz
+  VEHICLE ||--o{ TRIPINSTANCE : atende
+  TRIPINSTANCE ||--o{ BOOKING : recebe
+  USER ||--o{ BOOKING : faz
+  ORGANIZATION ||--o{ BOOKING : escopo
+  BOOKING ||--|| PAYMENT : possui
+  ORGANIZATION ||--o{ PAYMENT : escopo
+  ORGANIZATION ||--o{ SUBSCRIPTION : assina
+  PLAN ||--o{ SUBSCRIPTION : referencia
+  ORGANIZATION ||--o| TRIPSCHEDULINGCONFIG : configura
+  ORGANIZATION ||--o{ AUDITLOG : registra
+  USER ||--o{ AUDITLOG : autor
+
+  ROLE {
+    int id PK
+    string name
+    datetime createdAt
+    datetime updatedAt
+  }
+  USER {
+    uuid id PK
+    string name
+    string email UK
+    string passwordHash
+    string telephone
+    enum status "ACTIVE/INACTIVE"
+    datetime createdAt
+    datetime updatedAt
+  }
+  ORGANIZATION {
+    uuid id PK
+    string name
+    string cnpj UK
+    string email UK
+    string telephone
+    string address
+    string slug UK
+    enum status "ACTIVE/INACTIVE"
+    datetime createdAt
+    datetime updatedAt
+  }
+  PLAN {
+    int id PK
+    string name
+    decimal price
+    string description
+    int maxVehicles
+    int maxDrivers
+    int maxMonthlyTrips
+    int durationDays
+    boolean isActive
+    datetime createdAt
+    datetime updatedAt
+  }
+  SUBSCRIPTION {
+    uuid id PK
+    uuid organizationId FK
+    int planId FK
+    enum status "ACTIVE/PAST_DUE/CANCELED"
+    datetime startDate
+    datetime expiresAt
+    datetime createdAt
+    datetime updatedAt
+  }
+  ORGANIZATIONMEMBERSHIP {
+    uuid userId PK "FK"
+    int roleId PK "FK"
+    uuid organizationId PK "FK"
+    datetime assignedAt
+    datetime removedAt "NULL = ativo"
+  }
+  DRIVER {
+    uuid userId PK "FK p/ User"
+    string cnh UK
+    array cnhCategories "A..E"
+    datetime cnhExpiresAt
+    enum status "ACTIVE/INACTIVE/SUSPENDED"
+    datetime createdAt
+    datetime updatedAt
+  }
+  VEHICLE {
+    uuid id PK
+    string plate UK
+    string model
+    enum type "VAN/BUS/MINIBUS/CAR"
+    int maxCapacity
+    enum status "ACTIVE/INACTIVE"
+    uuid organizationId FK
+    datetime createdAt
+    datetime updatedAt
+  }
+  TRIPTEMPLATE {
+    uuid id PK
+    string departurePoint
+    string destination
+    string departureTimeOfDay "HH:mm UTC"
+    string arrivalTimeOfDay "HH:mm UTC"
+    decimal priceOneWay
+    decimal priceReturn
+    decimal priceRoundTrip
+    boolean isRecurring
+    array frequency "DayOfWeek"
+    enum shift "MORNING/AFTERNOON/EVENING"
+    array stops
+    int defaultCapacity
+    boolean autoCancelEnabled
+    decimal minRevenue
+    int autoCancelOffset
+    enum status "ACTIVE/INACTIVE"
+    uuid organizationId FK
+    boolean isPublic
+    datetime createdAt
+    datetime updatedAt
+  }
+  TRIPINSTANCE {
+    uuid id PK
+    uuid driverId FK "nullable"
+    uuid vehicleId FK "nullable"
+    int totalCapacity
+    enum tripStatus "DRAFT..CANCELED"
+    uuid tripTemplateId FK
+    datetime departureTime
+    datetime arrivalEstimate
+    uuid organizationId FK
+    datetime createdAt
+    datetime updatedAt
+  }
+  BOOKING {
+    uuid id PK
+    datetime enrollmentDate
+    enum status "ACTIVE/INACTIVE"
+    boolean presenceConfirmed
+    enum enrollmentType "ONE_WAY/RETURN/ROUND_TRIP"
+    decimal recordedPrice
+    uuid userId FK
+    uuid tripInstanceId FK
+    string boardingStop
+    string alightingStop
+    uuid organizationId FK
+    string activeKey UK "1 ativa por user+trip"
+    datetime createdAt
+    datetime updatedAt
+  }
+  PAYMENT {
+    uuid id PK
+    uuid organizationId FK
+    enum method "MONEY/PIX/CREDIT_CARD/DEBIT_CARD"
+    decimal amount
+    enum status "PENDING/COMPLETED/FAILED"
+    uuid enrollmentId FK "UK 1:1 Booking"
+    datetime createdAt
+    datetime updatedAt
+  }
+  TRIPSCHEDULINGCONFIG {
+    uuid id PK
+    uuid organizationId FK "UK"
+    int daysAhead "1..90"
+    boolean enabled
+    datetime createdAt
+    datetime updatedAt
+  }
+  AUDITLOG {
+    uuid id PK
+    uuid organizationId FK
+    uuid userId FK
+    string action
+    datetime timestamp
+  }

@@ -1,0 +1,68 @@
+%% DER COMPLETO — Parte A: Identidade/Acesso + Billing (Anexo B).
+%% 6 entidades para caber legível. Render:
+%% npx -p @mermaid-js/mermaid-cli mmdc -i der-completo-a.mmd -o ../imagens/der-completo-a.pdf --pdfFit
+erDiagram
+  ORGANIZATION ||--o{ ORGANIZATIONMEMBERSHIP : tem
+  USER ||--o{ ORGANIZATIONMEMBERSHIP : participa
+  ROLE ||--o{ ORGANIZATIONMEMBERSHIP : define
+  ORGANIZATION ||--o{ SUBSCRIPTION : assina
+  PLAN ||--o{ SUBSCRIPTION : referencia
+
+  ROLE {
+    int id PK
+    string name
+    datetime createdAt
+    datetime updatedAt
+  }
+  USER {
+    uuid id PK
+    string name
+    string email UK
+    string passwordHash
+    string telephone
+    enum status "ACTIVE/INACTIVE"
+    datetime createdAt
+    datetime updatedAt
+  }
+  ORGANIZATION {
+    uuid id PK
+    string name
+    string cnpj UK
+    string email UK
+    string telephone
+    string address
+    string slug UK
+    enum status "ACTIVE/INACTIVE"
+    datetime createdAt
+    datetime updatedAt
+  }
+  PLAN {
+    int id PK
+    string name
+    decimal price
+    string description
+    int maxVehicles
+    int maxDrivers
+    int maxMonthlyTrips
+    int durationDays
+    boolean isActive
+    datetime createdAt
+    datetime updatedAt
+  }
+  SUBSCRIPTION {
+    uuid id PK
+    uuid organizationId FK
+    int planId FK
+    enum status "ACTIVE/PAST_DUE/CANCELED"
+    datetime startDate
+    datetime expiresAt
+    datetime createdAt
+    datetime updatedAt
+  }
+  ORGANIZATIONMEMBERSHIP {
+    uuid userId PK "FK"
+    int roleId PK "FK"
+    uuid organizationId PK "FK"
+    datetime assignedAt
+    datetime removedAt "NULL = ativo"
+  }
