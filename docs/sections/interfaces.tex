@@ -1,0 +1,149 @@
+% Capturas de tela da aplicação cliente, organizadas por contexto de acesso.
+% Cada tela: descrição + requisitos evidenciados + figura + legenda.
+% As imagens devem ser salvas em docs/imagens/ com os nomes indicados.
+% Enquanto a captura não existir, um marcador é exibido no lugar (o documento compila).
+% IMPORTANTE: usar dados fictícios; não exibir tokens, e-mails reais, chaves ou IDs sensíveis.
+
+\providecommand{\pendentePrint}[1]{%
+  \fbox{\begin{minipage}[c][5.5cm][c]{0.55\textwidth}\centering
+    \textit{[Captura de tela pendente]}\\[0.4cm]\texttt{imagens/#1}
+  \end{minipage}}}
+
+\providecommand{\telaPrint}[3]{% #1 = arquivo, #2 = largura, #3 não usado
+  \IfFileExists{imagens/#1}{\includegraphics[width=#2\textwidth]{imagens/#1}}{\pendentePrint{#1}}}
+
+As capturas a seguir ilustram as principais telas da aplicação cliente, todas com \textbf{dados fictícios de demonstração}. Para cada tela, indicam-se os requisitos funcionais por ela evidenciados.
+
+\subsubsection{Catálogo público de viagens}
+
+Tela inicial do contexto público, acessível sem autenticação. Apresenta as viagens disponíveis agrupadas por rota, com busca e filtros (data, turno e ordenação), e exibe a ocupação de cada viagem. Evidencia os requisitos \textbf{RF04} (viagens agendadas), \textbf{RF07} (ponto de entrada para inscrição) e \textbf{RF22} (indicação de capacidade/ocupação).
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-catalogo.png}{0.55}{}
+\caption{Catálogo público de viagens disponíveis.}
+\label{fig:fe-catalogo}
+\end{figure}
+
+\subsubsection{Detalhe público da viagem}
+
+Tela única de detalhe de uma viagem, funcional logada e deslogada. Mostra rota, horário, pontos de embarque e datas alternativas da mesma rota, além do botão de compartilhamento e do botão de inscrição (ou de \textit{login}, quando não autenticado). Evidencia \textbf{RF04} e \textbf{RF07}.
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-detalhe-viagem.png}{0.55}{}
+\caption{Detalhe público de uma viagem, com datas alternativas e compartilhamento.}
+\label{fig:fe-detalhe-viagem}
+\end{figure}
+
+\subsubsection{Formulário de inscrição}
+
+Formulário em que o passageiro autenticado escolhe os pontos de embarque e desembarque, o tipo de trajeto e a forma de pagamento. A decisão definitiva de disponibilidade e preço é delegada à API. Evidencia \textbf{RF07} (inscrição), \textbf{RF09} (tipo de trajeto), \textbf{RF10} (forma de pagamento) e \textbf{RF24} (seleção do ponto de embarque).
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-formulario.png}{0.55}{}
+\caption{Formulário de inscrição em uma viagem.}
+\label{fig:fe-formulario}
+\end{figure}
+
+\subsubsection{Confirmação da inscrição}
+
+Tela de confirmação exibida após a criação bem-sucedida da inscrição, evidenciando a conclusão do fluxo de reserva (\textbf{RF07}) e oferecendo acesso ao detalhe da inscrição.
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-sucesso.png}{0.55}{}
+\caption{Confirmação de inscrição concluída.}
+\label{fig:fe-sucesso}
+\end{figure}
+
+\subsubsection{Minhas inscrições}
+
+Lista das inscrições do passageiro, com busca e filtro por estado, distinguindo viagens futuras das já realizadas (histórico). Evidencia \textbf{RF08} (cancelamento dentro do prazo) e o acompanhamento do histórico de inscrições.
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-minhas-inscricoes.png}{0.55}{}
+\caption{Lista de inscrições do passageiro.}
+\label{fig:fe-minhas-inscricoes}
+\end{figure}
+
+\subsubsection{Detalhe da inscrição}
+
+Detalhe de uma inscrição específica, com os dados da viagem e a ação de cancelamento (sujeita à janela de prazo validada pela API). Evidencia \textbf{RF08}.
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-detalhe-inscricao.png}{0.55}{}
+\caption{Detalhe de uma inscrição, com opção de cancelamento.}
+\label{fig:fe-detalhe-inscricao}
+\end{figure}
+
+\subsubsection{Painel administrativo}
+
+Painel com métricas operacionais (viagens ativas, próximas, passageiros, ocupação) e financeiras (receita prevista), além de atalho para o relatório financeiro. Evidencia parcialmente \textbf{RF15} e \textbf{RF16} (relatório/histórico agregados no cliente) e \textbf{RF19} (estimativa financeira de arrecadação).
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-dashboard.png}{0.75}{}
+\caption{Painel administrativo com métricas operacionais e financeiras.}
+\label{fig:fe-dashboard}
+\end{figure}
+
+\subsubsection{Gestão de viagens}
+
+Tela administrativa de \textit{CRUD} de instâncias de viagem, com transições de estado e atribuição de motorista e veículo. Evidencia \textbf{RF04} (agendamento), \textbf{RF05} (cancelamento de viagem), \textbf{RF06} (turnos), \textbf{RF21} (vinculação de motorista/veículo) e \textbf{RF23} (pontos de embarque).
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-gestao-viagens.png}{0.75}{}
+\caption{Gestão administrativa de viagens.}
+\label{fig:fe-gestao-viagens}
+\end{figure}
+
+\subsubsection{Gestão de templates de rota}
+
+Tela de \textit{CRUD} de modelos de rota recorrentes e de geração manual de instâncias. Evidencia \textbf{RF04} (base do agendamento recorrente), \textbf{RF06} (turnos) e \textbf{RF23} (pontos de embarque do modelo).
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-gestao-templates.png}{0.75}{}
+\caption{Gestão de templates de rota.}
+\label{fig:fe-gestao-templates}
+\end{figure}
+
+\subsubsection{Detalhe operacional da viagem}
+
+Tela compartilhada por administrador e motorista para a gestão operacional das inscrições: confirmação de presença e de pagamento por passageiro e transições de estado da viagem. Evidencia \textbf{RF11} (lista de passageiros), \textbf{RF12} (confirmação de presença), \textbf{RF13} (lista para o motorista), \textbf{RF14} (início/conclusão da viagem) e \textbf{RF25} (pontos de embarque por passageiro).
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-operacional.png}{0.75}{}
+\caption{Detalhe operacional da viagem, com gestão de presença e pagamento.}
+\label{fig:fe-operacional}
+\end{figure}
+
+\subsubsection{Gestão de motoristas e veículos}
+
+Telas administrativas de gestão da frota: motoristas vinculados à organização e veículos cadastrados. Evidenciam \textbf{RF03} (cadastro de motoristas) e \textbf{RF20} (cadastro de meios de transporte).
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-motoristas.png}{0.45}{}
+\hfill
+\telaPrint{fe-veiculos.png}{0.45}{}
+\caption{Gestão de motoristas (à esquerda) e de veículos (à direita).}
+\label{fig:fe-frota}
+\end{figure}
+
+\subsubsection{Viagens do motorista}
+
+Lista das viagens atribuídas ao motorista autenticado, ponto de entrada para a tela de detalhe operacional. Evidencia \textbf{RF13} e \textbf{RF14}.
+
+\begin{figure}[H]
+\centering
+\telaPrint{fe-motorista-viagens.png}{0.55}{}
+\caption{Lista de viagens atribuídas ao motorista.}
+\label{fig:fe-motorista-viagens}
+\end{figure}

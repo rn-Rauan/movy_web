@@ -1,9 +1,9 @@
-\subsection{Aplicação Cliente}
+\subsubsection{Aplicação Cliente}
 \label{sec:cliente}
 
 A aplicação cliente é um \textit{Single Page Application} (SPA) \textit{mobile-first} que consome os 93 \textit{endpoints} da API e materializa, para os perfis de passageiro, motorista e administrador, os fluxos descritos na Seção~\ref{sec:interfaces}.
 
-\subsubsection{Processo de Desenvolvimento Assistido por IA}
+\paragraph{Processo de Desenvolvimento Assistido por IA}
 
 A aplicação cliente foi \textbf{integralmente desenvolvida com o apoio de ferramentas de inteligência artificial (IA) generativa}, sob direção, revisão e validação do autor. Esse modelo de trabalho --- frequentemente denominado \textit{AI-assisted development} ou programação assistida por IA --- foi adotado de forma deliberada para acelerar a prototipação e a implementação, mantendo-se a autoria das decisões de requisitos, de arquitetura e de qualidade sob responsabilidade humana. Registra-se o uso dessas ferramentas em conformidade com as boas práticas de transparência acadêmica. O processo organizou-se em três etapas sequenciais e complementares, cada uma apoiada por uma ferramenta distinta.
 
@@ -11,7 +11,7 @@ Na primeira etapa, de \textbf{geração inicial}, a base do projeto foi produzid
 
 O sistema de design da aplicação é \textbf{proprietário}: não se adotou nenhum \textit{design system} de terceiros (como Material Design ou Ant Design). Sua identidade visual --- uma paleta de cores com variáveis semânticas (\textit{accent}, \textit{success}, \textit{danger}, \textit{warn}, entre outras), a tipografia (\texttt{Manrope} para texto e \texttt{JetBrains Mono} para dados numéricos) e a iconografia em traço --- foi concebida na etapa de concepção visual, em um conjunto de primitivas escritas à mão acompanhado de um painel de ajuste em tempo real de paleta, raio de borda e densidade. Na etapa de implementação, essa identidade foi materializada na aplicação de produção \textbf{sobre} as primitivas acessíveis do shadcn/ui (Radix) e do Tailwind CSS: os \textit{tokens} de design foram portados para variáveis CSS e os componentes, reestilizados para a identidade do Movy. Trata-se, portanto, de uma identidade visual original implementada sobre primitivas de interface acessíveis, e não da adoção de um tema de terceiros.
 
-\subsubsection{Roteamento e Controle de Acesso}
+\paragraph{Roteamento e Controle de Acesso}
 
 O roteamento utiliza o mecanismo \textit{file-based} do TanStack Router, no qual a estrutura de nomes dos arquivos determina a árvore de URLs. \textit{Layouts} sem caminho (prefixados por sublinhado) não acrescentam segmento à URL, mas estabelecem nós sob os quais outras rotas são aninhadas, permitindo associar a um conjunto de rotas uma verificação de acesso comum. A autenticação é verificada uma única vez, no \textit{layout} \texttt{\_protected}, que envolve todas as rotas que exigem sessão; sobre essa base, dois \textit{layouts} adicionais --- \texttt{\_admin} e \texttt{\_driver} --- aplicam as verificações de papel, redirecionando usuários sem o papel correspondente. A composição resulta em uma cadeia de verificações (autenticado \textbf{e} administrador, por exemplo), sem que os segmentos de proteção apareçam na URL. Esse modelo é o reflexo, no cliente, do RBAC implementado pelos \textit{guards} do \textit{backend}.
 
@@ -36,45 +36,28 @@ Subárvore operacional do motorista: \texttt{/my-trips} e acesso à tela compart
 \label{fig:fe_rotas_guards}
 \end{figure}
 
-\subsubsection{Padrão de Serviços e Hooks}
+\paragraph{Padrão de Serviços e Hooks}
 
-O Código~\ref{cod:fe_camadas} ilustra o fluxo unidirecional através das camadas: um serviço expõe operações de alto nível sobre os \textit{endpoints}; um \textit{hook} de caso de uso combina o serviço com estado e lógica de apresentação (busca, filtros), derivando o estado de carregamento da ausência simultânea de conteúdo e erro; e uma rota fina apenas decide entre os estados (carregando, erro, conteúdo) e delega a renderização.
+A Tabela~\ref{tab:fe_camadas} concretiza o fluxo unidirecional através das camadas, tomando como exemplo a funcionalidade ``minhas inscrições'': um serviço expõe operações de alto nível sobre os \textit{endpoints}; um \textit{hook} de caso de uso combina o serviço com estado e lógica de apresentação (busca, filtros), derivando o estado de carregamento da ausência simultânea de conteúdo e erro; e uma rota fina apenas decide entre os estados (carregando, erro, conteúdo) e delega a renderização.
 
-\begin{lstlisting}[language=JavaScript, caption={Fluxo entre as camadas: serviço, hook e rota}, label={cod:fe_camadas}]
-// SERVICO (services/bookings.service.ts) - padrao repositorio
-export const bookingsService = {
-  listForUser: () => api("/bookings/user"),
-  cancel: (id) => api(`/bookings/${id}/cancel`, { method: "PATCH" }),
-};
+\begin{table}[H]
+\centering
+\caption{Responsabilidades por camada no fluxo serviço $\rightarrow$ \textit{hook} $\rightarrow$ rota}
+\label{tab:fe_camadas}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{Camada} & \textbf{Arquivo (exemplo)} & \textbf{Responsabilidade} \\
+\midrule
+Serviço & \texttt{services/bookings.service.ts} & Expõe operações sobre os \textit{endpoints} (ex.: listar e cancelar inscrições), escondendo o transporte HTTP. \\
+\textit{Hook} (caso de uso) & \texttt{features/bookings/hooks/use\-Bookings.ts} & Invoca o serviço, mantém o estado (conteúdo, erro) e deriva o estado de carregamento. \\
+Rota (controlador fino) & \texttt{routes/\_protected.my-bookings.tsx} & Instancia o \textit{hook} e decide entre carregando, erro e conteúdo, delegando a renderização aos componentes. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-// HOOK (features/bookings/hooks/useBookings.ts) - caso de uso
-export function useBookings() {
-  const [bookings, setBookings] = useState(null);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    bookingsService.listForUser()
-      .then((res) => setBookings(res.data ?? res))
-      .catch((err) => { setError(err.message); toast.error(err.message); });
-  }, []);
-  return { bookings, loading: bookings === null && !error, error };
-}
+\paragraph{Integração com a API}
 
-// ROTA (routes/_protected.my-bookings.tsx) - controlador fino
-function MyBookingsContent() {
-  const { bookings, loading, error } = useBookings();
-  return (
-    <AppShell title="Minhas inscricoes">
-      {loading ? <LoadingList /> :
-       error ? <ErrorCard message={error} /> :
-       <BookingsList bookings={bookings} />}
-    </AppShell>
-  );
-}
-\end{lstlisting}
-
-\subsubsection{Integração com a API}
-
-A comunicação com o \textit{backend} é concentrada no cliente HTTP (Código~\ref{cod:fe_api}) e organizada pela camada de serviços. Os aspectos mais relevantes dessa integração são:
+A comunicação com o \textit{backend} é concentrada no cliente HTTP único (\texttt{lib/api.ts}) e organizada pela camada de serviços. Os aspectos mais relevantes dessa integração são:
 
 \textbf{Autenticação.} Toda requisição é autenticada por padrão, com o cabeçalho \texttt{Authorization: Bearer}; chamadas a \textit{endpoints} públicos desabilitam esse comportamento explicitamente. A expiração do \textit{access token} é tratada de forma transparente pela renovação automática descrita na Seção~\ref{sec:autenticacao}.
 

@@ -1,47 +1,55 @@
 @startuml casos-de-uso
-' Casos de uso (Seção 3.2) — EXEMPLO legível (subconjunto representativo).
-' A lista exaustiva de funcionalidades está na Tabela de Requisitos Funcionais (tab:rf).
-' Render: java -jar plantuml.jar -tpdf casos-de-uso.puml -o ../imagens
+' Casos de uso (Seção 3.2) — visão representativa e compacta.
+' A lista completa está na tabela de casos de uso (tab:casos_uso) e na de
+' requisitos funcionais (tab:rf). A precedência de capacidades
+' (Passageiro > Visitante; Motorista/Administrador > Passageiro) é descrita no texto.
+' Render: java -jar plantuml.jar -charset UTF-8 -tpng casos-de-uso.puml -o ../imagens
 left to right direction
 skinparam shadowing false
 skinparam packageStyle rectangle
 skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F7F7F7
+  BorderColor #777777
+}
 
-actor "Visitante" as V
-actor "Passageiro" as P
-actor "Motorista" as M
-actor "Administrador" as A
+actor Visitante     as V
+actor Passageiro    as P
+actor Motorista     as M
+actor Administrador as A
 
-' Generalização: precedência crescente de capacidades
-P --|> V
-M --|> P
-A --|> P
-
-rectangle "Movy" {
-  usecase "Explorar catálogo de viagens" as UC1
-  usecase "Ver perfil público de organização" as UC2
-  usecase "Autenticar-se" as UCAuth
-  usecase "Reservar viagem" as UC3
-  usecase "Gerenciar inscrições" as UC4
-  usecase "Candidatar-se a motorista" as UC5
-  usecase "Ver viagens atribuídas" as UC6
-  usecase "Confirmar presença e pagamento" as UC7
-  usecase "Gerenciar viagens e templates" as UC8
-  usecase "Gerenciar frota (motoristas/veículos)" as UC9
-  usecase "Acompanhar painel e financeiro" as UC10
+rectangle Movy {
+  usecase "Explorar catálogo de viagens"          as UC1
+  usecase "Ver detalhe da viagem"                 as UC2
+  usecase "Comparar planos"                        as UC3
+  usecase "Autenticar-se"                          as UCa
+  usecase "Reservar viagem"                        as UC4
+  usecase "Gerenciar inscrições"                   as UC5
+  usecase "Candidatar-se a motorista"             as UC6
+  usecase "Ver viagens atribuídas"                as UC7
+  usecase "Confirmar presença e pagamento"        as UC8
+  usecase "Atualizar status da viagem"            as UC9
+  usecase "Gerenciar viagens e templates"         as UC10
+  usecase "Gerenciar frota (motoristas/veículos)" as UC11
+  usecase "Acompanhar painel e financeiro"        as UC12
+  usecase "Configurar agendamento automático"     as UC13
 }
 
 V --> UC1
 V --> UC2
-P --> UC3
+V --> UC3
 P --> UC4
 P --> UC5
-M --> UC6
+P --> UC6
 M --> UC7
-A --> UC8
-A --> UC9
+M --> UC8
+M --> UC9
 A --> UC10
+A --> UC11
+A --> UC12
+A --> UC13
 
-UC3 ..> UCAuth : <<include>>
-UC4 ..> UCAuth : <<include>>
+UC4 ..> UCa : <<include>>
+UC5 ..> UCa : <<include>>
+UC6 ..> UCa : <<include>>
 @enduml

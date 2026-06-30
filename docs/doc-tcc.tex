@@ -71,6 +71,23 @@
 \setstretch{1.5}
 \captionsetup{labelfont=bf, labelsep=endash}
 
+% Numeração no estilo do PPC: seção "N.0", subseção "N.M", subsubseção "N.M.K"
+\renewcommand{\thesection}{\arabic{section}.0}
+\renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
+
+% \paragraph como cabeçalho de bloco (não run-in): usado para listar módulos/itens
+% sob a subseção de implementação, sem numeração e fora do sumário.
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {2.0ex \@plus 1ex \@minus .2ex}%
+  {1.0ex \@plus .2ex}%
+  {\normalfont\normalsize\bfseries}}
+\makeatother
+
+% Links sem caixas/coloração visíveis no PDF final (evita as molduras vermelhas).
+\hypersetup{hidelinks}
+
 % ---------------------------------------------------------
 % DADOS DO TRABALHO
 % ---------------------------------------------------------
@@ -89,7 +106,11 @@
 % ================= CAPA =====================
 \begin{titlepage}
 \begin{center}
-\includegraphics[width=10cm]{imagens/Logo-IFPI-Vertical.png} \\[0.3cm]
+% O logo institucional deve ser salvo em imagens/Logo-IFPI-Vertical.png.
+% O \IfFileExists evita que a compilação falhe enquanto o arquivo não estiver presente.
+\IfFileExists{imagens/Logo-IFPI-Vertical.png}{%
+  \includegraphics[width=10cm]{imagens/Logo-IFPI-Vertical.png}}{%
+  \vspace*{3cm}}\\[0.3cm]
 \textbf{\Instituicao} \\
 \textbf{\Campus} \\
 \textbf{\Curso} \\[3cm]
@@ -175,57 +196,60 @@ Desenvolver o sistema Movy --- composto por uma API REST escalável e por uma ap
 
 
 % ------------------------------
-\section{Trabalhos Relacionados}
-
-Diversos estudos têm abordado o uso de sistemas de informação no gerenciamento de transporte estudantil e universitário, com o objetivo de otimizar processos, reduzir falhas operacionais e melhorar a organização das viagens.
-
-O trabalho PickBus, proposto por Pretto et al. \cite{pickbus2021}, apresenta uma solução multiplataforma (web e mobile) voltada ao gerenciamento de transporte fretado de passageiros, com foco em eventos e deslocamentos coletivos. O sistema permite a criação e o gerenciamento de viagens, controle de passageiros, organização de pagamentos e centralização da comunicação entre organizadores e usuários. O estudo fundamenta-se em conceitos de mobilidade urbana e empreendedorismo, demonstrando a viabilidade da solução por meio de pesquisa de mercado e testes com usuários reais. Os resultados indicam boa aceitação do sistema e evidenciam a carência de ferramentas digitais específicas para o gerenciamento de transporte fretado.
-
-
-O trabalho intitulado "Sistema para Gerenciamento de Transportes", desenvolvido por Paiva \cite{anderson2020}, apresenta uma solução voltada à modernização do processo de solicitação e gerenciamento de transportes no contexto de uma instituição acadêmica. A proposta surge da necessidade de substituir métodos manuais baseados em troca de e-mails, os quais são suscetíveis a falhas de comunicação e perda de informações. O sistema permite o cadastro e a gestão de veículos, motoristas e setores, bem como a solicitação de viagens, verificação de disponibilidade, fluxo de aprovação hierárquico e alocação de recursos. Além disso, a solução contempla funcionalidades de monitoramento por meio de painéis e geração de relatórios, contribuindo para maior transparência e apoio à tomada de decisão. O estudo evidencia que a informatização do processo de gestão de transportes institucionais promove maior organização, eficiência operacional e confiabilidade das informações.
-
-
-Outro trabalho relevante é o de Reis et al. \cite{reis2021transporte}, que apresenta a modelagem de um software voltado ao gerenciamento do transporte escolar público municipal. A proposta tem como foco o levantamento de requisitos e a utilização de técnicas de Engenharia de Software e UML para organizar informações relacionadas a alunos, rotas, veículos, motoristas e monitores. O estudo evidencia que a ausência de sistemas informatizados compromete a eficiência operacional e a tomada de decisão, especialmente em contextos com grande volume de usuários e necessidade de relatórios precisos. Diferentemente do presente projeto, que se concentra no transporte universitário intermunicipal e na oferta de uma API escalável para integração com diferentes aplicações cliente, o trabalho de Reis et al. (2021) enfatiza a modelagem conceitual e o contexto do ensino básico municipal, reforçando, contudo, a importância da informatização como fator essencial para a organização e confiabilidade dos serviços de transporte educacional.
-
-O sistema proposto neste trabalho diferencia-se das soluções analisadas por abordar de forma específica o contexto do transporte universitário intermunicipal, um cenário ainda pouco explorado na literatura, sobretudo no que se refere à integração entre organização operacional e controle financeiro. Enquanto os trabalhos relacionados concentram-se no transporte escolar, no fretamento eventual para eventos ou na gestão institucional de veículos, a presente proposta foca nas particularidades do deslocamento diário e recorrente de estudantes universitários entre municípios, considerando suas demandas operacionais e administrativas.
-
-Além da automatização do agendamento de viagens, do gerenciamento da lista de passageiros e da centralização da comunicação entre usuários e responsáveis pelo transporte, o principal diferencial do sistema está na inclusão de um módulo de controle financeiro integrado à gestão das viagens. O sistema permite a estimativa automática da arrecadação por viagem com base no número de passageiros confirmados, possibilitando ao responsável avaliar rapidamente a viabilidade financeira de cada deslocamento.
-
-Adicionalmente, ao ser concebido como uma API escalável com modelo SaaS multi-tenant, acompanhada de uma aplicação cliente própria, o projeto amplia sua aplicabilidade, permitindo a integração com diferentes sistemas clientes, como aplicações web ou móveis, o que não é observado nos trabalhos analisados.
-
-
-% ------------------------------
 \section{Tecnologias Envolvidas}
 
-A seleção tecnológica foi orientada pelos requisitos de escalabilidade, segurança e manutenibilidade no servidor, e por produtividade, segurança de tipos e caráter \textit{mobile-first} no cliente. As duas camadas compartilham a linguagem TypeScript, o que estabelece contratos de dados explícitos entre elas. As subseções a seguir apresentam, separadamente, a \textit{stack} de cada camada e a justificativa das principais escolhas.
+A seleção tecnológica foi orientada pelos requisitos de escalabilidade, segurança e manutenibilidade no servidor, e por produtividade, segurança de tipos e caráter \textit{mobile-first} no cliente. As duas camadas compartilham a linguagem TypeScript \cite{typescript}, o que estabelece contratos de dados explícitos entre elas. Esta seção apresenta primeiro a fundamentação técnica dos conceitos que orientaram as escolhas, em seguida as tecnologias de cada camada e da infraestrutura, uma síntese comparativa e, por fim, os trabalhos relacionados que situam a proposta na literatura.
 
-\subsection{Stack do Backend}
+\input{sections/tecnologias-fundamentacao}
 
-A adoção de NestJS foi fundamentada na necessidade de uma arquitetura estruturada, com suporte nativo a padrões como injeção de dependência, módulos, \textit{guards} e interceptadores globais, essenciais para implementar \textit{Clean Architecture} e RBAC de forma consistente.
+\subsection{Tecnologias do Backend}
+
+A adoção do \textbf{NestJS} \cite{nestjs} foi fundamentada na necessidade de uma arquitetura estruturada, com suporte nativo a padrões como injeção de dependência, módulos, \textit{guards} e interceptadores globais, essenciais para implementar \textit{Clean Architecture} e RBAC de forma consistente. A Tabela~\ref{tab:tecnologias_implementadas} resume a \textit{stack} do servidor.
 
 \input{sections/tecnologias-backend-table}
 
-\subsection{Stack do Frontend}
+O \textbf{NestJS} fornece injeção de dependência nativa (essencial para \textit{Clean Architecture} e para o padrão Repositório), módulos estruturados que materializam os contextos delimitados (\textit{bounded contexts}) do DDD, \textit{guards} e interceptadores globais para RBAC e \textit{logging}, e um ecossistema maduro (Swagger, JWT, Passport). A \textbf{autenticação} apoia-se em \textit{tokens} JWT \cite{rfc7519} com Passport.js, em um modelo \textit{stateless} adequado a APIs REST: o \textit{refresh token} permite renovar credenciais sem nova autenticação, e o \textit{payload} do JWT é enriquecido no \textit{login} com todos os dados necessários (\texttt{userId}, \texttt{organizationId}, \texttt{role}, \texttt{isDev}), eliminando consultas ao banco a cada requisição. A \textbf{verificação} automatizada utiliza o \textbf{Jest} \cite{jest}, \textit{framework} padrão da comunidade Node/NestJS, integrado ao TypeScript via \textit{ts-jest}, com suporte a testes unitários, de integração e a relatórios de cobertura. As tecnologias de persistência (PostgreSQL e Prisma) e de infraestrutura (Docker e plataformas de nuvem) são tratadas na Subseção~\ref{sec:tec-infra}.
+
+\subsection{Tecnologias do Frontend}
 
 A seleção tecnológica do cliente priorizou produtividade de desenvolvimento, segurança de tipos --- alinhada ao \textit{backend} em TypeScript --- e adequação ao caráter \textit{mobile-first} do produto. A Tabela~\ref{tab:tecnologias_frontend} resume a \textit{stack} adotada.
 
 \input{sections/tecnologias-frontend-table}
 
-\subsection{Justificativa das Escolhas Tecnológicas}
+A interface é construída com \textbf{React} \cite{react}, biblioteca declarativa baseada em componentes. A adoção do \textbf{TanStack Router} \cite{tanstackrouter} foi motivada por seu roteamento baseado em arquivos com segurança de tipos de ponta a ponta e, sobretudo, pelo suporte a \textit{layouts} aninhados sem segmento de URL (\textit{pathless layouts}), recurso central para o esquema de controle de acesso por papel descrito adiante; o \textbf{TanStack Start} \cite{tanstackstart} provê a camada \textit{full-stack} sobre o \textit{router}. A estilização emprega o \textbf{Tailwind CSS} \cite{tailwind} (\textit{utility-first}, com \textit{tokens} de design), e os componentes baseiam-se no \textbf{shadcn/ui} \cite{shadcnui}, construído sobre as primitivas acessíveis do Radix UI, que adota o modelo de \textit{ownership} --- os componentes são copiados para o repositório e ficam sob controle direto do projeto ---, com a contrapartida de uma política rígida de não editá-los manualmente, atualizando-os apenas via interface de linha de comando. O \textbf{Zod} \cite{zod} é empregado na validação declarativa dos formulários --- combinada a estado controlado no React (\texttt{useState} com \texttt{safeParse}) --- e na validação dos \textit{search params} de rota, permitindo que o mesmo esquema sirva de validação e de fonte de tipos por inferência, reduzindo duplicação. O empacotamento utiliza o \textbf{Vite} \cite{vite}. Registra-se que, no estágio atual, \textbf{não se adotou uma biblioteca dedicada de estado de servidor}: o gerenciamento desse estado é feito por \textit{hooks} próprios sobre a \textit{Context API} do React --- decisão consciente, com a eventual migração para uma biblioteca como o TanStack Query mantida como evolução possível e retomada nas limitações da Seção~\ref{sec:consideracoes}.
 
-\subsubsection{Backend}
+\subsection{Banco de Dados e Infraestrutura}
+\label{sec:tec-infra}
 
-\noindent\textbf{NestJS} fornece injeção de dependência nativa (essencial para \textit{Clean Architecture} e padrão Repositório), módulos estruturados que materializam os contextos delimitados (\textit{bounded contexts}) do DDD, \textit{guards} e interceptadores globais para RBAC e \textit{logging}, e um ecossistema maduro (Swagger, JWT, Passport).
+A persistência apoia-se no \textbf{PostgreSQL} \cite{postgresql}, SGBD relacional confiável com suporte a ACID e transações complexas, acessado por meio do \textbf{Prisma ORM} \cite{prisma}. O Prisma adiciona tipagem forte (geração automática de tipos TypeScript a partir do \textit{schema}), \textit{migrations} versionadas, \textit{query builder} seguro contra \textit{SQL injection}, suporte a \textit{soft-delete} e operações transacionais, além de \textit{seed scripts} para inicialização de dados. No desenvolvimento local, o \textbf{Docker} \cite{docker} padroniza os ambientes e, via \textit{Docker Compose}, orquestra em conjunto o PostgreSQL e a API.
 
-\noindent\textbf{PostgreSQL e Prisma ORM.} O PostgreSQL é um SGBD relacional confiável com suporte a ACID e transações complexas; o Prisma adiciona tipagem forte (geração automática de tipos TypeScript a partir do \textit{schema}), \textit{migrations} versionadas, \textit{query builder} seguro contra \textit{SQL injection}, suporte a \textit{soft-delete} e operações transacionais, além de \textit{seed scripts} para inicialização de dados.
+Na implantação, cada artefato é publicado em uma plataforma especializada: a aplicação cliente em execução de borda na \textbf{Cloudflare Workers} \cite{cloudflareworkers}, a API REST em um \textit{Web Service} no \textbf{Render} \cite{render} e o banco de dados em PostgreSQL gerenciado no \textbf{Neon} \cite{neon}. Essa separação reflete a arquitetura em camadas do sistema e é detalhada na Seção~\ref{subsec:implantacao}.
 
-\noindent\textbf{JWT com Passport.js.} Autenticação \textit{stateless}, adequada a APIs REST. O \textit{refresh token} permite renovar credenciais sem re-autenticação, e o \textit{payload} do JWT é enriquecido no \textit{login} com todos os dados necessários (\texttt{userId}, \texttt{organizationId}, \texttt{role}, \texttt{isDev}), eliminando consultas ao banco a cada requisição autenticada.
+\subsection{Síntese das Tecnologias}
 
-\noindent\textbf{Docker e Jest.} O Docker padroniza os ambientes (desenvolvimento, teste, produção) e facilita o \textit{deploy} em nuvem, com \textit{Docker Compose} orquestrando localmente PostgreSQL e API; o Jest é o \textit{framework} padrão da comunidade Node/NestJS, com suporte a testes unitários, de integração e cobertura, integrado ao TypeScript via \textit{ts-jest}.
+A Tabela~\ref{tab:sintese_tecnologias} consolida, por preocupação de projeto, as principais tecnologias adotadas em cada camada. A escolha de TypeScript de ponta a ponta é o fio condutor que conecta servidor e cliente, permitindo contratos de dados explícitos e reduzindo a classe de erros de integração entre as camadas.
 
-\subsubsection{Frontend}
+\begin{table}[H]
+\centering
+\caption{Síntese das tecnologias por camada e preocupação de projeto}
+\label{tab:sintese_tecnologias}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{Camada} & \textbf{Preocupação} & \textbf{Principais tecnologias} \\
+\midrule
+Backend       & Estrutura e domínio      & NestJS, TypeScript, Clean Architecture + DDD \\
+Backend       & Autenticação/segurança   & JWT (Passport), Bcrypt, RBAC \\
+Backend       & Verificação              & Jest (\textit{ts-jest}) \\
+Frontend      & Interface e roteamento   & React, TanStack Router/Start, Tailwind, shadcn/ui \\
+Frontend      & Validação e tipos        & Zod, TypeScript \\
+Frontend      & \textit{Build}           & Vite \\
+Dados         & Persistência             & PostgreSQL, Prisma ORM \\
+Infraestrutura & Ambiente e implantação  & Docker, Cloudflare Workers, Render, Neon \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-A adoção do \textbf{TanStack Router} foi motivada por seu roteamento baseado em arquivos com segurança de tipos de ponta a ponta e, sobretudo, pelo suporte a \textit{layouts} aninhados sem segmento de URL (\textit{pathless layouts}), recurso central para o esquema de controle de acesso por papel descrito adiante. O \textbf{shadcn/ui}, construído sobre as primitivas acessíveis do Radix UI, adota o modelo de \textit{ownership} --- os componentes são copiados para o repositório e ficam sob controle direto do projeto ---, com a contrapartida de uma política rígida de não editá-los manualmente, atualizando-os apenas via interface de linha de comando. O \textbf{Zod} é empregado na validação declarativa dos formulários --- combinada a estado controlado no React (\texttt{useState} com \texttt{safeParse}) --- e na validação dos \textit{search params} de rota, permitindo que o mesmo esquema sirva de validação e de fonte de tipos por inferência, reduzindo duplicação. Registra-se que, no estágio atual, \textbf{não se adotou uma biblioteca dedicada de estado de servidor}: o gerenciamento desse estado é feito por \textit{hooks} próprios sobre a \textit{Context API} do React --- decisão consciente, com a eventual migração para uma biblioteca como o TanStack Query mantida como evolução possível e retomada nas limitações da Seção~\ref{sec:consideracoes}.
+\input{sections/trabalhos-relacionados}
 
 
 % ------------------------------
@@ -243,14 +267,20 @@ Os requisitos do sistema foram definidos a partir da observação do funcionamen
 
 \subsection{Casos de Uso}
 
-Os atores do sistema correspondem aos papéis previstos no controle de acesso, em precedência crescente de capacidades: o \textbf{Visitante} explora o catálogo público de viagens e os perfis públicos de organizações; o \textbf{Passageiro} (usuário autenticado) reserva e gerencia inscrições e pode candidatar-se a motorista; o \textbf{Motorista} visualiza e opera as viagens que lhe são atribuídas; e o \textbf{Administrador} gerencia rotas, viagens, motoristas, veículos, plano e métricas da sua organização. A Figura~\ref{fig:Diagrama de caso de uso.} apresenta o diagrama de casos de uso do sistema.
+Os atores do sistema correspondem aos papéis previstos no controle de acesso, em precedência crescente de capacidades: o \textbf{Visitante} explora o catálogo público de viagens e os perfis públicos de organizações; o \textbf{Passageiro} (usuário autenticado) reserva e gerencia inscrições e pode candidatar-se a motorista; o \textbf{Motorista} visualiza e opera as viagens que lhe são atribuídas; e o \textbf{Administrador} gerencia rotas, viagens, motoristas, veículos, plano e métricas da sua organização. A Figura~\ref{fig:Diagrama de caso de uso.} apresenta o diagrama de casos de uso, organizado pelos quatro contextos de acesso. Por concisão, o diagrama exibe um subconjunto representativo das funcionalidades; a Tabela~\ref{tab:casos_uso} sintetiza os principais casos de uso, e a relação exaustiva consta na Tabela de Requisitos Funcionais (Tabela~\ref{tab:rf}).
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{imagens/diagrama de casos de uso.png}
-\caption{Diagrama de caso de uso.}
+% Exportar de docs/diagramas/casos-de-uso.puml para imagens/casos-de-uso.png.
+% Enquanto não for re-renderizado, usa-se a versão anterior do diagrama.
+\IfFileExists{imagens/casos-de-uso.png}{%
+  \includegraphics[width=0.62\textwidth]{imagens/casos-de-uso.png}}{%
+  \includegraphics[width=\textwidth]{imagens/diagrama de casos de uso.png}}
+\caption{Diagrama de casos de uso, agrupado por contexto de acesso.}
 \label{fig:Diagrama de caso de uso.}
 \end{figure}
+
+\input{sections/casos-uso-table}
 
 \subsection{Modelo de Domínio (Diagrama de Classes)}
 
@@ -331,29 +361,22 @@ A Figura~\ref{fig:fe_fluxo_reserva} sintetiza a jornada principal do passageiro,
 \label{fig:fe_fluxo_reserva}
 \end{figure}
 
-% TODO (autor): inserir as capturas de tela. Para cada print, descomentar e ajustar:
-% \begin{figure}[H]
-% \centering
-% \includegraphics[width=0.5\textwidth]{imagens/fe-catalogo.png}
-% \caption{Catálogo público de viagens (marketplace).}
-% \label{fig:fe-catalogo}
-% \end{figure}
-%
-% Sugestão de capturas: (1) catálogo público; (2) detalhe da viagem;
-% (3) formulário de inscrição; (4) painel administrativo (dashboard);
-% (5) tela de detalhe da viagem com gestão de inscrições (presença/pagamento).
-
-As principais interfaces da aplicação cliente são descritas conceitualmente nesta seção. As capturas de tela correspondentes podem ser incluídas como material ilustrativo complementar.
+\input{sections/interfaces}
 
 % ------------------------------
-\section{Software: Implementação e Resultados Alcançados}
+\section{Software}
 
-O desenvolvimento contemplou os treze módulos funcionais previstos para o sistema, todos seguindo rigorosamente os padrões de \textit{Clean Architecture} e estruturados com casos de uso, \textit{value objects}, repositórios e tratamento de erros específicos de domínio. Esta seção descreve primeiro a implementação do \textit{backend} (módulos e \textit{endpoints}), em seguida a da aplicação cliente que o consome e, por fim, os temas transversais ao sistema --- autenticação e RBAC, multi-tenancy, transações, tratamento de erros e verificação.
+Esta seção apresenta a concretização do sistema em três frentes: a \textbf{implementação} dos módulos do servidor e da aplicação cliente, com os temas transversais que os sustentam (Subseção~\ref{sec:implementacao}); a \textbf{implantação} em ambiente de nuvem (Subseção~\ref{subsec:implantacao}); e a \textbf{verificação} por testes (Subseção~\ref{subsec:verificacao}).
+
+\subsection{Implementação dos Módulos}
+\label{sec:implementacao}
+
+O desenvolvimento contemplou os treze módulos funcionais previstos para o sistema, todos seguindo rigorosamente os padrões de \textit{Clean Architecture} e estruturados com casos de uso, \textit{value objects}, repositórios e tratamento de erros específicos de domínio. Descreve-se primeiro a implementação do \textit{backend} (módulos e \textit{endpoints}), em seguida a da aplicação cliente que o consome e, por fim, os temas transversais ao sistema --- autenticação e RBAC, multi-tenancy, transações e tratamento de erros.
 
 \input{sections/modulos-api}
 \input{sections/aplicacao-cliente}
 \input{sections/autenticacao-rbac}
-\subsection{Multi-tenancy}
+\subsubsection{Multi-tenancy}
 
 O isolamento lógico de dados entre organizações é implementado no \textit{backend} através de:
 \begin{enumerate}
@@ -363,30 +386,29 @@ O isolamento lógico de dados entre organizações é implementado no \textit{ba
 \item \textbf{Proteção IDOR (OWASP A01)}: Endpoints com parâmetro \texttt{/:id} validam ownership via \texttt{organizationId} do JWT em Driver, Vehicle e Trip.
 \end{enumerate}
 
-\subsection{Infraestrutura Transacional --- UnitOfWork + DbContext}
+\subsubsection{Infraestrutura Transacional --- UnitOfWork + DbContext}
 
-Para garantir atomicidade em operações que envolvem múltiplas escritas (ex: criar \texttt{Booking} + \texttt{Payment}), foi implementada uma infraestrutura de transações baseada em \texttt{AsyncLocalStorage}:
+Para garantir atomicidade em operações que envolvem múltiplas escritas (por exemplo, criar \texttt{Booking} e \texttt{Payment} juntos), foi implementada uma infraestrutura de transações baseada em \texttt{AsyncLocalStorage}. A Tabela~\ref{tab:uow} descreve o fluxo de uma transação, do caso de uso ao repositório.
 
-\begin{lstlisting}[caption={Fluxo de transação via UnitOfWork}, label={cod:uow}]
-UseCase
-  -> unitOfWork.execute(async () => {
-       await bookingRepository.save(booking)
-       await paymentRepository.save(payment)
-     })
-         |
-PrismaUnitOfWork
-  -> prisma.$transaction((tx) =>
-       dbContext.run(tx, fn))   # coloca tx no AsyncLocalStorage
-           |
-DbContext (AsyncLocalStorage)
-  -> client = tx durante a execucao
-           |
-Repository -> usa dbContext.client automaticamente
-\end{lstlisting}
+\begin{table}[H]
+\centering
+\caption{Fluxo de uma transação via UnitOfWork}
+\label{tab:uow}
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{Camada / componente} & \textbf{Responsabilidade na transação} \\
+\midrule
+Caso de uso (\textit{Use Case}) & Invoca \texttt{unitOfWork.execute(fn)}, agrupando as escritas (ex.: salvar \texttt{Booking} e \texttt{Payment}) em uma única função. \\
+\texttt{PrismaUnitOfWork} & Abre \texttt{prisma.\$transaction} e executa \texttt{dbContext.run(tx, fn)}, colocando o cliente transacional (\texttt{tx}) no \texttt{AsyncLocalStorage}. \\
+\texttt{DbContext} & Durante a execução, expõe \texttt{client = tx}; fora de transação, expõe o \texttt{PrismaService} (cliente raiz). \\
+Repositórios & Usam \texttt{dbContext.client} automaticamente, sem conhecer Prisma nem alterar suas assinaturas. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-Fora de transação, \texttt{dbContext.client} aponta para o \texttt{PrismaService} (cliente raiz). Dentro da transação, aponta para o \texttt{tx}. A camada de aplicação não conhece Prisma e não precisa alterar assinaturas de repositórios.
+Dessa forma, a camada de aplicação permanece desacoplada do ORM: a escolha entre o cliente raiz e o cliente transacional é resolvida de forma transparente pelo \texttt{DbContext}, e qualquer falha dentro do bloco provoca o \textit{rollback} automático de todas as escritas.
 
-\subsection{Tratamento de Erros Estruturado}
+\subsubsection{Tratamento de Erros Estruturado}
 
 O sistema implementa hierarquia de exceções mapeadas pelo \texttt{AllExceptionsFilter} global do \textit{backend}, conforme a Tabela~\ref{tab:error_mapping}.
 
@@ -410,7 +432,7 @@ O sistema implementa hierarquia de exceções mapeadas pelo \texttt{AllException
 
 \textbf{Reflexo no cliente.} A interface decide a mensagem a apresentar a partir do \textbf{código de erro de domínio} fornecido pela API (campo \texttt{error} do \textit{payload}), e não do texto da mensagem. O cliente normaliza toda falha em uma exceção tipada (\texttt{ApiError}) que carrega \texttt{status}, dados e o \texttt{errorCode}; um módulo central traduz esses códigos --- alinhados ao mapeamento da Tabela~\ref{tab:error_mapping} --- para mensagens em português, distinguindo, por exemplo, limites de plano excedidos (com ação que conduz à tela de assinatura), prazos de cancelamento de inscrição e \textit{tokens} de redefinição expirados.
 
-\subsection{Banco de Dados: Migrações e Seed}
+\subsubsection{Banco de Dados: Migrações e Seed}
 \label{subsec:migracoes}
 
 Prisma gerencia histórico completo de mudanças no esquema com migrations versionadas. O script \texttt{prisma/seed.ts} popula automaticamente roles padrão (ADMIN, DRIVER), planos (FREE, BASIC, PRO, PREMIUM) e um usuário admin de teste.
@@ -517,6 +539,8 @@ Com os treze módulos funcionais implementados --- autenticação, usuários, or
 % ------------------------------
 \newpage
 \renewcommand{\refname}{}
+\phantomsection
+\addcontentsline{toc}{section}{Referências}
 \section*{Referências}
 \bibliographystyle{abntex2-num}
 \bibliography{referencias}
@@ -524,29 +548,18 @@ Com os treze módulos funcionais implementados --- autenticação, usuários, or
 
 % ================= APÊNDICES =================
 \newpage
-\section*{Apêndice A --- Detalhamento das Entidades}
+\phantomsection
 \addcontentsline{toc}{section}{Apêndice A --- Detalhamento das Entidades}
+\section*{Apêndice A --- Detalhamento das Entidades}
 
 Este apêndice detalha, campo a campo, as entidades do domínio sintetizadas na Tabela~\ref{tab:entidades}.
 
 \input{sections/apendice-entidades}
 
-% ------------------------------
+% ================= ANEXOS =================
 \newpage
-\section*{Anexos}
+\section{Anexos}
 
-\subsection*{Declaração de Entrega do Código-Fonte}
-Declaro que o código-fonte do software foi entregue à coordenação do curso, sob o processo SUAP nº \rule{4cm}{0.4pt}.
-
-Assinatura: \rule{10cm}{0.4pt}
-
-Data: \rule{1cm}{0.4pt}/\rule{1cm}{0.4pt}/\rule{2cm}{0.4pt}
-
-\subsection*{Declaração de Submissão ao NIT}
-Declaro que o software foi submetido ao Núcleo de Inovação Tecnológica (NIT) do IFPI, sob o processo SUAP nº \rule{4cm}{0.4pt}.
-
-Assinatura: \rule{10cm}{0.4pt}
-
-Data: \rule{1cm}{0.4pt}/\rule{1cm}{0.4pt}/\rule{2cm}{0.4pt}
+\input{sections/anexos-declaracoes}
 
 \end{document}

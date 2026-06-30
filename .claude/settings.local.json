@@ -6,7 +6,15 @@
       "Bash(npm run *)",
       "Bash(npx eslint *)",
       "Bash(echo \"EXIT=$?\")",
-      "Bash(npx prettier *)"
+      "Bash(npx prettier *)",
+      "Bash(sort -k5 -n)",
+      "Read(//tmp/claude/C--Users-rauan-Documents-GitHub-movy-web/c129ead0-24cf-4d2e-a7fe-672dd4c03d14/**)",
+      "Bash(java -version)",
+      "Bash(command -v dot)",
+      "Bash(java -jar plantuml.jar -tpng -o \"C:/Users/rauan/Documents/GitHub/movy_web/docs/imagens\" \"C:/Users/rauan/Documents/GitHub/movy_web/docs/diagramas/casos-de-uso.puml\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(java -jar plantuml.jar -charset UTF-8 -tpng -o \"C:/Users/rauan/Documents/GitHub/movy_web/docs/imagens\" \"C:/Users/rauan/Documents/GitHub/movy_web/docs/diagramas/casos-de-uso.puml\")",
+      "Bash(identify \"C:/Users/rauan/Documents/GitHub/movy_web/docs/imagens/casos-de-uso.png\")"
     ]
   }
 }

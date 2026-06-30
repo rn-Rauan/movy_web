@@ -1,4 +1,4 @@
-\subsection{Módulos da API (13 Módulos)}
+\subsubsection{Módulos da API}
 
 A API expõe 93 endpoints REST distribuídos pelos módulos de domínio, totalizando 93 casos de uso. A Tabela~\ref{tab:endpoints} consolida a contagem por módulo; nas subseções seguintes, cada módulo é descrito com seus casos de uso e endpoints representativos (a especificação completa das rotas está disponível via Swagger em \texttt{/api}).
 
@@ -8,7 +8,7 @@ O \textit{backend} também contou com assistência de IA generativa, porém com 
 
 A descrição a seguir prioriza os módulos críticos do sistema --- Auth, Trip, Bookings, Payment e Membership/RBAC --- e as decisões de projeto dos demais; a estrutura padrão comum a todos os módulos (DTOs, mapeadores e repositório Prisma) não é repetida. Antes dos módulos funcionais, apresentam-se dois \textbf{componentes transversais} que sustentam os demais: o sistema de papéis (RBAC) e o módulo compartilhado (\textit{Shared}). Os temas transversais de autenticação, \textit{multi-tenancy}, transações e tratamento de erros são aprofundados na Seção~\ref{sec:autenticacao} e seguintes.
 
-\subsubsection{Componente Transversal: Papéis de Acesso (RBAC)}
+\paragraph{Componente Transversal: Papéis de Acesso (RBAC)}
 
 \textbf{Descrição}: Sistema de papéis (roles) que define permissões de acesso (Status: Implementado).
 
@@ -22,7 +22,7 @@ A descrição a seguir prioriza os módulos críticos do sistema --- Auth, Trip,
 
 \textbf{Endpoints}: N/A (Roles são pré-definidas no sistema)
 
-\subsubsection{Componente Transversal: Módulo Compartilhado (Shared)}
+\paragraph{Componente Transversal: Módulo Compartilhado (Shared)}
 
 \textbf{Descrição}: Módulo centralizado que expõe componentes reutilizáveis em todos os contextos delimitados (Status: Implementado).
 
@@ -40,7 +40,7 @@ A descrição a seguir prioriza os módulos críticos do sistema --- Auth, Trip,
 
 A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
-\subsubsection{User Module (CRUD + Autenticação)}
+\paragraph{User Module (CRUD + Autenticação)}
 
 \textbf{Descrição}: Gerenciamento completo de usuários e autenticação via JWT (Status: Implementado).
 
@@ -62,7 +62,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Segurança}: Bcrypt (salt rounds: 10) para hash de senhas; JWT com secrets distintos para access (1h) e refresh tokens (7d). O payload do JWT é enriquecido no login com todos os dados necessários, eliminando consultas ao banco em cada requisição. O módulo implementa ainda a lógica de \textbf{recuperação de senha} e \textbf{verificação de e-mail} por tokens de uso único armazenados apenas como hash SHA-256 (TTL de 1h e 24h), com resposta constante na solicitação (anti-enumeration) e revogação de \textit{refresh tokens} via \texttt{jti} no \textit{logout} e na redefinição de senha. A \textbf{entrega efetiva do e-mail} ainda não está integrada a um provedor, de modo que esses dois fluxos permanecem como dívida técnica (Seção~\ref{sec:consideracoes}).
 
-\subsubsection{Organization Module (CRUD)}
+\paragraph{Organization Module (CRUD)}
 
 \textbf{Descrição}: Gerenciamento de organizações de transporte com multi-tenancy (Status: Implementado).
 
@@ -81,7 +81,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Value Objects}: CNPJ (com dígitos verificadores), OrganizationName, Slug (URL-safe), Address.
 
-\subsubsection{Membership Module}
+\paragraph{Membership Module}
 
 \textbf{Descrição}: Associações entre usuários, roles e organizações. Base fundamental para RBAC (Status: Implementado).
 
@@ -102,7 +102,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Erros de Domínio}: \texttt{MembershipAlreadyExistsError} (HTTP 409), \texttt{MembershipNotFoundError} (HTTP 404), \texttt{DriverNotFoundForMembershipError} (HTTP 400).
 
-\subsubsection{Driver Module}
+\paragraph{Driver Module}
 
 \textbf{Descrição}: Gerenciamento de perfis de motoristas com Value Objects para CNH. Motoristas são entidades globais — o vínculo com organizações ocorre exclusivamente via \texttt{OrganizationMembership}, permitindo que um usuário seja motorista em múltiplas organizações (Status: Implementado).
 
@@ -130,7 +130,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Endpoints}: 9 rotas. Exemplos: \texttt{POST /drivers} (perfil \textit{self-service}), \texttt{GET /drivers/me}, \texttt{PATCH /drivers/me} (atualização parcial de \texttt{cnhExpiresAt}/\texttt{cnhCategories}), \texttt{GET /drivers/lookup?email=\&cnh=} (ADMIN), \texttt{GET /drivers/organization/:orgId} (paginado) e \texttt{GET /drivers/:id/name} (visível a qualquer usuário autenticado).
 
-\subsubsection{Vehicle Module}
+\paragraph{Vehicle Module}
 
 \textbf{Descrição}: Gerenciamento de frota de veículos com Value Object para placa e proteção IDOR (Status: Implementado).
 
@@ -147,7 +147,7 @@ A seguir, descrevem-se os \textbf{treze módulos funcionais} da API.
 
 \textbf{Endpoints}: 5 rotas. Exemplos: \texttt{POST/GET /vehicles/organization/:organizationId} (registro e listagem paginada) e \texttt{GET/PUT/DELETE /vehicles/:id} (consulta, atualização e \textit{soft-delete}, todas com proteção IDOR).
 
-\subsubsection{Trip Module}
+\paragraph{Trip Module}
 
 \textbf{Descrição}: Módulo de viagens com separação entre templates (configuração recorrente) e instâncias (execuções reais), máquina de estados e atribuição de motorista/veículo (Status: Implementado).
 
@@ -194,7 +194,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 \end{table}
 {\footnotesize * Exige driver e vehicle atribuídos. Transições inválidas lançam \texttt{InvalidTripStatusTransitionError} (HTTP 400).}
 
-\subsubsection{Bookings Module}
+\paragraph{Bookings Module}
 
 \textbf{Descrição}: Gerenciamento completo de inscrições de passageiros em viagens, com controle de capacidade, preço registrado server-side e proteção contra race conditions (Status: Implementado).
 
@@ -216,7 +216,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{Erros de Domínio}: \texttt{BookingNotFoundError} (404), \texttt{BookingAlreadyExistsError} (409), \texttt{TripInstanceFullError} (409), \texttt{TripInstanceNotBookableError} (400), \texttt{BookingCancellationNotAllowedError} (400), \texttt{BookingCancellationDeadlineError} (400), \texttt{BookingAlreadyInactiveError} (400), \texttt{BookingAccessForbiddenError} (403), entre outros.
 
-\subsubsection{Plans Module}
+\paragraph{Plans Module}
 
 \textbf{Descrição}: Gerenciamento dos planos de assinatura disponíveis na plataforma. Escritas restritas a desenvolvedores via \texttt{DevGuard} (Status: Implementado).
 
@@ -224,7 +224,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{Endpoints}: 6 rotas. Escritas restritas a \texttt{@Dev()} (\texttt{POST /plans}, \texttt{PATCH /plans/:id}, \texttt{.../deactivate}); leitura autenticada (\texttt{GET /plans}, \texttt{/plans/:id}) e endpoint público \texttt{GET /public/plans} para a tela de \textit{onboarding}.
 
-\subsubsection{Subscriptions Module}
+\paragraph{Subscriptions Module}
 
 \textbf{Descrição}: Gerenciamento de assinaturas das organizações nos planos. Implementa expiração lazy (sem cron job) e controle de limites de plano via \texttt{PlanLimitService} (Status: Implementado).
 
@@ -242,7 +242,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{Endpoints}: 5 rotas sob \texttt{/organizations/:orgId/subscriptions}. Exemplos: \texttt{POST} (assinar plano), \texttt{PATCH /:id/cancel}, \texttt{GET /active} (assinatura vigente, com \textit{lazy expiry}) e \texttt{GET} (histórico paginado).
 
-\subsubsection{Payment Module}
+\paragraph{Payment Module}
 
 \textbf{Descrição}: Registro e simulação de pagamentos associados a inscrições. A criação de pagamentos é responsabilidade do \texttt{CreateBookingUseCase} — cada inscrição gera automaticamente um registro de pagamento com status \texttt{PENDING}. Os endpoints de simulação permitem demonstrar o fluxo completo sem gateway externo (Status: Implementado). Além do ADMIN, o motorista pode confirmar/falhar pagamentos de viagens atribuídas a ele (\texttt{PaymentNotAssignedToDriverError}, HTTP 403). A resposta inclui \texttt{tripInstanceId} e \texttt{tripDepartureTime} (\textit{snapshots} de leitura), permitindo ao cliente agregar receita por data da viagem.
 
@@ -250,7 +250,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{Endpoints}: 4 rotas sob \texttt{/organizations/:orgId/payments}. \texttt{GET /:id} e \texttt{GET} (listagem paginada); \texttt{PATCH /:id/confirm} (\texttt{PENDING → COMPLETED}) e \texttt{.../fail} (\texttt{PENDING → FAILED}), simulando o ciclo sem gateway externo.
 
-\subsubsection{Scheduling Module}
+\paragraph{Scheduling Module}
 
 \textbf{Descrição}: Automação da geração e do encerramento de viagens recorrentes via \textit{jobs} agendados (\texttt{@nestjs/schedule}), parametrizados por organização através de \texttt{TripSchedulingConfig} (Status: Implementado).
 
@@ -264,7 +264,7 @@ CANCELED & -- & -- & -- & -- & -- \\
 
 \textbf{Endpoints}: 2 rotas sob \texttt{/organizations/:organizationId/scheduling-config} (\texttt{GET} e \texttt{PATCH}, ADMIN). A cadência dos \textit{jobs} é fixa; a configuração por organização controla apenas a janela (\texttt{daysAhead}) e a ativação (\texttt{enabled}). O \texttt{ScheduleModule} é registrado condicionalmente (\texttt{DISABLE\_CRON}).
 
-\subsubsection{Plan-Usage Module}
+\paragraph{Plan-Usage Module}
 
 \textbf{Descrição}: Exposição consolidada do consumo de recursos da organização frente aos limites do plano vigente, para alimentar painéis administrativos (Status: Implementado).
 
