@@ -227,7 +227,7 @@ A seleção tecnológica do cliente priorizou produtividade de desenvolvimento, 
 
 \subsubsection{Frontend}
 
-A adoção do \textbf{TanStack Router} foi motivada por seu roteamento baseado em arquivos com segurança de tipos de ponta a ponta e, sobretudo, pelo suporte a \textit{layouts} aninhados sem segmento de URL (\textit{pathless layouts}), recurso central para o esquema de controle de acesso por papel descrito adiante. O \textbf{shadcn/ui}, construído sobre as primitivas acessíveis do Radix UI, adota o modelo de \textit{ownership} --- os componentes são copiados para o repositório e ficam sob controle direto do projeto ---, com a contrapartida de uma política rígida de não editá-los manualmente, atualizando-os apenas via interface de linha de comando. O \textbf{Zod}, combinado ao React Hook Form, permite que o mesmo esquema sirva de validação e de fonte de tipos por inferência, reduzindo duplicação. Registra-se que, no estágio atual, \textbf{não se adotou uma biblioteca dedicada de estado de servidor}: o gerenciamento desse estado é feito por \textit{hooks} próprios sobre a \textit{Context API} do React --- decisão consciente, com a eventual migração para uma biblioteca como o TanStack Query mantida como evolução possível e retomada nas limitações da Seção~\ref{sec:consideracoes}.
+A adoção do \textbf{TanStack Router} foi motivada por seu roteamento baseado em arquivos com segurança de tipos de ponta a ponta e, sobretudo, pelo suporte a \textit{layouts} aninhados sem segmento de URL (\textit{pathless layouts}), recurso central para o esquema de controle de acesso por papel descrito adiante. O \textbf{shadcn/ui}, construído sobre as primitivas acessíveis do Radix UI, adota o modelo de \textit{ownership} --- os componentes são copiados para o repositório e ficam sob controle direto do projeto ---, com a contrapartida de uma política rígida de não editá-los manualmente, atualizando-os apenas via interface de linha de comando. O \textbf{Zod} é empregado na validação declarativa dos formulários --- combinada a estado controlado no React (\texttt{useState} com \texttt{safeParse}) --- e na validação dos \textit{search params} de rota, permitindo que o mesmo esquema sirva de validação e de fonte de tipos por inferência, reduzindo duplicação. Registra-se que, no estágio atual, \textbf{não se adotou uma biblioteca dedicada de estado de servidor}: o gerenciamento desse estado é feito por \textit{hooks} próprios sobre a \textit{Context API} do React --- decisão consciente, com a eventual migração para uma biblioteca como o TanStack Query mantida como evolução possível e retomada nas limitações da Seção~\ref{sec:consideracoes}.
 
 
 % ------------------------------
@@ -302,6 +302,36 @@ A aplicação cliente adota uma \textbf{moldura comum} (\textit{AppShell}) para 
 \item \textbf{Administrador}: painel com métricas operacionais e financeiras; \textit{CRUD} de modelos de rota e geração manual de instâncias; \textit{CRUD} de viagens, com transições de estado e atribuição de motorista e veículo; gestão de motoristas e veículos; configuração de agendamento automático; e administração do plano e das assinaturas.
 \item \textbf{Motorista}: lista de viagens atribuídas e a tela de detalhe da viagem --- compartilhada com o administrador ---, na qual se realiza a gestão operacional das inscrições (confirmação de presença e de pagamento por passageiro).
 \end{itemize}
+
+A Figura~\ref{fig:fe_fluxo_reserva} sintetiza a jornada principal do passageiro, desde a descoberta pública de uma viagem até a confirmação da inscrição. O fluxo evidencia que a navegação pública permanece disponível sem autenticação, mas a criação da inscrição exige sessão ativa e delega a decisão definitiva de disponibilidade, preço e criação do pagamento à API.
+
+\begin{figure}[H]
+\centering
+\setlength{\fboxsep}{8pt}
+\fbox{%
+\begin{minipage}{0.9\textwidth}
+\centering
+\small
+\textbf{Catálogo público de viagens}\\
+\texttt{/public/trip-instances}\\[0.15cm]
+\(\downarrow\) selecionar viagem\\[0.15cm]
+\textbf{Detalhe público da viagem}\\
+\texttt{/public/trip-instances/:id}\\[0.15cm]
+\(\downarrow\) entrar para reservar ou inscrever-se\\[0.15cm]
+\textbf{Autenticação, quando necessária}\\
+\texttt{/login?redirect=/public/trip-instances/:id}\\[0.15cm]
+\(\downarrow\) sessão ativa\\[0.15cm]
+\textbf{Formulário de inscrição}\\
+\texttt{/trips/:orgId/:tripId/book}\\[0.15cm]
+\(\downarrow\) \texttt{POST /bookings}\\[0.15cm]
+\textbf{API valida capacidade, status e preço}\\[0.15cm]
+\(\downarrow\) inscrição criada\\[0.15cm]
+\textbf{Confirmação e acompanhamento}\\
+\texttt{/bookings-success/:bookingId} \quad e \quad \texttt{/my-bookings/:bookingId}
+\end{minipage}}
+\caption{Fluxo principal de reserva na aplicação cliente}
+\label{fig:fe_fluxo_reserva}
+\end{figure}
 
 % TODO (autor): inserir as capturas de tela. Para cada print, descomentar e ajustar:
 % \begin{figure}[H]
@@ -383,9 +413,11 @@ O sistema implementa hierarquia de exceções mapeadas pelo \texttt{AllException
 \textbf{Reflexo no cliente.} A interface decide a mensagem a apresentar a partir do \textbf{código de erro de domínio} fornecido pela API (campo \texttt{error} do \textit{payload}), e não do texto da mensagem. O cliente normaliza toda falha em uma exceção tipada (\texttt{ApiError}) que carrega \texttt{status}, dados e o \texttt{errorCode}; um módulo central traduz esses códigos --- alinhados ao mapeamento da Tabela~\ref{tab:error_mapping} --- para mensagens em português, distinguindo, por exemplo, limites de plano excedidos (com ação que conduz à tela de assinatura), prazos de cancelamento de inscrição e \textit{tokens} de redefinição expirados.
 
 \subsection{Banco de Dados: Migrações e Seed}
+\label{subsec:migracoes}
 
 Prisma gerencia histórico completo de mudanças no esquema com migrations versionadas. O script \texttt{prisma/seed.ts} popula automaticamente roles padrão (ADMIN, DRIVER), planos (FREE, BASIC, PRO, PREMIUM) e um usuário admin de teste.
 
+\input{sections/implantacao}
 \input{sections/verificacao}
 \section{Considerações Finais}
 \label{sec:consideracoes}
@@ -465,6 +497,7 @@ O sistema cobre o escopo de módulos planejado, mas mantém limitações conscie
 \item \textbf{Expandir Cobertura de Testes}: Adicionar \textit{specs} para use cases secundários do \textit{backend} e introduzir uma camada de testes automatizados no cliente, a partir do fluxo de reserva.
 \item \textbf{Fortalecer a Sessão no Cliente}: Reavaliar o armazenamento de credenciais em \texttt{localStorage} antes da operação comercial.
 \item \textbf{Backup Strategy}: Configurar backups automáticos do banco PostgreSQL em desenvolvimento e produção.
+\item \textbf{Automação da Implantação}: Estabelecer \textit{pipeline} de CI/CD que execute \texttt{prisma migrate deploy} automaticamente diante de alterações em \texttt{prisma/migrations}, adicionar um \textit{script} \texttt{deploy} ao \texttt{package.json} do cliente e provisionar um ambiente de \textit{staging} distinto do de produção, com domínio próprio.
 \end{enumerate}
 
 \subsubsection{Tecnologias Futuras a Considerar}

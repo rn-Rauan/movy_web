@@ -88,19 +88,35 @@ Os principais padrões de \textit{design} implementados no servidor são: \textb
 
 \subsubsection{Frontend --- Arquitetura em Camadas}
 
-A arquitetura do cliente espelha a separação do servidor, distribuindo responsabilidades em quatro camadas atravessadas por um fluxo de dados unidirecional, conforme o Código~\ref{cod:fe_arquitetura}.
+A arquitetura do cliente espelha a separação do servidor, distribuindo responsabilidades em quatro camadas atravessadas por um fluxo de dados unidirecional, conforme a Figura~\ref{fig:fe_arquitetura}.
 
-\begin{lstlisting}[caption={Arquitetura em camadas do frontend}, label={cod:fe_arquitetura}]
-Rotas + Componentes      (apresentacao: controladores finos / so props)
-        |  invocam
-Hooks de feature         (casos de uso: estado + obtencao de dados + efeitos)
-        |  chamam
-Servicos                 (padrao repositorio: um arquivo por dominio)
-        |  usam
-Cliente HTTP (lib/api)   (autenticacao + renovacao de sessao + erros)
-        |  HTTP/JSON
-   Movy API (backend)
-\end{lstlisting}
+\begin{figure}[H]
+\centering
+\setlength{\fboxsep}{8pt}
+\fbox{%
+\begin{minipage}{0.88\textwidth}
+\centering
+\textbf{Apresentação}\\
+\texttt{src/routes} + componentes de tela\\
+\small rotas finas, composição visual e dados recebidos por propriedades\\[0.2cm]
+\(\downarrow\) invocam\\[0.2cm]
+\textbf{Hooks de feature}\\
+\texttt{src/features/*/hooks}\\
+\small casos de uso do cliente: estado, busca, filtros e efeitos\\[0.2cm]
+\(\downarrow\) chamam\\[0.2cm]
+\textbf{Serviços}\\
+\texttt{src/services}\\
+\small repositórios de API agrupados por domínio\\[0.2cm]
+\(\downarrow\) usam\\[0.2cm]
+\textbf{Cliente HTTP}\\
+\texttt{src/lib/api.ts}\\
+\small autenticação, renovação de sessão e normalização de erros\\[0.2cm]
+\(\downarrow\) HTTP/JSON\\[0.2cm]
+\textbf{Movy API}
+\end{minipage}}
+\caption{Arquitetura em camadas da aplicação cliente}
+\label{fig:fe_arquitetura}
+\end{figure}
 
 A camada de \textbf{apresentação} compõe-se das rotas e dos componentes. As rotas são deliberadamente finas --- controladores enxutos cuja função é instanciar um \textit{hook} de caso de uso e repassar seus dados aos componentes ---, e os componentes recebem dados apenas por propriedades, sem realizar requisições próprias. A camada de \textbf{casos de uso} materializa-se nos \textit{hooks de feature}, que encapsulam a obtenção de dados, o estado associado (carregamento, erro, conteúdo) e os efeitos colaterais de uma operação de domínio. A camada de \textbf{serviços} implementa o padrão Repositório: cada arquivo agrupa as chamadas a um conjunto coeso de \textit{endpoints} e esconde detalhes de transporte. Por fim, o \textbf{cliente HTTP} é o ponto único de comunicação com a API, responsável por anexar credenciais, normalizar erros e renovar a sessão de forma transparente. Por convenção, nenhum componente ou rota chama o cliente HTTP diretamente --- toda comunicação passa por um serviço.
 

@@ -92,7 +92,7 @@ A seleção tecnológica buscou equilibrar produtividade, segurança de tipos e 
 | TanStack Router / Start    | Roteamento baseado em arquivos, com segurança de tipos e _layouts_ aninhados.            |
 | Tailwind CSS v4            | Estilização _utility-first_ com sistema de design próprio por _tokens_.                  |
 | shadcn/ui (Radix UI)       | Componentes de interface acessíveis, sob modelo de _ownership_.                          |
-| Zod + React Hook Form      | Validação declarativa de formulários, reaproveitada como tipos por inferência.           |
+| Zod                        | Validação declarativa de formulários (estado controlado no React), reaproveitada como tipos por inferência. |
 | `fetch` nativo encapsulado | Cliente HTTP único, com renovação de sessão e normalização de erros.                     |
 | Sonner                     | Notificações transitórias (_toasts_).                                                    |
 | Lucide React               | Conjunto de ícones otimizável por _tree-shaking_.                                        |

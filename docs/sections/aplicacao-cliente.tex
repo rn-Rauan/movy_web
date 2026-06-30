@@ -15,6 +15,27 @@ O sistema de design da aplicação é \textbf{proprietário}: não se adotou nen
 
 O roteamento utiliza o mecanismo \textit{file-based} do TanStack Router, no qual a estrutura de nomes dos arquivos determina a árvore de URLs. \textit{Layouts} sem caminho (prefixados por sublinhado) não acrescentam segmento à URL, mas estabelecem nós sob os quais outras rotas são aninhadas, permitindo associar a um conjunto de rotas uma verificação de acesso comum. A autenticação é verificada uma única vez, no \textit{layout} \texttt{\_protected}, que envolve todas as rotas que exigem sessão; sobre essa base, dois \textit{layouts} adicionais --- \texttt{\_admin} e \texttt{\_driver} --- aplicam as verificações de papel, redirecionando usuários sem o papel correspondente. A composição resulta em uma cadeia de verificações (autenticado \textbf{e} administrador, por exemplo), sem que os segmentos de proteção apareçam na URL. Esse modelo é o reflexo, no cliente, do RBAC implementado pelos \textit{guards} do \textit{backend}.
 
+\begin{figure}[H]
+\centering
+\setlength{\fboxsep}{8pt}
+\fbox{%
+\begin{minipage}{0.94\textwidth}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{0.24\linewidth} X}
+Público &
+\texttt{/}, \texttt{/login}, \texttt{/signup}, \texttt{/public/trip-instances}, \texttt{/public/organizations}, \texttt{/public/plans}. \\
+\texttt{\_protected} &
+Rotas que exigem sessão: \texttt{/my-bookings}, \texttt{/profile}, \texttt{/trips/:orgId/:tripId/book}, \texttt{/setup}. \\
+\texttt{\_admin} &
+Subárvore administrativa: \texttt{/dashboard}, \texttt{/trips}, \texttt{/templates}, \texttt{/drivers}, \texttt{/vehicles}, \texttt{/organization}, \texttt{/financial}. \\
+\texttt{\_driver} &
+Subárvore operacional do motorista: \texttt{/my-trips} e acesso à tela compartilhada de detalhe da viagem. \\
+\end{tabularx}
+\end{minipage}}
+\caption{Organização das rotas e dos \textit{guards} no cliente}
+\label{fig:fe_rotas_guards}
+\end{figure}
+
 \subsubsection{Padrão de Serviços e Hooks}
 
 O Código~\ref{cod:fe_camadas} ilustra o fluxo unidirecional através das camadas: um serviço expõe operações de alto nível sobre os \textit{endpoints}; um \textit{hook} de caso de uso combina o serviço com estado e lógica de apresentação (busca, filtros), derivando o estado de carregamento da ausência simultânea de conteúdo e erro; e uma rota fina apenas decide entre os estados (carregando, erro, conteúdo) e delega a renderização.
