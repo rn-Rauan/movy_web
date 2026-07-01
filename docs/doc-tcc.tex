@@ -145,14 +145,14 @@ Orientador(a): \Orientador \\
 \newpage
 \section*{Resumo}
 
-A organização do transporte universitário intermunicipal ainda ocorre, em muitas localidades, de forma manual e pouco estruturada — com listas informais em aplicativos de mensagens, ausência de controle de capacidade e gestão financeira frágil. Este trabalho apresenta o \textbf{Movy}, uma plataforma de \textit{Software as a Service} (SaaS) concebida para automatizar o agendamento de viagens, o registro de passageiros e o controle financeiro desse serviço. O sistema é composto por dois artefatos integrados: uma \textbf{API REST} escalável, responsável pela lógica de domínio e pela persistência, e uma \textbf{aplicação web cliente} \textit{mobile-first}, responsável por toda a interação com o usuário. A API foi desenvolvida em NestJS com TypeScript, Prisma ORM e PostgreSQL, segundo os princípios de \textit{Clean Architecture} e \textit{Domain-Driven Design} (DDD), implementando arquitetura \textit{multi-tenant} com isolamento lógico de dados por organização, autenticação JWT, controle de acesso baseado em papéis (RBAC), transações atômicas e limites de plano. O cliente, em React e TanStack Router, espelha a separação em camadas do servidor e materializa, em telas e fluxos, os requisitos expostos pela API, delegando a ela toda decisão de negócio. Foram implementados os treze módulos funcionais previstos — totalizando 93 \textit{endpoints} REST — e a verificação do backend conta com 458 testes unitários em 57 \textit{suites}. Os resultados indicam que a arquitetura adotada oferece uma base sólida, segura e manutenível para a operação do serviço, com pontos de evolução claramente identificados.
+A organização do transporte universitário intermunicipal ainda ocorre, em muitas localidades, de forma manual e pouco estruturada, com listas informais em aplicativos de mensagens, ausência de controle de capacidade e gestão financeira frágil. Este trabalho apresenta o Movy, uma plataforma de \textit{Software as a Service} (SaaS) concebida para automatizar o agendamento de viagens, o registro de passageiros e o controle financeiro desse serviço. O sistema é composto por dois artefatos integrados: uma API REST escalável, responsável pela lógica de domínio e pela persistência, e uma aplicação web cliente \textit{mobile-first}, responsável por toda a interação com o usuário. A API foi desenvolvida em NestJS com TypeScript, Prisma ORM e PostgreSQL, segundo os princípios de \textit{Clean Architecture} e \textit{Domain-Driven Design} (DDD), implementando arquitetura \textit{multi-tenant} com isolamento lógico de dados por organização, autenticação JWT, controle de acesso baseado em papéis (RBAC), transações atômicas e limites de plano. O cliente, em React e TanStack Router, espelha a separação em camadas do servidor e materializa, em telas e fluxos, os requisitos expostos pela API, delegando a ela toda decisão de negócio. Foram implementados os treze módulos funcionais previstos, totalizando 93 \textit{endpoints} REST, e a verificação do backend conta com 458 testes unitários em 57 \textit{suites}. Os resultados indicam que a arquitetura adotada oferece uma base sólida, segura e manutenível para a operação do serviço, com pontos de evolução claramente identificados.
 
 \textbf{Palavras-chave:} Transporte universitário; SaaS; API REST; Multi-tenancy; NestJS; React; DDD; Clean Architecture.
 
 \newpage
 \section*{Abstract}
 
-In many locations, the organization of intercity university transportation is still carried out manually and in an unstructured way — relying on informal lists in messaging apps, with no capacity control and weak financial management. This work presents \textbf{Movy}, a \textit{Software as a Service} (SaaS) platform designed to automate trip scheduling, passenger registration, and financial control of this service. The system comprises two integrated artifacts: a scalable \textbf{REST API}, responsible for domain logic and persistence, and a \textit{mobile-first} \textbf{web client application}, responsible for all user interaction. The API was developed in NestJS with TypeScript, Prisma ORM, and PostgreSQL, following \textit{Clean Architecture} and \textit{Domain-Driven Design} (DDD) principles, implementing a \textit{multi-tenant} architecture with logical data isolation per organization, JWT authentication, role-based access control (RBAC), atomic transactions, and plan limits. The client, built with React and TanStack Router, mirrors the server's layered separation and materializes, in screens and flows, the requirements exposed by the API, delegating all business decisions to it. The thirteen planned functional modules were implemented — totaling 93 REST endpoints — and backend verification comprises 458 unit tests across 57 suites. The results indicate that the adopted architecture provides a solid, secure, and maintainable foundation for operating the service, with clearly identified evolution points.
+In many locations, the organization of intercity university transportation is still carried out manually and in an unstructured way, relying on informal lists in messaging apps, with no capacity control and weak financial management. This work presents Movy, a \textit{Software as a Service} (SaaS) platform designed to automate trip scheduling, passenger registration, and financial control of this service. The system comprises two integrated artifacts: a scalable REST API, responsible for domain logic and persistence, and a \textit{mobile-first} web client application, responsible for all user interaction. The API was developed in NestJS with TypeScript, Prisma ORM, and PostgreSQL, following \textit{Clean Architecture} and \textit{Domain-Driven Design} (DDD) principles, implementing a \textit{multi-tenant} architecture with logical data isolation per organization, JWT authentication, role-based access control (RBAC), atomic transactions, and plan limits. The client, built with React and TanStack Router, mirrors the server's layered separation and materializes, in screens and flows, the requirements exposed by the API, delegating all business decisions to it. The thirteen planned functional modules were implemented, totaling 93 REST endpoints, and backend verification comprises 458 unit tests across 57 suites. The results indicate that the adopted architecture provides a solid, secure, and maintainable foundation for operating the service, with clearly identified evolution points.
 
 \textbf{Keywords:} University transportation; SaaS; REST API; Multi-tenancy; NestJS; React; DDD; Clean Architecture.
 
@@ -175,12 +175,12 @@ O cenário foi observado diretamente na prática, durante a utilização diária
 
 Diante desse contexto, evidencia-se a necessidade de uma solução tecnológica capaz de automatizar o processo de agendamento de viagens, o registro de passageiros e o controle financeiro do transporte universitário intermunicipal, proporcionando maior organização, confiabilidade e eficiência tanto para os estudantes quanto para os responsáveis pelo serviço.
 
-Para responder a essa necessidade, este trabalho apresenta o \textbf{Movy}, sistema concebido como dois artefatos integrados e complementares: uma \textbf{API REST} (\textit{backend}), que concentra as regras de negócio e a persistência, e uma \textbf{aplicação web cliente} (\textit{frontend}) \textit{mobile-first}, que materializa essas regras em telas e fluxos para os perfis de passageiro, motorista e administrador. Um princípio condutor de todo o projeto é que o cliente \textbf{não detém regras de negócio autoritativas}: ele orquestra a interação e valida entradas localmente apenas para fornecer retorno imediato, delegando toda decisão definitiva à API. Por essa razão, este relatório descreve o sistema de forma unificada, tratando \textit{backend} e \textit{frontend} como duas camadas de um mesmo produto sempre que o tema é comum (requisitos, modelo de domínio, arquitetura, segurança), e os diferenciando apenas quando a implementação assim exige.
+Para responder a essa necessidade, este trabalho apresenta o Movy, sistema concebido como dois artefatos integrados e complementares: uma API REST (\textit{backend}), que concentra as regras de negócio e a persistência, e uma aplicação web cliente (\textit{frontend}) \textit{mobile-first}, que materializa essas regras em telas e fluxos para os perfis de passageiro, motorista e administrador. Um princípio condutor de todo o projeto é que o cliente não detém regras de negócio autoritativas: ele orquestra a interação e valida entradas localmente apenas para fornecer retorno imediato, delegando toda decisão definitiva à API. Por essa razão, este relatório descreve o sistema de forma unificada, tratando \textit{backend} e \textit{frontend} como duas camadas de um mesmo produto sempre que o tema é comum (requisitos, modelo de domínio, arquitetura, segurança), e os diferenciando apenas quando a implementação assim exige.
 
 \subsection{Objetivos}
 
 \subsubsection{Objetivo Geral}
-Desenvolver o sistema Movy --- composto por uma API REST escalável e por uma aplicação web cliente que a consome --- para o gerenciamento do transporte universitário intermunicipal, automatizando o agendamento de viagens, o registro de passageiros e o controle financeiro, de modo a proporcionar maior organização, transparência e eficiência para estudantes e responsáveis pelo transporte.
+Desenvolver o sistema Movy, composto por uma API REST escalável e por uma aplicação web cliente que a consome, para o gerenciamento do transporte universitário intermunicipal, automatizando o agendamento de viagens, o registro de passageiros e o controle financeiro, de modo a proporcionar maior organização, transparência e eficiência para estudantes e responsáveis pelo transporte.
 
 \subsubsection{Objetivos Específicos}
 \begin{itemize}
@@ -204,26 +204,26 @@ A seleção tecnológica foi orientada pelos requisitos de escalabilidade, segur
 
 \subsection{Tecnologias do Backend}
 
-A adoção do \textbf{NestJS} \cite{nestjs} foi fundamentada na necessidade de uma arquitetura estruturada, com suporte nativo a padrões como injeção de dependência, módulos, \textit{guards} e interceptadores globais, essenciais para implementar \textit{Clean Architecture} e RBAC de forma consistente. A Tabela~\ref{tab:tecnologias_implementadas} resume a \textit{stack} do servidor.
+A adoção do NestJS \cite{nestjs} foi fundamentada na necessidade de uma arquitetura estruturada, com suporte nativo a padrões como injeção de dependência, módulos, \textit{guards} e interceptadores globais, essenciais para implementar \textit{Clean Architecture} e RBAC de forma consistente. A Tabela~\ref{tab:tecnologias_implementadas} resume a \textit{stack} do servidor.
 
 \input{sections/tecnologias-backend-table}
 
-O \textbf{NestJS} fornece injeção de dependência nativa (essencial para \textit{Clean Architecture} e para o padrão Repositório), módulos estruturados que materializam os contextos delimitados (\textit{bounded contexts}) do DDD, \textit{guards} e interceptadores globais para RBAC e \textit{logging}, e um ecossistema maduro (Swagger, JWT, Passport). A \textbf{autenticação} apoia-se em \textit{tokens} JWT \cite{rfc7519} com Passport.js, em um modelo \textit{stateless} adequado a APIs REST: o \textit{refresh token} permite renovar credenciais sem nova autenticação, e o \textit{payload} do JWT é enriquecido no \textit{login} com todos os dados necessários (\texttt{userId}, \texttt{organizationId}, \texttt{role}, \texttt{isDev}), eliminando consultas ao banco a cada requisição. A \textbf{verificação} automatizada utiliza o \textbf{Jest} \cite{jest}, \textit{framework} padrão da comunidade Node/NestJS, integrado ao TypeScript via \textit{ts-jest}, com suporte a testes unitários, de integração e a relatórios de cobertura. As tecnologias de persistência (PostgreSQL e Prisma) e de infraestrutura (Docker e plataformas de nuvem) são tratadas na Subseção~\ref{sec:tec-infra}.
+O NestJS fornece injeção de dependência nativa (essencial para \textit{Clean Architecture} e para o padrão Repositório), módulos estruturados que materializam os contextos delimitados (\textit{bounded contexts}) do DDD, \textit{guards} e interceptadores globais para RBAC e \textit{logging}, e um ecossistema maduro (Swagger, JWT, Passport). A autenticação apoia-se em \textit{tokens} JWT \cite{rfc7519} com Passport.js, em um modelo \textit{stateless} adequado a APIs REST: o \textit{refresh token} permite renovar credenciais sem nova autenticação, e o \textit{payload} do JWT é enriquecido no \textit{login} com todos os dados necessários (\texttt{userId}, \texttt{organizationId}, \texttt{role}, \texttt{isDev}), eliminando consultas ao banco a cada requisição. A verificação automatizada utiliza o Jest \cite{jest}, \textit{framework} padrão da comunidade Node/NestJS, integrado ao TypeScript via \textit{ts-jest}, com suporte a testes unitários, de integração e a relatórios de cobertura. As tecnologias de persistência (PostgreSQL e Prisma) e de infraestrutura (Docker e plataformas de nuvem) são tratadas na Subseção~\ref{sec:tec-infra}.
 
 \subsection{Tecnologias do Frontend}
 
-A seleção tecnológica do cliente priorizou produtividade de desenvolvimento, segurança de tipos --- alinhada ao \textit{backend} em TypeScript --- e adequação ao caráter \textit{mobile-first} do produto. A Tabela~\ref{tab:tecnologias_frontend} resume a \textit{stack} adotada.
+A seleção tecnológica do cliente priorizou produtividade de desenvolvimento, segurança de tipos, alinhada ao \textit{backend} em TypeScript, e adequação ao caráter \textit{mobile-first} do produto. A Tabela~\ref{tab:tecnologias_frontend} resume a \textit{stack} adotada.
 
 \input{sections/tecnologias-frontend-table}
 
-A interface é construída com \textbf{React} \cite{react}, biblioteca declarativa baseada em componentes. A adoção do \textbf{TanStack Router} \cite{tanstackrouter} foi motivada por seu roteamento baseado em arquivos com segurança de tipos de ponta a ponta e, sobretudo, pelo suporte a \textit{layouts} aninhados sem segmento de URL (\textit{pathless layouts}), recurso central para o esquema de controle de acesso por papel descrito adiante; o \textbf{TanStack Start} \cite{tanstackstart} provê a camada \textit{full-stack} sobre o \textit{router}. A estilização emprega o \textbf{Tailwind CSS} \cite{tailwind} (\textit{utility-first}, com \textit{tokens} de design), e os componentes baseiam-se no \textbf{shadcn/ui} \cite{shadcnui}, construído sobre as primitivas acessíveis do Radix UI, que adota o modelo de \textit{ownership} --- os componentes são copiados para o repositório e ficam sob controle direto do projeto ---, com a contrapartida de uma política rígida de não editá-los manualmente, atualizando-os apenas via interface de linha de comando. O \textbf{Zod} \cite{zod} é empregado na validação declarativa dos formulários --- combinada a estado controlado no React (\texttt{useState} com \texttt{safeParse}) --- e na validação dos \textit{search params} de rota, permitindo que o mesmo esquema sirva de validação e de fonte de tipos por inferência, reduzindo duplicação. O empacotamento utiliza o \textbf{Vite} \cite{vite}. Registra-se que, no estágio atual, \textbf{não se adotou uma biblioteca dedicada de estado de servidor}: o gerenciamento desse estado é feito por \textit{hooks} próprios sobre a \textit{Context API} do React --- decisão consciente, com a eventual migração para uma biblioteca como o TanStack Query mantida como evolução possível e retomada nas limitações da Seção~\ref{sec:consideracoes}.
+A interface é construída com React \cite{react}, biblioteca declarativa baseada em componentes. A adoção do TanStack Router \cite{tanstackrouter} foi motivada por seu roteamento baseado em arquivos com segurança de tipos de ponta a ponta e, sobretudo, pelo suporte a \textit{layouts} aninhados sem segmento de URL (\textit{pathless layouts}), recurso central para o esquema de controle de acesso por papel descrito adiante; o TanStack Start \cite{tanstackstart} provê a camada \textit{full-stack} sobre o \textit{router}. A estilização emprega o Tailwind CSS \cite{tailwind} (\textit{utility-first}, com \textit{tokens} de design), e os componentes baseiam-se no shadcn/ui \cite{shadcnui}, construído sobre as primitivas acessíveis do Radix UI, que adota o modelo de \textit{ownership}, os componentes são copiados para o repositório e ficam sob controle direto do projeto, com a contrapartida de uma política rígida de não editá-los manualmente, atualizando-os apenas via interface de linha de comando. O Zod \cite{zod} é empregado na validação declarativa dos formulários, combinada a estado controlado no React (\texttt{useState} com \texttt{safeParse}), e na validação dos \textit{search params} de rota, permitindo que o mesmo esquema sirva de validação e de fonte de tipos por inferência, reduzindo duplicação. O empacotamento utiliza o Vite \cite{vite}. Registra-se que, no estágio atual, não se adotou uma biblioteca dedicada de estado de servidor: o gerenciamento desse estado é feito por \textit{hooks} próprios sobre a \textit{Context API} do React, decisão consciente, com a eventual migração para uma biblioteca como o TanStack Query mantida como evolução possível e retomada nas limitações da Seção~\ref{sec:consideracoes}.
 
 \subsection{Banco de Dados e Infraestrutura}
 \label{sec:tec-infra}
 
-A persistência apoia-se no \textbf{PostgreSQL} \cite{postgresql}, SGBD relacional confiável com suporte a ACID e transações complexas, acessado por meio do \textbf{Prisma ORM} \cite{prisma}. O Prisma adiciona tipagem forte (geração automática de tipos TypeScript a partir do \textit{schema}), \textit{migrations} versionadas, \textit{query builder} seguro contra \textit{SQL injection}, suporte a \textit{soft-delete} e operações transacionais, além de \textit{seed scripts} para inicialização de dados. No desenvolvimento local, o \textbf{Docker} \cite{docker} padroniza os ambientes e, via \textit{Docker Compose}, orquestra em conjunto o PostgreSQL e a API.
+A persistência apoia-se no PostgreSQL \cite{postgresql}, SGBD relacional confiável com suporte a ACID e transações complexas, acessado por meio do Prisma ORM \cite{prisma}. O Prisma adiciona tipagem forte (geração automática de tipos TypeScript a partir do \textit{schema}), \textit{migrations} versionadas, \textit{query builder} seguro contra \textit{SQL injection}, suporte a \textit{soft-delete} e operações transacionais, além de \textit{seed scripts} para inicialização de dados. No desenvolvimento local, o Docker \cite{docker} padroniza os ambientes e, via \textit{Docker Compose}, orquestra em conjunto o PostgreSQL e a API.
 
-Na implantação, cada artefato é publicado em uma plataforma especializada: a aplicação cliente em execução de borda na \textbf{Cloudflare Workers} \cite{cloudflareworkers}, a API REST em um \textit{Web Service} no \textbf{Render} \cite{render} e o banco de dados em PostgreSQL gerenciado no \textbf{Neon} \cite{neon}. Essa separação reflete a arquitetura em camadas do sistema e é detalhada na Seção~\ref{subsec:implantacao}.
+Na implantação, cada artefato é publicado em uma plataforma especializada: a aplicação cliente em execução de borda na Cloudflare Workers \cite{cloudflareworkers}, a API REST em um \textit{Web Service} no Render \cite{render} e o banco de dados em PostgreSQL gerenciado no Neon \cite{neon}. Essa separação reflete a arquitetura em camadas do sistema e é detalhada na Seção~\ref{subsec:implantacao}.
 
 \subsection{Síntese das Tecnologias}
 
@@ -254,20 +254,21 @@ Infraestrutura & Ambiente e implantação  & Docker, Cloudflare Workers, Render,
 
 % ------------------------------
 \section{Modelagem do Projeto}
+\label{sec:modelagem}
 
 \subsection{Levantamento de Requisitos}
-Os requisitos do sistema foram definidos a partir da observação do funcionamento atual do transporte universitário intermunicipal, bem como das necessidades relatadas por estudantes, motoristas e responsáveis pela gestão das viagens. Os requisitos descritos a seguir são \textbf{requisitos do sistema}: são \textit{expostos} pela API e \textit{materializados} em telas e fluxos pela aplicação cliente. Para melhor organização, foram classificados em funcionais e não funcionais. \\
-\textbf{Requisitos Funcionais}. A Tabela~\ref{tab:rf} consolida os requisitos funcionais do sistema, distinguindo, por meio da coluna \textit{Status}, os requisitos já implementados daqueles planejados para evolução futura.
+Os requisitos do sistema foram definidos a partir da observação do funcionamento atual do transporte universitário intermunicipal, bem como das necessidades relatadas por estudantes, motoristas e responsáveis pela gestão das viagens. Os requisitos descritos a seguir são requisitos do sistema: são \textit{expostos} pela API e \textit{materializados} em telas e fluxos pela aplicação cliente. Para melhor organização, foram classificados em funcionais e não funcionais. \\
+Requisitos Funcionais. A Tabela~\ref{tab:rf} consolida os requisitos funcionais do sistema, distinguindo, por meio da coluna \textit{Status}, os requisitos já implementados daqueles planejados para evolução futura.
 
 \input{sections/requisitos-funcionais-table}
 
-\textbf{Requisitos Não Funcionais}. A Tabela~\ref{tab:rnf} resume os requisitos não funcionais e o respectivo grau de atendimento. Os requisitos de desempenho e disponibilidade (RNF02 e RNF03) são tratados como metas de projeto, não submetidas a medição formal neste trabalho.
+Requisitos Não Funcionais. A Tabela~\ref{tab:rnf} resume os requisitos não funcionais e o respectivo grau de atendimento. Os requisitos de desempenho e disponibilidade (RNF02 e RNF03) são tratados como metas de projeto, não submetidas a medição formal neste trabalho.
 
 \input{sections/requisitos-nao-funcionais-table}
 
 \subsection{Casos de Uso}
 
-Os atores do sistema correspondem aos papéis previstos no controle de acesso, em precedência crescente de capacidades: o \textbf{Visitante} explora o catálogo público de viagens e os perfis públicos de organizações; o \textbf{Passageiro} (usuário autenticado) reserva e gerencia inscrições e pode candidatar-se a motorista; o \textbf{Motorista} visualiza e opera as viagens que lhe são atribuídas; e o \textbf{Administrador} gerencia rotas, viagens, motoristas, veículos, plano e métricas da sua organização. A Figura~\ref{fig:Diagrama de caso de uso.} apresenta o diagrama de casos de uso, organizado pelos quatro contextos de acesso. Por concisão, o diagrama exibe um subconjunto representativo das funcionalidades; a Tabela~\ref{tab:casos_uso} sintetiza os principais casos de uso, e a relação exaustiva consta na Tabela de Requisitos Funcionais (Tabela~\ref{tab:rf}).
+Os atores do sistema correspondem aos papéis previstos no controle de acesso, em precedência crescente de capacidades: o Visitante explora o catálogo público de viagens e os perfis públicos de organizações; o Passageiro (usuário autenticado) reserva e gerencia inscrições e pode candidatar-se a motorista; o Motorista visualiza e opera as viagens que lhe são atribuídas; e o Administrador gerencia rotas, viagens, motoristas, veículos, plano e métricas da sua organização. A Figura~\ref{fig:Diagrama de caso de uso.} apresenta o diagrama de casos de uso, organizado pelos quatro contextos de acesso. Por concisão, o diagrama exibe um subconjunto representativo das funcionalidades; a Tabela~\ref{tab:casos_uso} sintetiza os principais casos de uso, e a relação exaustiva consta na Tabela de Requisitos Funcionais (Tabela~\ref{tab:rf}).
 
 \begin{figure}[H]
 \centering
@@ -284,19 +285,18 @@ Os atores do sistema correspondem aos papéis previstos no controle de acesso, e
 
 \subsection{Modelo de Domínio (Diagrama de Classes)}
 
-O modelo de domínio foi modelado segundo os princípios do \textit{Domain-Driven Design} (DDD): cada entidade é um agregado com métodos de fábrica estáticos (\texttt{create()}, que valida invariantes, e \texttt{restore()}, que reidrata a partir da persistência sem revalidar), e os atributos de regra de negócio são encapsulados em \textit{Value Objects} imutáveis (por exemplo, \texttt{Email}, \texttt{Cnpj}, \texttt{Cnh}, \texttt{Plate}, \texttt{Money}). Para preservar a legibilidade em formato impresso, o diagrama é apresentado em um \textbf{mapa panorâmico} (Figura~\ref{fig:diagrama}), que exibe apenas as entidades e suas associações, seguido de figuras de detalhe organizadas por \textit{bounded context} (identidade e acesso, frota, viagens, reservas e pagamentos, e \textit{billing}), nas quais constam atributos, métodos e \textit{Value Objects}. O detalhamento completo encontra-se no arquivo-fonte \texttt{docs/DIAGRAMA\_CLASSES.md}, do qual as figuras são exportadas.
+O modelo de domínio foi modelado segundo os princípios do \textit{Domain-Driven Design} (DDD): cada entidade é um agregado com métodos de fábrica estáticos (\texttt{create()}, que valida invariantes, e \texttt{restore()}, que reidrata a partir da persistência sem revalidar), e os atributos de regra de negócio são encapsulados em \textit{Value Objects} imutáveis (por exemplo, \texttt{Email}, \texttt{Cnpj}, \texttt{Cnh}, \texttt{Plate}, \texttt{Money}). Para preservar a legibilidade em formato impresso, o diagrama é apresentado em um mapa panorâmico (Figura~\ref{fig:diagrama}), que exibe apenas as entidades e suas associações. O arquivo-fonte do diagrama fica em \texttt{docs/diagramas/classes-mapa.mmd}, do qual a figura é exportada.
 
 \begin{figure}[H]
 \centering
-% TODO: exportar de docs/DIAGRAMA_CLASSES.md (Fig. 1) e salvar em imagens/
 \includegraphics[width=\textwidth]{imagens/classes-mapa.png}
 \caption{Mapa geral de entidades do modelo de domínio (Movy API).}
 \label{fig:diagrama}
 \end{figure}
 
-As entidades agrupam-se em cinco contextos: \textbf{(i) Identidade e Acesso} --- \texttt{User}, \texttt{Organization}, \texttt{Membership} (tabela-pivô que materializa o N:N entre usuário e organização, carregando o \texttt{Role} e servindo de base ao RBAC) e os \textit{tokens} de redefinição de senha e verificação de e-mail; \textbf{(ii) Frota} --- \texttt{Driver} (entidade global, vinculada a organizações via \texttt{Membership}) e \texttt{Vehicle}; \textbf{(iii) Viagens} --- \texttt{TripTemplate} (modelo recorrente) que gera \texttt{TripInstance} (execução datada, com máquina de estados) e \texttt{TripSchedulingConfig}; \textbf{(iv) Reservas e Pagamentos} --- \texttt{Booking} (inscrição) e \texttt{Payment} (1:1 com a inscrição); e \textbf{(v) Billing} --- \texttt{Plan} e \texttt{Subscription}, com cota de uso aplicada pelo \texttt{PlanLimitService}.
+As entidades agrupam-se em cinco contextos: (i) Identidade e Acesso, \texttt{User}, \texttt{Organization}, \texttt{Membership} (tabela-pivô que materializa o N:N entre usuário e organização, carregando o \texttt{Role} e servindo de base ao RBAC) e os \textit{tokens} de redefinição de senha e verificação de e-mail; (ii) Frota, \texttt{Driver} (entidade global, vinculada a organizações via \texttt{Membership}) e \texttt{Vehicle}; (iii) Viagens, \texttt{TripTemplate} (modelo recorrente) que gera \texttt{TripInstance} (execução datada, com máquina de estados) e \texttt{TripSchedulingConfig}; (iv) Reservas e Pagamentos, \texttt{Booking} (inscrição) e \texttt{Payment} (1:1 com a inscrição); e (v) Billing, \texttt{Plan} e \texttt{Subscription}, com cota de uso aplicada pelo \texttt{PlanLimitService}.
 
-Cabe registrar que a aplicação cliente \textbf{não possui um modelo de classes de domínio próprio}: as entidades de negócio são definidas no \textit{backend}, e o cliente as representa por meio de \textit{tipos de dados} (interfaces TypeScript) que espelham os contratos da API, residindo em um módulo central de tipos. Trata-se, portanto, de uma projeção do modelo de domínio acima no cliente, e não de um modelo independente.
+Cabe registrar que a aplicação cliente não possui um modelo de classes de domínio próprio: as entidades de negócio são definidas no \textit{backend}, e o cliente as representa por meio de \textit{tipos de dados} (interfaces TypeScript) que espelham os contratos da API, residindo em um módulo central de tipos. Trata-se, portanto, de uma projeção do modelo de domínio acima no cliente, e não de um modelo independente.
 
 \input{sections/arquitetura-sistema}
 \subsection{Diagrama Entidade-Relacionamento}
@@ -310,25 +310,25 @@ Para preservar a legibilidade no formato impresso, a Figura~\ref{fig:der} aprese
 \begin{figure}[H]
 \centering
 \includegraphics[width=1\textwidth]{imagens/der-simplificado.png}
-\caption{Diagrama Entidade-Relacionamento do sistema --- versão simplificada (Movy API).}
+\caption{Diagrama Entidade-Relacionamento do sistema, versão simplificada (Movy API).}
 \label{fig:der}
 \end{figure}
 
 \subsubsection{Entidades do Domínio}
 
-O modelo de domínio agrupa-se em sete contextos, sintetizados na Tabela~\ref{tab:entidades}, que registra a responsabilidade de cada contexto e as principais regras de negócio --- em especial o isolamento \textit{multi-tenant} via \texttt{organizationId}, o RBAC ancorado em \texttt{Membership}, a relação 1:1 entre \texttt{Booking} e \texttt{Payment}, o controle de capacidade das viagens e a assinatura por plano. O detalhamento campo a campo de cada entidade é apresentado no Apêndice~A.
+O modelo de domínio agrupa-se em sete contextos, sintetizados na Tabela~\ref{tab:entidades}, que registra a responsabilidade de cada contexto e as principais regras de negócio, em especial o isolamento \textit{multi-tenant} via \texttt{organizationId}, o RBAC ancorado em \texttt{Membership}, a relação 1:1 entre \texttt{Booking} e \texttt{Payment}, o controle de capacidade das viagens e a assinatura por plano. O detalhamento campo a campo de cada entidade é apresentado no Apêndice~A.
 
 \input{sections/entidades-table}
 \subsection{Interfaces}
 \label{sec:interfaces}
 
-A aplicação cliente adota uma \textbf{moldura comum} (\textit{AppShell}) para a maior parte das telas, responsável pelo cabeçalho --- com título, botão opcional de retorno e ação contextual --- e pela barra de navegação inferior, que apresenta abas distintas conforme o papel do usuário (precedência administrador, motorista, passageiro). As listagens utilizam três estados padronizados --- carregamento (com esqueletos de conteúdo), erro e vazio legítimo (com ilustração e ação de saída) ---, evitando telas em branco. Para a edição de dados, adota-se o padrão de uma visualização somente-leitura acompanhada de um controle que abre um formulário em folha inferior (\textit{bottom sheet}) ou diálogo. As telas organizam-se por contexto de acesso:
+A aplicação cliente adota uma moldura comum (\textit{AppShell}) para a maior parte das telas, responsável pelo cabeçalho, com título, botão opcional de retorno e ação contextual, e pela barra de navegação inferior, que apresenta abas distintas conforme o papel do usuário (precedência administrador, motorista, passageiro). As listagens utilizam três estados padronizados, carregamento (com esqueletos de conteúdo), erro e vazio legítimo (com ilustração e ação de saída), evitando telas em branco. Para a edição de dados, adota-se o padrão de uma visualização somente-leitura acompanhada de um controle que abre um formulário em folha inferior (\textit{bottom sheet}) ou diálogo. As telas organizam-se por contexto de acesso:
 
 \begin{itemize}
-\item \textbf{Público (sem autenticação)}: página inicial de divulgação; catálogo de viagens, agrupado por rota e com busca e filtros (data, turno, ordenação); detalhe público de uma viagem, com datas alternativas da mesma rota e compartilhamento por \textit{link}; diretório de organizações ativas e perfil público de cada organização; e comparativo de planos comerciais.
-\item \textbf{Passageiro (autenticado)}: formulário de inscrição (seleção de pontos de embarque e desembarque, tipo de trajeto e método de pagamento); tela de confirmação pós-inscrição; lista de inscrições, com busca e filtro por estado, e seu detalhe (com cancelamento); perfil pessoal; e o autosserviço de perfil de motorista.
-\item \textbf{Administrador}: painel com métricas operacionais e financeiras; \textit{CRUD} de modelos de rota e geração manual de instâncias; \textit{CRUD} de viagens, com transições de estado e atribuição de motorista e veículo; gestão de motoristas e veículos; configuração de agendamento automático; e administração do plano e das assinaturas.
-\item \textbf{Motorista}: lista de viagens atribuídas e a tela de detalhe da viagem --- compartilhada com o administrador ---, na qual se realiza a gestão operacional das inscrições (confirmação de presença e de pagamento por passageiro).
+\item Público (sem autenticação): página inicial de divulgação; catálogo de viagens, agrupado por rota e com busca e filtros (data, turno, ordenação); detalhe público de uma viagem, com datas alternativas da mesma rota e compartilhamento por \textit{link}; diretório de organizações ativas e perfil público de cada organização; e comparativo de planos comerciais.
+\item Passageiro (autenticado): formulário de inscrição (seleção de pontos de embarque e desembarque, tipo de trajeto e método de pagamento); tela de confirmação pós-inscrição; lista de inscrições, com busca e filtro por estado, e seu detalhe (com cancelamento); perfil pessoal; e o autosserviço de perfil de motorista.
+\item Administrador: painel com métricas operacionais e financeiras; \textit{CRUD} de modelos de rota e geração manual de instâncias; \textit{CRUD} de viagens, com transições de estado e atribuição de motorista e veículo; gestão de motoristas e veículos; configuração de agendamento automático; e administração do plano e das assinaturas.
+\item Motorista: lista de viagens atribuídas e a tela de detalhe da viagem, compartilhada com o administrador, na qual se realiza a gestão operacional das inscrições (confirmação de presença e de pagamento por passageiro).
 \end{itemize}
 
 A Figura~\ref{fig:fe_fluxo_reserva} sintetiza a jornada principal do passageiro, desde a descoberta pública de uma viagem até a confirmação da inscrição. O fluxo evidencia que a navegação pública permanece disponível sem autenticação, mas a criação da inscrição exige sessão ativa e delega a decisão definitiva de disponibilidade, preço e criação do pagamento à API.
@@ -340,21 +340,21 @@ A Figura~\ref{fig:fe_fluxo_reserva} sintetiza a jornada principal do passageiro,
 \begin{minipage}{0.9\textwidth}
 \centering
 \small
-\textbf{Catálogo público de viagens}\\
+Catálogo público de viagens\\
 \texttt{/public/trip-instances}\\[0.15cm]
 \(\downarrow\) selecionar viagem\\[0.15cm]
-\textbf{Detalhe público da viagem}\\
+Detalhe público da viagem\\
 \texttt{/public/trip-instances/:id}\\[0.15cm]
 \(\downarrow\) entrar para reservar ou inscrever-se\\[0.15cm]
-\textbf{Autenticação, quando necessária}\\
+Autenticação, quando necessária\\
 \texttt{/login?redirect=/public/trip-instances/:id}\\[0.15cm]
 \(\downarrow\) sessão ativa\\[0.15cm]
-\textbf{Formulário de inscrição}\\
+Formulário de inscrição\\
 \texttt{/trips/:orgId/:tripId/book}\\[0.15cm]
 \(\downarrow\) \texttt{POST /bookings}\\[0.15cm]
-\textbf{API valida capacidade, status e preço}\\[0.15cm]
+API valida capacidade, status e preço\\[0.15cm]
 \(\downarrow\) inscrição criada\\[0.15cm]
-\textbf{Confirmação e acompanhamento}\\
+Confirmação e acompanhamento\\
 \texttt{/bookings-success/:bookingId} \quad e \quad \texttt{/my-bookings/:bookingId}
 \end{minipage}}
 \caption{Fluxo principal de reserva na aplicação cliente}
@@ -366,12 +366,12 @@ A Figura~\ref{fig:fe_fluxo_reserva} sintetiza a jornada principal do passageiro,
 % ------------------------------
 \section{Software}
 
-Esta seção apresenta a concretização do sistema em três frentes: a \textbf{implementação} dos módulos do servidor e da aplicação cliente, com os temas transversais que os sustentam (Subseção~\ref{sec:implementacao}); a \textbf{implantação} em ambiente de nuvem (Subseção~\ref{subsec:implantacao}); e a \textbf{verificação} por testes (Subseção~\ref{subsec:verificacao}).
+Esta seção apresenta a concretização do sistema em três frentes: a implementação dos módulos do servidor e da aplicação cliente, com os temas transversais que os sustentam (Subseção~\ref{sec:implementacao}); a implantação em ambiente de nuvem (Subseção~\ref{subsec:implantacao}); e a verificação por testes (Subseção~\ref{subsec:verificacao}).
 
 \subsection{Implementação dos Módulos}
 \label{sec:implementacao}
 
-O desenvolvimento contemplou os treze módulos funcionais previstos para o sistema, todos seguindo rigorosamente os padrões de \textit{Clean Architecture} e estruturados com casos de uso, \textit{value objects}, repositórios e tratamento de erros específicos de domínio. Descreve-se primeiro a implementação do \textit{backend} (módulos e \textit{endpoints}), em seguida a da aplicação cliente que o consome e, por fim, os temas transversais ao sistema --- autenticação e RBAC, multi-tenancy, transações e tratamento de erros.
+O desenvolvimento contemplou os treze módulos funcionais previstos para o sistema, todos seguindo rigorosamente os padrões de \textit{Clean Architecture} e estruturados com casos de uso, \textit{value objects}, repositórios e tratamento de erros específicos de domínio. Descreve-se primeiro a implementação do \textit{backend} (módulos e \textit{endpoints}), em seguida a da aplicação cliente que o consome e, por fim, os temas transversais ao sistema, autenticação e RBAC, multi-tenancy, transações e tratamento de erros.
 
 \input{sections/modulos-api}
 \input{sections/aplicacao-cliente}
@@ -380,13 +380,13 @@ O desenvolvimento contemplou os treze módulos funcionais previstos para o siste
 
 O isolamento lógico de dados entre organizações é implementado no \textit{backend} através de:
 \begin{enumerate}
-\item \textbf{Campo organizationId}: Presente em todas as entidades que pertencem a uma organização.
-\item \textbf{Filtragem em Queries}: Todas as buscas filtram por \texttt{organizationId} da organização do usuário autenticado.
-\item \textbf{TenantFilterGuard}: Valida que o parâmetro \texttt{:organizationId} na rota corresponde ao \texttt{organizationId} do JWT.
-\item \textbf{Proteção IDOR (OWASP A01)}: Endpoints com parâmetro \texttt{/:id} validam ownership via \texttt{organizationId} do JWT em Driver, Vehicle e Trip.
+\item Campo organizationId: Presente em todas as entidades que pertencem a uma organização.
+\item Filtragem em Queries: Todas as buscas filtram por \texttt{organizationId} da organização do usuário autenticado.
+\item TenantFilterGuard: Valida que o parâmetro \texttt{:organizationId} na rota corresponde ao \texttt{organizationId} do JWT.
+\item Proteção IDOR (OWASP A01): Endpoints com parâmetro \texttt{/:id} validam ownership via \texttt{organizationId} do JWT em Driver, Vehicle e Trip.
 \end{enumerate}
 
-\subsubsection{Infraestrutura Transacional --- UnitOfWork + DbContext}
+\subsubsection{Infraestrutura Transacional, UnitOfWork + DbContext}
 
 Para garantir atomicidade em operações que envolvem múltiplas escritas (por exemplo, criar \texttt{Booking} e \texttt{Payment} juntos), foi implementada uma infraestrutura de transações baseada em \texttt{AsyncLocalStorage}. A Tabela~\ref{tab:uow} descreve o fluxo de uma transação, do caso de uso ao repositório.
 
@@ -422,7 +422,7 @@ O sistema implementa hierarquia de exceções mapeadas pelo \texttt{AllException
 \midrule
 \texttt{\_NOT\_FOUND} & 404 Not Found \\
 \texttt{\_ALREADY\_EXISTS} / \texttt{\_CONFLICT} / \texttt{\_IN\_USE} & 409 Conflict \\
-\texttt{INVALID\_} / \texttt{\_BAD\_REQUEST} / \texttt{INACTIVE\_} / \texttt{EXPIRED\_} & 400 Bad Request \\
+\texttt{INVALID\_} / \texttt{INACTIVE\_} / \texttt{EXPIRED\_} / \texttt{\_BAD\_REQUEST} / \texttt{\_INACTIVE} & 400 Bad Request \\
 \texttt{\_FORBIDDEN} & 403 Forbidden \\
 \texttt{\_UNAUTHORIZED} & 401 Unauthorized \\
 (demais, ex.\ \texttt{\_CREATION\_FAILED}) & 500 Internal Server Error \\
@@ -430,7 +430,9 @@ O sistema implementa hierarquia de exceções mapeadas pelo \texttt{AllException
 \end{tabular}
 \end{table}
 
-\textbf{Reflexo no cliente.} A interface decide a mensagem a apresentar a partir do \textbf{código de erro de domínio} fornecido pela API (campo \texttt{error} do \textit{payload}), e não do texto da mensagem. O cliente normaliza toda falha em uma exceção tipada (\texttt{ApiError}) que carrega \texttt{status}, dados e o \texttt{errorCode}; um módulo central traduz esses códigos --- alinhados ao mapeamento da Tabela~\ref{tab:error_mapping} --- para mensagens em português, distinguindo, por exemplo, limites de plano excedidos (com ação que conduz à tela de assinatura), prazos de cancelamento de inscrição e \textit{tokens} de redefinição expirados.
+Erros que não são de domínio seguem outro caminho: violações de validação de \textit{schema} nos DTOs (via \textit{class-validator}) retornam \texttt{400} com a lista de violações na \texttt{message}, e o \textit{rate limiting} global (60 requisições por minuto por IP) retorna \texttt{429}; nenhum deles carrega \texttt{code} de domínio. Registra-se ainda que as falhas de persistência (por exemplo, \texttt{\_CREATION\_FAILED}) retornam \texttt{500} deliberadamente, por representarem erro interno inesperado ao salvar, e não erro do cliente.
+
+Reflexo no cliente. A interface decide a mensagem a apresentar a partir do código de erro de domínio fornecido pela API (campo \texttt{error} do \textit{payload}), e não do texto da mensagem. O cliente normaliza toda falha em uma exceção tipada (\texttt{ApiError}) que carrega \texttt{status}, dados e o \texttt{errorCode}; um módulo central traduz esses códigos, alinhados ao mapeamento da Tabela~\ref{tab:error_mapping}, para mensagens em português, distinguindo, por exemplo, limites de plano excedidos (com ação que conduz à tela de assinatura), prazos de cancelamento de inscrição e \textit{tokens} de redefinição expirados.
 
 \subsubsection{Banco de Dados: Migrações e Seed}
 \label{subsec:migracoes}
@@ -444,18 +446,18 @@ Prisma gerencia histórico completo de mudanças no esquema com migrations versi
 
 \subsection{Síntese dos Resultados}
 
-O projeto alcançou os objetivos estabelecidos, entregando um \textbf{MVP funcional} com os treze módulos planejados (93 \textit{endpoints} REST e 93 casos de uso) e a aplicação cliente que os consome. O sistema demonstra uma arquitetura sólida baseada em \textit{Clean Architecture} e \textit{Domain-Driven Design} no servidor, espelhada por uma arquitetura em camadas no cliente. Entre os resultados de maior relevância de engenharia, destacam-se:
+O projeto alcançou os objetivos estabelecidos, entregando um MVP funcional com os treze módulos planejados (93 \textit{endpoints} REST e 93 casos de uso) e a aplicação cliente que os consome. O sistema demonstra uma arquitetura sólida baseada em \textit{Clean Architecture} e \textit{Domain-Driven Design} no servidor, espelhada por uma arquitetura em camadas no cliente. Entre os resultados de maior relevância de engenharia, destacam-se:
 
 \begin{enumerate}
-\item \textbf{Arquitetura Modular Espelhada}: Cada módulo do servidor segue o padrão Application → Domain → Infrastructure → Presentation; o cliente reproduz a separação em rotas finas, \textit{hooks} de caso de uso, serviços e cliente HTTP único, conferindo localidade de mudança e previsibilidade a ambos os lados.
-\item \textbf{Multi-tenancy}: Isolamento lógico de dados via \texttt{organizationId} em todas as entidades pertinentes, com \texttt{TenantFilterGuard} e proteção IDOR (OWASP A01) nos \textit{endpoints} por ID.
-\item \textbf{Autenticação e RBAC}: JWT com \textit{access tokens} de curta duração e \textit{refresh tokens}, Bcrypt (10 \textit{salt rounds}), \textit{guards} de autorização e suporte a múltiplas \textit{roles} por usuário; no cliente, controle de acesso por papel centralizado nos \textit{layouts} e renovação de sessão transparente.
-\item \textbf{Value Objects e Soft-delete}: Encapsulamento de validações críticas (CNPJ, Email, Slug, CNH, Placa, Money) e preservação de histórico via exclusão lógica nas entidades críticas.
-\item \textbf{Viagens e Automação}: TripTemplate + TripInstance com máquina de estados, atribuição de motorista/veículo e \textit{jobs} de geração recorrente e auto-cancelamento por organização.
-\item \textbf{Inscrições e Transações Atômicas}: Bookings com controle de capacidade, preço calculado \textit{server-side} e proteção contra \textit{race conditions} via \texttt{UnitOfWork} com isolamento \texttt{Serializable}.
-\item \textbf{Planos, Assinaturas e Pagamentos}: Modelo SaaS com \textit{tiers}, limites de recursos (\texttt{PlanLimitService}), expiração \textit{lazy} e simulação do ciclo de pagamento (PENDING → COMPLETED/FAILED).
-\item \textbf{Tratamento de Erros e CI/CD}: \texttt{AllExceptionsFilter} global com mapeamento estável de códigos de erro, consumido pelo cliente; \textit{rate limiting} global (60 req/min); \textit{pipeline} de \textit{build}, \textit{lint} e testes via GitHub Actions.
-\item \textbf{Verificação}: 458 testes unitários em 57 \textit{suites} no \textit{backend} (padrão AAA, \textit{factories} por módulo) e roteiro de testes manuais no cliente.
+\item Arquitetura Modular Espelhada: Cada módulo do servidor segue o padrão Application → Domain → Infrastructure → Presentation; o cliente reproduz a separação em rotas finas, \textit{hooks} de caso de uso, serviços e cliente HTTP único, conferindo localidade de mudança e previsibilidade a ambos os lados.
+\item Multi-tenancy: Isolamento lógico de dados via \texttt{organizationId} em todas as entidades pertinentes, com \texttt{TenantFilterGuard} e proteção IDOR (OWASP A01) nos \textit{endpoints} por ID.
+\item Autenticação e RBAC: JWT com \textit{access tokens} de curta duração e \textit{refresh tokens}, Bcrypt (10 \textit{salt rounds}), \textit{guards} de autorização e suporte a múltiplas \textit{roles} por usuário; no cliente, controle de acesso por papel centralizado nos \textit{layouts} e renovação de sessão transparente.
+\item Value Objects e Soft-delete: Encapsulamento de validações críticas (CNPJ, Email, Slug, CNH, Placa, Money) e preservação de histórico via exclusão lógica nas entidades críticas.
+\item Viagens e Automação: TripTemplate + TripInstance com máquina de estados, atribuição de motorista/veículo e \textit{jobs} de geração recorrente e auto-cancelamento por organização.
+\item Inscrições e Transações Atômicas: Bookings com controle de capacidade, preço calculado \textit{server-side} e proteção contra \textit{race conditions} via \texttt{UnitOfWork} com isolamento \texttt{Serializable}.
+\item Planos, Assinaturas e Pagamentos: Modelo SaaS com \textit{tiers}, limites de recursos (\texttt{PlanLimitService}), expiração \textit{lazy} e simulação do ciclo de pagamento (PENDING → COMPLETED/FAILED).
+\item Tratamento de Erros e CI/CD: \texttt{AllExceptionsFilter} global com mapeamento estável de códigos de erro, consumido pelo cliente; \textit{rate limiting} global (60 req/min); \textit{pipeline} de \textit{build}, \textit{lint} e testes via GitHub Actions.
+\item Verificação: 458 testes unitários em 57 \textit{suites} no \textit{backend} (padrão AAA, \textit{factories} por módulo) e roteiro de testes manuais no cliente.
 \end{enumerate}
 
 \subsubsection{Métricas do Projeto}
@@ -485,26 +487,27 @@ Rate Limiting & Configurado & 60 req/min \\
 O sistema cobre o escopo de módulos planejado, mas mantém limitações conscientes, documentadas aqui como decisões datadas e revisáveis, e não como omissões.
 
 \begin{enumerate}
-\item \textbf{Integração com Gateway de Pagamento}: O módulo de pagamentos opera com simulação de ciclo de vida (PENDING → COMPLETED/FAILED). A integração com um gateway real (ex.: Stripe) é a próxima evolução natural do módulo.
-\item \textbf{Notificações}: O sistema de notificações por e-mail/SMS ainda não foi implementado, afetando os requisitos RF17 e RF18.
-\item \textbf{Relatórios}: As funcionalidades de geração de relatórios e históricos (RF15, RF16) ainda não foram desenvolvidas no \textit{backend}; o cliente já dispõe de relatório financeiro agregado no painel administrativo.
-\item \textbf{Recuperação de Senha e Verificação de E-mail}: a lógica de \textit{tokens} de uso único (hash SHA-256, TTL, resposta \textit{anti-enumeration}) está implementada no \textit{backend}, mas, sem integração com um provedor de e-mail, o token não é entregue ao usuário --- esses fluxos não operam ponta a ponta e dependem da implementação de notificações (RF17/RF18).
-\item \textbf{Auditoria}: a entidade \texttt{AuditLog} está modelada no schema, mas nenhum caso de uso a persiste (RF26 parcialmente atendido) --- mantida como ponto de extensão \textit{audit-ready}.
-\item \textbf{Cobertura de Testes}: Embora 458 testes cubram os use cases críticos e os \textit{guards} principais, alguns use cases secundários ainda não possuem \textit{specs} dedicadas, e o cliente carece de testes automatizados (verificação atualmente manual).
-\item \textbf{Caching}: Não há \textit{caching} (ex.: Redis) para otimização de consultas frequentes.
-\item \textbf{Frontend --- decisões conscientes}: suporte, no estágio atual, a uma única organização por administrador (a primeira retornada por \texttt{GET /organizations/me}); coexistência de dois estilos de obtenção de dados pela não adoção imediata de uma biblioteca de estado de servidor; e armazenamento de credenciais em \texttt{localStorage}, aceito em troca de simplicidade e marcado para reavaliação antes da operação comercial.
+\item Integração com Gateway de Pagamento: O módulo de pagamentos opera com simulação de ciclo de vida (PENDING → COMPLETED/FAILED). A integração com um gateway real (ex.: Stripe) é a próxima evolução natural do módulo.
+\item Precificação única e paradas simplificadas: no estágio atual, o preço de uma inscrição é um valor único por viagem, independentemente da distância percorrida. Assim, um passageiro que embarca a 20 km do destino e outro que embarca a 5 km pagam o mesmo valor, pois não há precificação por trecho. Além disso, no escopo do MVP as paradas não possuem entidade/tabela dedicada no modelo de dados: são registradas apenas como uma lista de texto no \texttt{TripTemplate}. Ambos os pontos são conscientes e estão previstos para evolução futura, associados a um novo modelo de cobrança descrito nas recomendações para continuação (adiante).
+\item Notificações: O sistema de notificações por e-mail/SMS ainda não foi implementado, afetando os requisitos RF17 e RF18.
+\item Relatórios: As funcionalidades de geração de relatórios e históricos (RF15, RF16) ainda não foram desenvolvidas no \textit{backend}; o cliente já dispõe de relatório financeiro agregado no painel administrativo.
+\item Recuperação de Senha e Verificação de E-mail: a lógica de \textit{tokens} de uso único (hash SHA-256, TTL, resposta \textit{anti-enumeration}) está implementada no \textit{backend}, mas, sem integração com um provedor de e-mail, o token não é entregue ao usuário, esses fluxos não operam ponta a ponta e dependem da implementação de notificações (RF17/RF18).
+\item Auditoria: a entidade \texttt{AuditLog} está modelada no schema, mas nenhum caso de uso a persiste (RF26 parcialmente atendido), mantida como ponto de extensão \textit{audit-ready}.
+\item Cobertura de Testes: Embora 458 testes cubram os use cases críticos e os \textit{guards} principais, alguns use cases secundários ainda não possuem \textit{specs} dedicadas, e o cliente carece de testes automatizados (verificação atualmente manual).
+\item Caching: Não há \textit{caching} (ex.: Redis) para otimização de consultas frequentes.
+\item Frontend, decisões conscientes: suporte, no estágio atual, a uma única organização por administrador (a primeira retornada por \texttt{GET /organizations/me}); coexistência de dois estilos de obtenção de dados pela não adoção imediata de uma biblioteca de estado de servidor; e armazenamento de credenciais em \texttt{localStorage}, aceito em troca de simplicidade e marcado para reavaliação antes da operação comercial.
 \end{enumerate}
 
 \subsection{Lições Aprendidas}
 
 \begin{enumerate}
-\item \textbf{Clean Architecture é Essencial}: A separação clara entre camadas facilitou desenvolvimento iterativo e testes de componentes isolados, tanto no servidor quanto, por espelhamento, no cliente.
-\item \textbf{DDD Agregou Valor}: Value Objects bem definidos preveniram bugs de validação e documentam regras de negócio naturalmente.
-\item \textbf{Multi-tenancy Desde o Início}: Implementar multi-tenancy na arquitetura inicial foi crítico; retroajustar seria custoso.
-\item \textbf{Segurança IDOR Requer Vigilância Ativa}: Endpoints com parâmetro \texttt{/:id} sem \texttt{:organizationId} na rota exigem validação explícita de ownership via \texttt{organizationId} do JWT ou método \texttt{belongsToOrganization()} no repositório.
-\item \textbf{Desacoplamento de Módulos Previne Ciclos}: O padrão Orchestrator (Auth coordenando User, Organization, Membership) eliminou dependências circulares e violações do SRP.
-\item \textbf{Testes AAA com Injeção Manual são Superiores}: Dependências injetadas manualmente tornam os testes mais rápidos e isolados, e forçam o código a ser testável por design.
-\item \textbf{Um Único Ponto de Comunicação com a API}: Concentrar no cliente HTTP a autenticação, a renovação de sessão e a normalização de erros permitiu tratar questões transversais de forma uniforme em todo o cliente.
+\item Clean Architecture é Essencial: A separação clara entre camadas facilitou desenvolvimento iterativo e testes de componentes isolados, tanto no servidor quanto, por espelhamento, no cliente.
+\item DDD Agregou Valor: Value Objects bem definidos preveniram bugs de validação e documentam regras de negócio naturalmente.
+\item Multi-tenancy Desde o Início: Implementar multi-tenancy na arquitetura inicial foi crítico; retroajustar seria custoso.
+\item Segurança IDOR Requer Vigilância Ativa: Endpoints com parâmetro \texttt{/:id} sem \texttt{:organizationId} na rota exigem validação explícita de ownership via \texttt{organizationId} do JWT ou método \texttt{belongsToOrganization()} no repositório.
+\item Desacoplamento de Módulos Previne Ciclos: O padrão Orchestrator (Auth coordenando User, Organization, Membership) eliminou dependências circulares e violações do SRP.
+\item Testes AAA com Injeção Manual são Superiores: Dependências injetadas manualmente tornam os testes mais rápidos e isolados, e forçam o código a ser testável por design.
+\item Um Único Ponto de Comunicação com a API: Concentrar no cliente HTTP a autenticação, a renovação de sessão e a normalização de erros permitiu tratar questões transversais de forma uniforme em todo o cliente.
 \end{enumerate}
 
 \subsection{Recomendações para Continuação}
@@ -512,29 +515,30 @@ O sistema cobre o escopo de módulos planejado, mas mantém limitações conscie
 \subsubsection{Ações Imediatas Recomendadas}
 
 \begin{enumerate}
-\item \textbf{Integração de Pagamentos}: Configurar gateway real (Stripe) para substituir a simulação atual, conectando-o ao fluxo de inscrições.
-\item \textbf{Notificações}: Implementar notificações via e-mail/SMS (RF17, RF18) utilizando Bull/BullMQ para processamento assíncrono.
-\item \textbf{Expandir Cobertura de Testes}: Adicionar \textit{specs} para use cases secundários do \textit{backend} e introduzir uma camada de testes automatizados no cliente, a partir do fluxo de reserva.
-\item \textbf{Fortalecer a Sessão no Cliente}: Reavaliar o armazenamento de credenciais em \texttt{localStorage} antes da operação comercial.
-\item \textbf{Backup Strategy}: Configurar backups automáticos do banco PostgreSQL em desenvolvimento e produção.
-\item \textbf{Automação da Implantação}: Estabelecer \textit{pipeline} de CI/CD que execute \texttt{prisma migrate deploy} automaticamente diante de alterações em \texttt{prisma/migrations}, adicionar um \textit{script} \texttt{deploy} ao \texttt{package.json} do cliente e provisionar um ambiente de \textit{staging} distinto do de produção, com domínio próprio.
+\item Integração de Pagamentos: Configurar gateway real (Stripe) para substituir a simulação atual, conectando-o ao fluxo de inscrições.
+\item Notificações: Implementar notificações via e-mail/SMS (RF17, RF18) utilizando Bull/BullMQ para processamento assíncrono.
+\item Expandir Cobertura de Testes: Adicionar \textit{specs} para use cases secundários do \textit{backend} e introduzir uma camada de testes automatizados no cliente, a partir do fluxo de reserva.
+\item Fortalecer a Sessão no Cliente: Reavaliar o armazenamento de credenciais em \texttt{localStorage} antes da operação comercial.
+\item Backup Strategy: Configurar backups automáticos do banco PostgreSQL em desenvolvimento e produção.
+\item Automação da Implantação: Estabelecer \textit{pipeline} de CI/CD que execute \texttt{prisma migrate deploy} automaticamente diante de alterações em \texttt{prisma/migrations}, adicionar um \textit{script} \texttt{deploy} ao \texttt{package.json} do cliente e provisionar um ambiente de \textit{staging} distinto do de produção, com domínio próprio.
+\item Precificação por trecho e cobrança híbrida: introduzir uma entidade dedicada de paradas (com ordem e quilometragem) que substitua a atual lista de texto e habilite preço por trecho, de modo que o valor pago reflita a distância percorrida por cada passageiro. Em paralelo, evoluir o modelo de monetização da plataforma para uma cobrança híbrida (\textit{hybrid billing}), que combine uma mensalidade fixa a uma cobrança por uso: assim, a mensalidade garante a receita recorrente e a parcela por uso cresce junto com o volume de utilização, alinhando o custo do cliente ao valor efetivamente consumido.
 \end{enumerate}
 
 \subsubsection{Tecnologias Futuras a Considerar}
 
 \begin{itemize}
-\item \textbf{Redis}: Para caching de dados frequentes e gerenciamento de sessões.
-\item \textbf{Bull/BullMQ}: Para fila de jobs assíncronos (notificações, relatórios).
-\item \textbf{TanStack Query}: Para unificar o gerenciamento de estado de servidor no cliente.
-\item \textbf{Sentry/Rollbar}: Para monitoramento de erros em produção.
-\item \textbf{DataDog/New Relic}: Para APM (Application Performance Monitoring).
+\item Redis: Para caching de dados frequentes e gerenciamento de sessões.
+\item Bull/BullMQ: Para fila de jobs assíncronos (notificações, relatórios).
+\item TanStack Query: Para unificar o gerenciamento de estado de servidor no cliente.
+\item Sentry/Rollbar: Para monitoramento de erros em produção.
+\item DataDog/New Relic: Para APM (Application Performance Monitoring).
 \end{itemize}
 
 \subsection{Conclusão}
 
 O sistema Movy demonstra viabilidade técnica e arquitetural para operar como uma plataforma SaaS de gerenciamento de transporte universitário intermunicipal. Os princípios de \textit{Clean Architecture} e DDD forneceram, no servidor, uma fundação sólida que antecipa o crescimento futuro sem sacrificar manutenibilidade; e a aplicação cliente, ao espelhar essa estratificação e ao concentrar a comunicação com a API em um ponto único, materializa os requisitos do sistema com controle de acesso por papel e comunicação resiliente.
 
-Com os treze módulos funcionais implementados --- autenticação, usuários, organizações, papéis, \textit{memberships}, motoristas, veículos, viagens, inscrições, planos, assinaturas, pagamentos e agendamento ---, um sistema robusto de RBAC, multi-tenancy e proteção IDOR, e 458 testes unitários no \textit{backend}, o projeto entrega um MVP funcional, cobrindo os fluxos principais de ponta a ponta. As limitações registradas --- gateway de pagamento, notificações, relatórios, \textit{caching} e a maturação da camada de testes do cliente --- delineiam um roteiro de evolução claro, cujos pontos de inserção já estão previstos na arquitetura atual.
+Com os treze módulos funcionais implementados, autenticação, usuários, organizações, papéis, \textit{memberships}, motoristas, veículos, viagens, inscrições, planos, assinaturas, pagamentos e agendamento, um sistema robusto de RBAC, multi-tenancy e proteção IDOR, e 458 testes unitários no \textit{backend}, o projeto entrega um MVP funcional, cobrindo os fluxos principais de ponta a ponta. As limitações registradas, gateway de pagamento, notificações, relatórios, \textit{caching} e a maturação da camada de testes do cliente, delineiam um roteiro de evolução claro, cujos pontos de inserção já estão previstos na arquitetura atual.
 
 % ------------------------------
 \newpage
@@ -549,10 +553,10 @@ Com os treze módulos funcionais implementados --- autenticação, usuários, or
 % ================= APÊNDICES =================
 \newpage
 \phantomsection
-\addcontentsline{toc}{section}{Apêndice A --- Detalhamento das Entidades}
-\section*{Apêndice A --- Detalhamento das Entidades}
+\addcontentsline{toc}{section}{Apêndice A, Dicionário de Dados}
+\section*{Apêndice A, Dicionário de Dados}
 
-Este apêndice detalha, campo a campo, as entidades do domínio sintetizadas na Tabela~\ref{tab:entidades}.
+Este apêndice apresenta o dicionário de dados das entidades do domínio sintetizadas na Tabela~\ref{tab:entidades}.
 
 \input{sections/apendice-entidades}
 

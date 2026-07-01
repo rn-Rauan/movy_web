@@ -12,11 +12,13 @@ export function BookingCard({ booking }: BookingCardProps) {
   const isActive = booking.status === "ACTIVE";
   const isCancelled = booking.status === "INACTIVE";
   const trip = booking.tripInstance;
-  // Viagem finalizada vira histórico: card estático (sem navegação) — não há mais nada
-  // a fazer/ver na inscrição depois que a viagem terminou. `tripStatus`/`tripDepartureTime`
-  // vêm achatados no item de /bookings/user (ver BookingListItemResponseDto no backend).
+  // Viagem finalizada ou cancelada vira card estático (sem navegação): não há ação possível
+  // sobre a inscrição — em especial, não se cancela inscrição de viagem cancelada. Só
+  // inscrições de viagens ativas abrem o detalhe. `tripStatus`/`tripDepartureTime` vêm
+  // achatados no item de /bookings/user (ver BookingListItemResponseDto no backend).
   const tripFinished = booking.tripStatus === "FINISHED";
-  const clickable = !tripFinished;
+  const tripCanceled = booking.tripStatus === "CANCELED";
+  const clickable = !tripFinished && !tripCanceled;
   const departureIso = booking.tripDepartureTime ?? trip?.departureTime ?? booking.enrollmentDate;
   const orgName = trip?.organizationName;
   const price = booking.recordedPrice;
@@ -26,6 +28,7 @@ export function BookingCard({ booking }: BookingCardProps) {
     "block rounded-[14px] border border-line bg-surface p-3.5",
     clickable && "transition-colors hover:border-ink-2",
     isCancelled && "opacity-70",
+    tripCanceled && "opacity-70",
     tripFinished && "opacity-90",
   );
 
@@ -44,14 +47,22 @@ export function BookingCard({ booking }: BookingCardProps) {
               "rounded-full px-2.5 py-[3px] text-[10px] font-bold",
               isCancelled
                 ? "bg-danger-soft text-danger line-through"
-                : tripFinished
-                  ? "bg-line-soft text-ink-2"
-                  : isActive
-                    ? "bg-ink text-surface"
-                    : "bg-line-soft text-ink-2",
+                : tripCanceled
+                  ? "bg-danger-soft text-danger"
+                  : tripFinished
+                    ? "bg-line-soft text-ink-2"
+                    : isActive
+                      ? "bg-ink text-surface"
+                      : "bg-line-soft text-ink-2",
             )}
           >
-            {tripFinished && !isCancelled ? "Realizada" : bookingStatusLabel(booking.status)}
+            {isCancelled
+              ? bookingStatusLabel(booking.status)
+              : tripCanceled
+                ? "Viagem cancelada"
+                : tripFinished
+                  ? "Realizada"
+                  : bookingStatusLabel(booking.status)}
           </span>
           {clickable && (
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.6} />

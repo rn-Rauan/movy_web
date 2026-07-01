@@ -801,7 +801,7 @@ As principais regras de exclusão protegem o histórico operacional e financeiro
 - `trip_template → driver/vehicle` (defaults): **`onDelete: SetNull`** — remover o default nunca bloqueia a exclusão; instâncias futuras recaem em `DRAFT`.
 - Demais relações org-scoped: **`onDelete: Cascade`** a partir de `organization`/`user`.
 
-> A entidade **`audit_log`** está **modelada mas não persistida** nesta versão (dívida declarada): nenhum caso de uso escreve nela. Mantém o sistema _audit-ready_ e documenta a intenção de design (ver comentário no `schema.prisma` e `docs/ROADMAP.md`).
+> A entidade **`audit_log`** está **modelada mas não persistida** nesta versão (dívida declarada): nenhum caso de uso escreve nela. Mantém o sistema _audit-ready_ e documenta a intenção de design.
 
 ## 3.6 Interface
 
@@ -900,14 +900,14 @@ Cada tela corresponde a um arquivo de rota em `src/routes/` e rastreia ao(s) cas
 
 ### 3.6.3 Placeholders de imagem
 
-> Substituir pelos arquivos a serem fornecidos (sugestão: `docs/imagens/ui/`). As capturas devem ser tiradas em _viewport_ móvel (RNF10).
+> Substituir pelos arquivos de captura salvos em `docs/imagens/`. As capturas devem ser tiradas em _viewport_ móvel (RNF10), exceto telas administrativas que podem usar largura maior.
 
-- `![Catálogo público de viagens (/public/trip-instances)](imagens/ui/catalogo.png)`
-- `![Detalhe da viagem e inscrição (/public/trip-instances/$id)](imagens/ui/detalhe.png)`
-- `![Minhas inscrições (/my-bookings)](imagens/ui/reservas.png)`
-- `![Dashboard administrativo (/dashboard)](imagens/ui/dashboard.png)`
-- `![Detalhe da viagem — gestão de inscrições (/trip/$tripId)](imagens/ui/admin-viagem.png)`
-- `![Operação da viagem pelo motorista (/my-trips → /trip/$tripId)](imagens/ui/motorista.png)`
+- `../imagens/fe-catalogo.png` — catálogo público de viagens.
+- `../imagens/fe-detalhe-viagem.png` — detalhe público da viagem.
+- `../imagens/fe-formulario.png` — formulário de inscrição.
+- `../imagens/fe-dashboard.png` — painel administrativo.
+- `../imagens/fe-gestao-viagens.png` — gestão de viagens.
+- `../imagens/fe-operacional.png` — detalhe operacional da viagem.
 
 > O cliente **não possui modelo de domínio próprio**: representa as entidades do backend por interfaces TypeScript que espelham os contratos da API (ver Seção 3.3). Convenções de data/moeda e exibição de horários em fuso de Brasília atendem RNF10 e RNF12.
 

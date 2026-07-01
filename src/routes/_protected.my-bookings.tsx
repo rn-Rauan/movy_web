@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useMemo } from "react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -18,6 +18,14 @@ export const Route = createFileRoute("/_protected/my-bookings")({
 });
 
 function MyBookingsPage() {
+  const location = useLocation();
+  if (location.pathname !== "/my-bookings") {
+    return <Outlet />;
+  }
+  return <MyBookingsIndex />;
+}
+
+function MyBookingsIndex() {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {
     return (

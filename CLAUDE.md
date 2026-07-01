@@ -401,7 +401,7 @@ schedulingService.updateConfig(orgId, patch);        // PATCH parcial (enabled, 
 - `handleApiError(err, fallbackMsg)` — detecta 403 limite-de-plano via `errorCode` estável (`NO_ACTIVE_SUBSCRIPTION_FORBIDDEN`, `*_PLAN_LIMIT_*`) com toast + action "Ver planos" → `/organization`. Também mapeia `errorCode`s de trip-scheduling (`INVALID_TRIP_TIME_OF_DAY_FORMAT`, `INVALID_TRIP_TEMPLATE_MISSING_SCHEDULE`, etc.) e o mapa `DRIVER_AND_AUTH_MESSAGES` (driver/vehicle access, CNH validation, payment driver, reset/verify token expirado) pra mensagens em PT-BR. Plugar nas rotas que fazem mutações sujeitas a limite ou ao contrato de scheduling/driver.
 - `bookingCancelErrorMessage(err)` — mapeia `errorCode` de cancelamento (`BOOKING_CANCEL_WINDOW_CLOSED_BAD_REQUEST`, `BOOKING_TRIP_TERMINAL_BAD_REQUEST`, `BOOKING_ALREADY_INACTIVE_BAD_REQUEST`) pra mensagens em PT-BR.
 
-`ApiError` (em `lib/api.ts`) carrega `status`, `message`, `data` e `errorCode` (campo `error` do payload). Sempre prefira `errorCode` a parsing de `message` — é o contrato estável documentado em `docs/API_FRONTEND.md`.
+`ApiError` (em `lib/api.ts`) carrega `status`, `message`, `data` e `errorCode` (campo `error` do payload). Sempre prefira `errorCode` a parsing de `message` — é o contrato estável documentado em `docs/reference/api-frontend.md`.
 
 **Padrão `notFound` em hooks (404 ≠ erro):** quando um recurso pode legitimamente não existir ainda (ex: `GET /drivers/me` retorna 404 pra user sem perfil; `GET /organizations/{id}/scheduling-config` pra orgs legacy), o hook deve separar 404 num flag `notFound: true` sem disparar toast. Ver `useMyDriver` e `useSchedulingConfig`. Se o backend não padroniza 404 e retorna a mensagem dentro de um 400/500, usar heurística defensiva no hook (ver `isDriverNotFound` em `useMyDriver.ts`).
 
@@ -492,7 +492,7 @@ O backend não inclui `userName`/`userEmail` no payload de `Driver` da maioria d
 - Não adicionar React Query ainda — apesar do `@tanstack/react-query` estar no `package.json`, nenhuma rota o consome. Manter padrão Context + hooks até decisão explícita de migrar (ver ADR-002)
 - Não criar OrganizationContext global — `adminOrgId` do `useRole()` é suficiente
 - Não adicionar plugins ao `vite.config.ts` — o preset `@lovable.dev/vite-tanstack-config` já os inclui
-- Não fazer parsing de `err.message` pra detectar tipo de erro — usar `err.errorCode` (campo estável documentado em `docs/API_FRONTEND.md`). Exceção: hooks que detectam "recurso não existe ainda" precisam de heurística defensiva quando o backend não padroniza 404 (ver `useMyDriver`).
+- Não fazer parsing de `err.message` pra detectar tipo de erro — usar `err.errorCode` (campo estável documentado em `docs/reference/api-frontend.md`). Exceção: hooks que detectam "recurso não existe ainda" precisam de heurística defensiva quando o backend não padroniza 404 (ver `useMyDriver`).
 - Não buscar `template` separado pra hidratar `TripInstance` — `GET /trip-instances/{id}` e `GET /trip-instances/organization/{id}` já vêm enriquecidos com `template`/`departurePoint`/`destination`/`bookedCount`
 - Não enviar `departureTime`/`arrivalEstimate` ao criar `TripInstance` — o backend agora aceita só `departureDate` (YYYY-MM-DD) e combina com o time-of-day do template. Os campos absolutos voltam na resposta.
 - Não expor cron expressions cruas (`0 2 * * *`, `*/15 * * * *`) nem horários em UTC literal na UI — converter pra BR e mostrar como info (não como input — o cron é global no backend desde 22/05/2026).

@@ -19,6 +19,8 @@ import {
   formatDateTime,
   formatFullDate,
   formatPrice,
+  isTripTerminal,
+  statusLabel,
 } from "@/lib/format";
 import { useDriverName } from "@/features/drivers/hooks/useDriverName";
 import { StatusPill } from "@/components/passenger/StatusPill";
@@ -39,6 +41,10 @@ export function BookingDetailView({
   cancelError,
 }: BookingDetailViewProps) {
   const isActive = booking.status === "ACTIVE";
+  // Só é possível cancelar a inscrição enquanto a viagem não está em estado terminal
+  // (em curso, concluída ou cancelada). Isso impede cancelar inscrição de viagem cancelada.
+  const tripTerminal = isTripTerminal(booking.tripStatus);
+  const canCancel = isActive && !tripTerminal;
   const departure = booking.tripDepartureTime || booking.enrollmentDate;
   const { name: driverName } = useDriverName(booking.tripInstance?.driverId);
 
@@ -119,7 +125,15 @@ export function BookingDetailView({
 
       <FormError className="mb-3">{cancelError}</FormError>
 
-      {isActive && (
+      {isActive && tripTerminal && (
+        <div className="mb-3 rounded-[12px] border border-line bg-line-soft px-4 py-3 text-[12px] text-muted-foreground">
+          {booking.tripStatus === "CANCELED"
+            ? "Esta viagem foi cancelada. Não há ação disponível para esta inscrição."
+            : `Esta viagem está ${statusLabel(booking.tripStatus ?? "").toLowerCase()}. O cancelamento da inscrição não está mais disponível.`}
+        </div>
+      )}
+
+      {canCancel && (
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button

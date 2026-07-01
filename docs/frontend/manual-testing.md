@@ -8,7 +8,7 @@ Bateria completa de cenários manuais para validar o frontend antes do deploy. C
 
 ## Pré-requisitos globais
 
-- **Backend** Movy Java rodando em `VITE_API_URL` (padrão `http://localhost:5701`).
+- **API Movy** rodando em `VITE_API_URL` (padrão `http://localhost:5701`).
 - **Frontend** rodando via `npm run dev`.
 - **Dev tools de email**: tokens de reset/verify saem em `GET /dev/emails/latest?to=<email>` (em dev mode — `ConsoleEmailService` no backend). Em prod isso retorna vazio.
 - **Seed mínimo** sugerido:

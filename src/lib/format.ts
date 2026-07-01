@@ -83,6 +83,15 @@ export function canEnroll(s: TripStatus | string) {
   return s === "SCHEDULED" || s === "CONFIRMED";
 }
 
+/**
+ * Viagem em estado terminal para fins de cancelamento da inscrição: em curso, concluída ou
+ * cancelada. Nesses estados o passageiro não pode mais cancelar a inscrição, então a UI não
+ * deve oferecer a ação. Quando o status é desconhecido (undefined), não bloqueia.
+ */
+export function isTripTerminal(s: TripStatus | string | undefined | null): boolean {
+  return s === "IN_PROGRESS" || s === "FINISHED" || s === "CANCELED";
+}
+
 export function bookingStatusLabel(s: string) {
   const map: Record<string, string> = {
     ACTIVE: "Ativa",

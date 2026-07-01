@@ -1,75 +1,41 @@
-# Documentação — movy_web
+# Documentação do Movy Web
 
-Bem-vindo à documentação do projeto **movy_web**, um SaaS de transporte — sistema de gerenciamento e reserva de viagens.
+Esta pasta reúne a documentação do frontend do Movy e os materiais de apoio do projeto. A documentação oficial fica separada dos anexos do TCC e dos registros históricos para evitar leitura de arquivos desatualizados.
 
----
+## Leitura Recomendada
 
-## Índice
+| Documento                                                  | Uso                                                               |
+| ---------------------------------------------------------- | ----------------------------------------------------------------- |
+| [frontend/README.md](frontend/README.md)                   | Ponto de entrada da documentação técnica do frontend.             |
+| [frontend/development.md](frontend/development.md)         | Setup local, scripts, variáveis e convenções de trabalho.         |
+| [frontend/architecture.md](frontend/architecture.md)       | Organização em rotas, features, services, componentes e `lib`.    |
+| [frontend/routes.md](frontend/routes.md)                   | Mapa atual de rotas públicas, protegidas, admin e motorista.      |
+| [frontend/auth-and-access.md](frontend/auth-and-access.md) | Autenticação, sessão, RBAC e guards de rota.                      |
+| [frontend/api-integration.md](frontend/api-integration.md) | Cliente HTTP, services, tratamento de erros e contrato com a API. |
+| [frontend/components.md](frontend/components.md)           | Padrões de UI, layout, shadcn/ui e componentes reutilizáveis.     |
+| [frontend/testing.md](frontend/testing.md)                 | Estratégia de verificação e relação com o roteiro manual.         |
+| [frontend/deployment.md](frontend/deployment.md)           | Deploy do frontend em Cloudflare Workers.                         |
 
-### 📘 Comece por aqui
+## Referências
 
-| Documento                                | Descrição                                                                                                |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **[FRONTEND.md](./FRONTEND.md)**         | **Doc técnica abrangente do frontend — fonte canônica pra v1.0.** Stack, fluxos, padrões, anti-patterns. |
-| **[TCC_FRONTEND.md](./TCC_FRONTEND.md)** | Capítulo de TCC em prosa acadêmica sobre o frontend — autocontido, com seção de integração com a API.    |
-| [E2E_MANUAL.md](./E2E_MANUAL.md)         | 97 cenários de teste manuais pré-deploy (happy paths + cross-flows + edge cases).                        |
-| [API_FRONTEND.md](./API_FRONTEND.md)     | Contrato completo da API backend (endpoints, schemas, errorCodes).                                       |
+| Documento                                                | Uso                                                |
+| -------------------------------------------------------- | -------------------------------------------------- |
+| [reference/api-frontend.md](reference/api-frontend.md)   | Contrato detalhado da API consumida pelo frontend. |
+| [adr/decisions.md](adr/decisions.md)                     | Decisões arquiteturais relevantes do frontend.     |
+| [frontend/manual-testing.md](frontend/manual-testing.md) | Roteiro de testes manuais E2E.                     |
 
-### 🔍 Deep-dives por área (legacy — podem ter trechos desatualizados)
+## Processos
 
-| Documento                                        | Descrição                                                                        |
-| ------------------------------------------------ | -------------------------------------------------------------------------------- |
-| [architecture.md](./architecture.md)             | Stack, estrutura de diretórios, feature modules, guard de auth e deploy          |
-| [setup.md](./setup.md)                           | Instalação, variáveis de ambiente, scripts e convenções de desenvolvimento       |
-| [routes.md](./routes.md)                         | Todas as rotas, pathless layout `_protected`, guard centralizado e convenções    |
-| [components.md](./components.md)                 | AppShell, BottomNav, feedback components, feature components e shadcn/ui         |
-| [api.md](./api.md)                               | Cliente HTTP, auto-refresh, services (repository pattern) e endpoints consumidos |
-| [auth.md](./auth.md)                             | Fluxo de autenticação, AuthProvider, RoleProvider, tokenStorage e guard          |
-| [types.md](./types.md)                           | Tipos TypeScript do domínio e utilitários de formatação                          |
-| [FRONTEND_ENDPOINTS.md](./FRONTEND_ENDPOINTS.md) | Mapeamento de endpoints por rota (com arquivo e acesso)                          |
+| Documento                                                                    | Uso                                                            |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [process/captures.md](process/captures.md)                                   | Guia de capturas de tela usadas no relatório/TCC.              |
+| [process/deploy-cloudflare-workers.md](process/deploy-cloudflare-workers.md) | Registro do deploy do frontend na Cloudflare.                  |
+| [process/deploy-neon-render.md](process/deploy-neon-render.md)               | Registro do ambiente online com API no Render e banco no Neon. |
 
-### 📋 Operacional
+## TCC
 
-| Documento                      | Descrição                                                  |
-| ------------------------------ | ---------------------------------------------------------- |
-| [HANDOFF.md](./HANDOFF.md)     | Snapshot "pegue aqui e continue" — estado atual da sessão. |
-| [PROGRESS.md](./PROGRESS.md)   | Andamento detalhado por área.                              |
-| [BACKLOG.md](./BACKLOG.md)     | Próxima ação concreta.                                     |
-| [ROADMAP.md](./ROADMAP.md)     | Visão de longo prazo.                                      |
-| [DECISIONS.md](./DECISIONS.md) | ADRs — registros de decisões arquiteturais (por quê).      |
+O TCC em LaTeX continua em [doc-tcc.tex](doc-tcc.tex), com seções em [sections/](sections/) e imagens em [imagens/](imagens/). Rascunhos auxiliares em Markdown foram isolados em [tcc/](tcc/).
 
----
+## Arquivo Histórico
 
-## Resumo do Projeto
-
-**movy_web** é um PWA mobile-first com três papéis de usuário:
-
-| Role   | Capacidades                                                 |
-| ------ | ----------------------------------------------------------- |
-| User   | Explorar viagens públicas, reservar, gerenciar inscrições   |
-| Driver | Extensão de User — confirmar presença, marcar pagamentos    |
-| Admin  | Criar organização, templates, viagens; gerenciar motoristas |
-
-### Tecnologias Principais
-
-- **React 19** + **TypeScript** (strict)
-- **TanStack Start** (roteamento full-stack, file-based routing)
-- **Tailwind CSS v4** + **shadcn/ui** (Radix UI)
-- **Cloudflare Workers** (deploy)
-- **npm** (package manager — `bun` também é suportado, mas o CLAUDE.md usa `npm`)
-
-### Arquitetura
-
-O frontend segue **feature modules**: rotas são thin controllers (~15 linhas), a lógica fica em hooks de feature, e chamadas de API são encapsuladas em services.
-
-```
-routes/ (thin controllers) → features/ (hooks + components) → services/ → api.ts → Backend
-```
-
-### Início Rápido
-
-```bash
-npm install
-echo "VITE_API_URL=https://sua-api.com" > .env
-npm run dev
-```
+Materiais antigos, handoffs e protótipos foram movidos para [archive/](archive/). Eles não devem ser usados como fonte atual de implementação.

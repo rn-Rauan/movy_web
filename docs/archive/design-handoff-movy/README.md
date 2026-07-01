@@ -1,5 +1,7 @@
 # Handoff — movy
 
+> Arquivo histórico. Este pacote foi preservado como referência visual antiga e não deve ser usado como fonte atual de implementação sem comparação com `docs/frontend`.
+
 Redesign do app de gestão de viagens (admin / operador de empresa de transporte). Pacote estruturado para implementação assistida por agente.
 
 ## Como usar este pacote

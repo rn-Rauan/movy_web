@@ -1,6 +1,8 @@
 # Decisions — Registro de decisões técnicas
 
 > ADRs leves. Uma entrada por decisão relevante. Cada ADR tem: contexto, decisão, consequências, e quando reabrir.
+>
+> Para a documentação técnica atual, consulte [../frontend](../frontend).
 
 **Formato:**
 

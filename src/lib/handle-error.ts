@@ -19,6 +19,14 @@ const BOOKING_CANCEL_MESSAGES: Record<string, string> = {
   BOOKING_ALREADY_INACTIVE_BAD_REQUEST: "Esta inscrição já foi cancelada.",
 };
 
+// 400 do fluxo de criação de inscrição (distinto do cancelamento acima).
+const BOOKING_MESSAGES: Record<string, string> = {
+  BOOKING_TRIP_INSTANCE_NOT_BOOKABLE_BAD_REQUEST: "Esta viagem não está disponível para inscrição.",
+  BOOKING_STOP_BAD_REQUEST: "Selecione pontos de embarque e desembarque válidos.",
+  BOOKING_PRICE_NOT_AVAILABLE_BAD_REQUEST: "O preço desta viagem ainda não está disponível.",
+  BOOKING_CREATION_FAILED_BAD_REQUEST: "Não foi possível concluir a inscrição. Tente novamente.",
+};
+
 const TRIP_SCHEDULING_MESSAGES: Record<string, string> = {
   INVALID_TRIP_TIME_OF_DAY_FORMAT: "Use o formato HH:mm (24h) nos horários do template.",
   INVALID_TRIP_TIME_OF_DAY_ORDER: "Horários do template são inválidos.",
@@ -29,6 +37,15 @@ const TRIP_SCHEDULING_MESSAGES: Record<string, string> = {
     "Configure a capacidade padrão do template antes de gerar viagens.",
   TRIP_TEMPLATE_NOT_RECURRING_BAD_REQUEST:
     "A geração automática só funciona em templates recorrentes ativos.",
+  TRIP_INSTANCE_STATUS_TRANSITION_BAD_REQUEST: "Transição de status inválida para esta viagem.",
+  TRIP_INSTANCE_CAPACITY_BAD_REQUEST: "Capacidade da viagem inválida.",
+  TRIP_INSTANCE_TIMES_BAD_REQUEST: "Os horários da viagem estão inconsistentes.",
+  TRIP_INSTANCE_CREATION_FAILED_BAD_REQUEST: "Não foi possível criar a viagem. Verifique os dados.",
+  TRIP_TEMPLATE_INACTIVE: "Este template de rota está inativo.",
+  INVALID_TRIP_STOPS: "Paradas inválidas. Verifique os pontos informados.",
+  INVALID_TRIP_ROUTE_POINTS: "Pontos de origem e destino inválidos.",
+  INVALID_TRIP_PRICE_CONFIGURATION: "Configuração de preço inválida.",
+  INVALID_SCHEDULING_DAYS_AHEAD: "A janela de geração deve estar entre 1 e 90 dias.",
 };
 
 const DRIVER_AND_AUTH_MESSAGES: Record<string, string> = {
@@ -48,6 +65,34 @@ const DRIVER_AND_AUTH_MESSAGES: Record<string, string> = {
   PAYMENT_ALREADY_PROCESSED_BAD_REQUEST: "Pagamento já foi processado.",
   INVALID_OR_EXPIRED_RESET_TOKEN_BAD_REQUEST: "Link de recuperação expirou. Solicite outro.",
   INVALID_OR_EXPIRED_VERIFICATION_TOKEN_BAD_REQUEST: "Link de verificação expirou. Solicite outro.",
+  DRIVER_PROFILE_NOT_FOUND_BAD_REQUEST: "Você ainda não tem perfil de motorista.",
+  DRIVER_NOT_FOUND_FOR_MEMBERSHIP_BAD_REQUEST:
+    "Este usuário ainda não ativou o perfil de motorista.",
+  USER_FOR_MEMBERSHIP_NOT_FOUND: "Nenhum usuário encontrado com esse e-mail.",
+  EXPIRED_CNH: "A CNH informada está vencida.",
+  INVALID_CNH: "Número de CNH inválido.",
+  INVALID_CNH_EXPIRATION: "Data de validade da CNH inválida.",
+  VEHICLE_INACTIVE: "Este veículo está inativo.",
+  INVALID_PLATE: "Placa inválida.",
+  INVALID_CNPJ: "CNPJ inválido.",
+  INVALID_PASSWORD: "A senha não atende aos requisitos mínimos.",
+};
+
+// 409 Conflict — recursos duplicados/indisponíveis. Sem estes mapeamentos, os códigos caem
+// no conflictMessage genérico (pensado para signup/organização) e viram "E-mail ou slug já
+// cadastrado". Ver Catálogo de Erros da API (campo `error` do payload).
+const CONFLICT_MESSAGES: Record<string, string> = {
+  DRIVER_CNH_ALREADY_EXISTS: "Já existe um motorista cadastrado com essa CNH.",
+  DRIVER_ALREADY_EXISTS_CONFLICT: "Você já possui um perfil de motorista.",
+  PLATE_ALREADY_IN_USE: "Já existe um veículo cadastrado com essa placa.",
+  BOOKING_ALREADY_EXISTS_CONFLICT: "Você já está inscrito nesta viagem.",
+  BOOKING_TRIP_INSTANCE_FULL_CONFLICT: "Esta viagem está lotada.",
+  SUBSCRIPTION_ALREADY_EXISTS: "Esta organização já possui uma assinatura ativa.",
+  MEMBERSHIP_ALREADY_EXISTS: "Este vínculo já existe.",
+  USER_EMAIL_ALREADY_EXISTS: "Já existe uma conta com esse e-mail.",
+  ORGANIZATION_ALREADY_EXISTS: "Já existe uma organização com esse CNPJ.",
+  ORGANIZATION_EMAIL_ALREADY_EXISTS: "Já existe uma organização com esse e-mail.",
+  ORGANIZATION_SLUG_ALREADY_EXISTS: "Esse identificador (slug) já está em uso.",
 };
 
 export const PLAN_LIMIT_MESSAGE = "Você atingiu o limite do seu plano";
@@ -89,8 +134,10 @@ function mappedErrorCode(errorCode: string | null): string | undefined {
   if (!errorCode) return undefined;
   return (
     BOOKING_CANCEL_MESSAGES[errorCode] ??
+    BOOKING_MESSAGES[errorCode] ??
     TRIP_SCHEDULING_MESSAGES[errorCode] ??
-    DRIVER_AND_AUTH_MESSAGES[errorCode]
+    DRIVER_AND_AUTH_MESSAGES[errorCode] ??
+    CONFLICT_MESSAGES[errorCode]
   );
 }
 
