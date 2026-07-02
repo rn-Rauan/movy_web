@@ -29,6 +29,7 @@
 \usepackage{longtable}  % tabelas que quebram entre páginas (requisitos)
 \usepackage{array}      % colunas customizadas (>{...})
 \usepackage{pdflscape}  % páginas em orientação paisagem (apêndice do DER)
+\usepackage[htt]{hyphenat} % permite hifenização em fonte monoespaçada (\texttt)
 
 \lstset{
     language=Python,            % linguagem padrão (pode trocar)
@@ -70,6 +71,16 @@
 \geometry{a4paper, left=3cm, right=2cm, top=2.5cm, bottom=2.5cm}
 \setstretch{1.5}
 \captionsetup{labelfont=bf, labelsep=endash}
+
+% Evita que tokens longos de código (\texttt) estourem a margem direita:
+% quando a linha não fecha, o parágrafo ganha folga extra de espaçamento e o
+% token desce inteiro para a linha seguinte em vez de vazar para a margem.
+\setlength{\emergencystretch}{3em}
+\tolerance=1500
+
+% Fonte de tabelas e figuras (padrão ABNT: identificação acima, fonte abaixo).
+% Uso: \fonte{Elaborado pelo autor (2026)} logo após a tabela/imagem.
+\newcommand{\fonte}[1]{{\par\vspace{0.25em}\centering\footnotesize Fonte: #1.\par}}
 
 % Numeração no estilo do PPC: seção "N.0", subseção "N.M", subsubseção "N.M.K"
 \renewcommand{\thesection}{\arabic{section}.0}
@@ -247,6 +258,7 @@ Dados         & Persistência             & PostgreSQL, Prisma ORM \\
 Infraestrutura & Ambiente e implantação  & Docker, Cloudflare Workers, Render, Neon \\
 \bottomrule
 \end{tabularx}
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 
 \input{sections/trabalhos-relacionados}
@@ -272,13 +284,14 @@ Os atores do sistema correspondem aos papéis previstos no controle de acesso, e
 
 \begin{figure}[H]
 \centering
+\caption{Diagrama de casos de uso, agrupado por contexto de acesso.}
+\label{fig:Diagrama de caso de uso.}
 % Exportar de docs/diagramas/casos-de-uso.puml para imagens/casos-de-uso.png.
 % Enquanto não for re-renderizado, usa-se a versão anterior do diagrama.
 \IfFileExists{imagens/casos-de-uso.png}{%
   \includegraphics[width=0.62\textwidth]{imagens/casos-de-uso.png}}{%
   \includegraphics[width=\textwidth]{imagens/diagrama de casos de uso.png}}
-\caption{Diagrama de casos de uso, agrupado por contexto de acesso.}
-\label{fig:Diagrama de caso de uso.}
+\fonte{Elaborado pelo autor (2026)}
 \end{figure}
 
 \input{sections/casos-uso-table}
@@ -289,9 +302,10 @@ O modelo de domínio foi modelado segundo os princípios do \textit{Domain-Drive
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{imagens/classes-mapa.png}
 \caption{Mapa geral de entidades do modelo de domínio (Movy API).}
 \label{fig:diagrama}
+\includegraphics[width=\textwidth]{imagens/classes-mapa.png}
+\fonte{Elaborado pelo autor (2026)}
 \end{figure}
 
 As entidades agrupam-se em cinco contextos: (i) Identidade e Acesso, \texttt{User}, \texttt{Organization}, \texttt{Membership} (tabela-pivô que materializa o N:N entre usuário e organização, carregando o \texttt{Role} e servindo de base ao RBAC) e os \textit{tokens} de redefinição de senha e verificação de e-mail; (ii) Frota, \texttt{Driver} (entidade global, vinculada a organizações via \texttt{Membership}) e \texttt{Vehicle}; (iii) Viagens, \texttt{TripTemplate} (modelo recorrente) que gera \texttt{TripInstance} (execução datada, com máquina de estados) e \texttt{TripSchedulingConfig}; (iv) Reservas e Pagamentos, \texttt{Booking} (inscrição) e \texttt{Payment} (1:1 com a inscrição); e (v) Billing, \texttt{Plan} e \texttt{Subscription}, com cota de uso aplicada pelo \texttt{PlanLimitService}.
@@ -309,9 +323,10 @@ Para preservar a legibilidade no formato impresso, a Figura~\ref{fig:der} aprese
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=1\textwidth]{imagens/der-simplificado.png}
 \caption{Diagrama Entidade-Relacionamento do sistema, versão simplificada (Movy API).}
 \label{fig:der}
+\includegraphics[width=1\textwidth]{imagens/der-simplificado.png}
+\fonte{Elaborado pelo autor (2026)}
 \end{figure}
 
 \subsubsection{Entidades do Domínio}
@@ -335,6 +350,8 @@ A Figura~\ref{fig:fe_fluxo_reserva} sintetiza a jornada principal do passageiro,
 
 \begin{figure}[H]
 \centering
+\caption{Fluxo principal de reserva na aplicação cliente}
+\label{fig:fe_fluxo_reserva}
 \setlength{\fboxsep}{8pt}
 \fbox{%
 \begin{minipage}{0.9\textwidth}
@@ -357,8 +374,7 @@ API valida capacidade, status e preço\\[0.15cm]
 Confirmação e acompanhamento\\
 \texttt{/bookings-success/:bookingId} \quad e \quad \texttt{/my-bookings/:bookingId}
 \end{minipage}}
-\caption{Fluxo principal de reserva na aplicação cliente}
-\label{fig:fe_fluxo_reserva}
+\fonte{Elaborado pelo autor (2026)}
 \end{figure}
 
 \input{sections/interfaces}
@@ -404,6 +420,7 @@ Caso de uso (\textit{Use Case}) & Invoca \texttt{unitOfWork.execute(fn)}, agrupa
 Repositórios & Usam \texttt{dbContext.client} automaticamente, sem conhecer Prisma nem alterar suas assinaturas. \\
 \bottomrule
 \end{tabularx}
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 
 Dessa forma, a camada de aplicação permanece desacoplada do ORM: a escolha entre o cliente raiz e o cliente transacional é resolvida de forma transparente pelo \texttt{DbContext}, e qualquer falha dentro do bloco provoca o \textit{rollback} automático de todas as escritas.
@@ -416,9 +433,9 @@ O sistema implementa hierarquia de exceções mapeadas pelo \texttt{AllException
 \centering
 \caption{Mapeamento de erros de domínio para HTTP}
 \label{tab:error_mapping}
-\begin{tabular}{ll}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X l}
 \toprule
-\textbf{Sufixo do código de erro} & \textbf{HTTP} \\
+\textbf{Sufixo ou prefixo do código de erro} & \textbf{HTTP} \\
 \midrule
 \texttt{\_NOT\_FOUND} & 404 Not Found \\
 \texttt{\_ALREADY\_EXISTS} / \texttt{\_CONFLICT} / \texttt{\_IN\_USE} & 409 Conflict \\
@@ -427,7 +444,8 @@ O sistema implementa hierarquia de exceções mapeadas pelo \texttt{AllException
 \texttt{\_UNAUTHORIZED} & 401 Unauthorized \\
 (demais, ex.\ \texttt{\_CREATION\_FAILED}) & 500 Internal Server Error \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 
 Erros que não são de domínio seguem outro caminho: violações de validação de \textit{schema} nos DTOs (via \textit{class-validator}) retornam \texttt{400} com a lista de violações na \texttt{message}, e o \textit{rate limiting} global (60 requisições por minuto por IP) retorna \texttt{429}; nenhum deles carrega \texttt{code} de domínio. Registra-se ainda que as falhas de persistência (por exemplo, \texttt{\_CREATION\_FAILED}) retornam \texttt{500} deliberadamente, por representarem erro interno inesperado ao salvar, e não erro do cliente.
@@ -480,6 +498,7 @@ CI/CD (GitHub Actions) & Configurado & \checkmark \\
 Rate Limiting & Configurado & 60 req/min \\
 \bottomrule
 \end{tabular}
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 
 \subsection{Limitações Identificadas}

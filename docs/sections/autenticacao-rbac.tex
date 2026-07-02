@@ -21,6 +21,7 @@ O pipeline de segurança é composto por quatro \textit{guards} executados em se
 \multicolumn{3}{l}{\textit{Aprovado nas quatro etapas} $\rightarrow$ a requisição alcança o Controller.} \\
 \bottomrule
 \end{tabularx}
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 
 O \texttt{JwtAuthGuard} enriquece o \textit{payload} JWT no momento do login com todos os dados necessários (\texttt{userId}, \texttt{organizationId}, \texttt{role}, \texttt{isDev}), eliminando consultas ao banco a cada requisição. Usuários listados em \texttt{DEV\_EMAILS} recebem \texttt{isDev=true} no token e ignoram validações de tenant e role. Em termos de papéis, o ADMIN tem acesso total (organizações, usuários, motoristas, configurações), o DRIVER tem acesso limitado (visualizar viagens e confirmar ações relacionadas) e o USER implícito (passageiro) pode inscrever-se em viagens e visualizar suas inscrições. As \textit{memberships} permitem múltiplas \textit{roles} por usuário em diferentes organizações (ex.: motorista em uma org, admin em outra).

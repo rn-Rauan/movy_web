@@ -5,9 +5,10 @@ Em alto nível, o sistema é composto por três elementos: a aplicação cliente
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.6\textwidth]{imagens/arquitetura.png}
 \caption{Arquitetura em camadas do sistema, aplicação cliente, API REST e banco de dados.}
 \label{fig:arquitetura}
+\includegraphics[width=0.6\textwidth]{imagens/arquitetura.png}
+\fonte{Elaborado pelo autor (2026)}
 \end{figure}
 
 \subsubsection{Backend, Clean Architecture e DDD}
@@ -74,6 +75,7 @@ Cada módulo de negócio segue a mesma estrutura hierárquica, com um diretório
 \texttt{user.module.ts}  & Declaração do módulo NestJS, que conecta as quatro camadas via injeção de dependência. \\
 \bottomrule
 \end{tabularx}
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 
 Os principais padrões de \textit{design} implementados no servidor são: Repositório (abstração da persistência), Injeção de Dependência (nativa do NestJS), Value Objects (validação de valores complexos), Use Cases (cada operação de negócio como classe testável), Guards (proteção de rotas), Interceptadores (\textit{logging} centralizado), Filters de Exceção (tratamento global de erros), Soft Delete (exclusão por status/\textit{timestamp}) e UnitOfWork (transações atômicas via \texttt{AsyncLocalStorage} sem expor Prisma à camada de aplicação).
@@ -84,6 +86,8 @@ A arquitetura do cliente espelha a separação do servidor, distribuindo respons
 
 \begin{figure}[H]
 \centering
+\caption{Arquitetura em camadas da aplicação cliente}
+\label{fig:fe_arquitetura}
 \setlength{\fboxsep}{8pt}
 \fbox{%
 \begin{minipage}{0.88\textwidth}
@@ -106,8 +110,7 @@ Cliente HTTP\\
 \(\downarrow\) HTTP/JSON\\[0.2cm]
 Movy API
 \end{minipage}}
-\caption{Arquitetura em camadas da aplicação cliente}
-\label{fig:fe_arquitetura}
+\fonte{Elaborado pelo autor (2026)}
 \end{figure}
 
 A camada de apresentação compõe-se das rotas e dos componentes. As rotas são deliberadamente finas, controladores enxutos cuja função é instanciar um \textit{hook} de caso de uso e repassar seus dados aos componentes, e os componentes recebem dados apenas por propriedades, sem realizar requisições próprias. A camada de casos de uso materializa-se nos \textit{hooks de feature}, que encapsulam a obtenção de dados, o estado associado (carregamento, erro, conteúdo) e os efeitos colaterais de uma operação de domínio. A camada de serviços implementa o padrão Repositório: cada arquivo agrupa as chamadas a um conjunto coeso de \textit{endpoints} e esconde detalhes de transporte. Por fim, o cliente HTTP é o ponto único de comunicação com a API, responsável por anexar credenciais, normalizar erros e renovar a sessão de forma transparente. Por convenção, nenhum componente ou rota chama o cliente HTTP diretamente, toda comunicação passa por um serviço.
@@ -129,5 +132,6 @@ O código organiza-se em módulos de feature: cada domínio reúne, em um único
 \texttt{lib/}        & Infraestrutura compartilhada: \texttt{api.ts}, contextos de autenticação e papel, tipos, formatação e \textit{timezone}. \\
 \bottomrule
 \end{tabularx}
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 

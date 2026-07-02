@@ -179,6 +179,8 @@ Máquina de Estados:
 \centering
 \caption{Transições de status de TripInstance}
 \label{tab:trip_status}
+{\footnotesize
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{lccccc}
 \toprule
 \textbf{De $\backslash$ Para} & \textbf{SCHEDULED} & \textbf{CONFIRMED} & \textbf{IN\_PROGRESS} & \textbf{FINISHED} & \textbf{CANCELED} \\
@@ -191,6 +193,8 @@ FINISHED & -- & -- & -- & -- & -- \\
 CANCELED & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
+}
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 {\footnotesize * Exige driver e vehicle atribuídos. Transições inválidas lançam \texttt{InvalidTripStatusTransitionError} (HTTP 400).}
 

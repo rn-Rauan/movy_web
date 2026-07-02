@@ -17,6 +17,8 @@ O roteamento utiliza o mecanismo \textit{file-based} do TanStack Router, no qual
 
 \begin{figure}[H]
 \centering
+\caption{Organização das rotas e dos \textit{guards} no cliente}
+\label{fig:fe_rotas_guards}
 \setlength{\fboxsep}{8pt}
 \fbox{%
 \begin{minipage}{0.94\textwidth}
@@ -32,8 +34,7 @@ Subárvore administrativa: \texttt{/dashboard}, \texttt{/trips}, \texttt{/templa
 Subárvore operacional do motorista: \texttt{/my-trips} e acesso à tela compartilhada de detalhe da viagem. \\
 \end{tabularx}
 \end{minipage}}
-\caption{Organização das rotas e dos \textit{guards} no cliente}
-\label{fig:fe_rotas_guards}
+\fonte{Elaborado pelo autor (2026)}
 \end{figure}
 
 \paragraph{Padrão de Serviços e Hooks}
@@ -64,6 +65,7 @@ Instancia o \textit{hook}, decide entre carregamento, erro e conteúdo, e delega
 \bottomrule
 \end{tabularx}
 }
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 
 \paragraph{Integração com a API}

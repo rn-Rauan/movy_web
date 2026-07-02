@@ -24,9 +24,10 @@ Complementarmente à contagem de testes, a Figura~\ref{fig:cobertura} apresenta 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{imagens/jest-coverage-completo.png}
 \caption{Relatório de cobertura de testes do \textit{backend} (Jest), agregado por módulo.}
 \label{fig:cobertura}
+\includegraphics[width=\textwidth]{imagens/jest-coverage-completo.png}
+\fonte{Elaborado pelo autor (2026)}
 \end{figure}
 
 \subsubsection{Verificação do Frontend}
@@ -37,7 +38,7 @@ Em coerência com o estágio do produto e o tamanho reduzido da equipe, a estrat
 \centering
 \caption{Exemplos de casos de teste manuais do frontend}
 \label{tab:testes_manuais}
-\begin{tabular}{lll}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X l}
 \toprule
 \textbf{Caso} & \textbf{Resultado esperado} & \textbf{Status} \\
 \midrule
@@ -48,7 +49,8 @@ Mesmo ponto de embarque e desembarque & Bloqueio com mensagem de validação & O
 Cancelamento fora da janela permitida & Bloqueio com mensagem do \textit{errorCode} & OK \\
 Rota administrativa sem papel de admin & Redirecionamento para a raiz & OK \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+\fonte{Elaborado pelo autor (2026)}
 \end{table}
 
 % ------------------------------

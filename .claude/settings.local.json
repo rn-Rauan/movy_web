@@ -14,7 +14,19 @@
       "Bash(java -jar plantuml.jar -tpng -o \"C:/Users/rauan/Documents/GitHub/movy_web/docs/imagens\" \"C:/Users/rauan/Documents/GitHub/movy_web/docs/diagramas/casos-de-uso.puml\")",
       "Bash(echo \"exit: $?\")",
       "Bash(java -jar plantuml.jar -charset UTF-8 -tpng -o \"C:/Users/rauan/Documents/GitHub/movy_web/docs/imagens\" \"C:/Users/rauan/Documents/GitHub/movy_web/docs/diagramas/casos-de-uso.puml\")",
-      "Bash(identify \"C:/Users/rauan/Documents/GitHub/movy_web/docs/imagens/casos-de-uso.png\")"
+      "Bash(identify \"C:/Users/rauan/Documents/GitHub/movy_web/docs/imagens/casos-de-uso.png\")",
+      "Bash(command -v python)",
+      "Bash(command -v python3)",
+      "Bash(command -v py)",
+      "Bash(command -v pdftotext)",
+      "Bash(command -v gs)",
+      "Bash(pdftotext -layout \"C:/Users/rauan/Downloads/tcc3 \\(12\\).pdf\" tcc3.txt)",
+      "Bash(python -c ' *)",
+      "Bash(pdfinfo \"C:/Users/rauan/Downloads/tcc3 \\(12\\).pdf\")",
+      "Bash(python -)",
+      "Bash(python -c \"import fitz; print\\('pymupdf ok', fitz.__doc__\\)\")",
+      "Bash(python -m pip install --quiet pymupdf)",
+      "Bash(python -c \"import fitz; print\\('pymupdf', fitz.version\\)\")"
     ]
   }
 }
