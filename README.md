@@ -8,21 +8,22 @@ SaaS de transporte — plataforma de gerenciamento e reserva de viagens com **PW
 
 ## 🛠️ Tech Stack
 
-| Camada | Tecnologias |
-|--------|-------------|
-| **Frontend** | React 19 · TypeScript (strict mode) |
-| **Roteamento** | TanStack Router · File-based routing |
-| **Styling** | Tailwind CSS v4 · shadcn/ui (Radix UI) |
-| **Validação** | Zod · date-fns |
-| **Build** | Vite 7 · `@lovable.dev/vite-tanstack-config` |
-| **Deploy** | Cloudflare Workers · Wrangler |
-| **Componentes** | lucide-react · recharts · sonner |
+| Camada          | Tecnologias                                  |
+| --------------- | -------------------------------------------- |
+| **Frontend**    | React 19 · TypeScript (strict mode)          |
+| **Roteamento**  | TanStack Router · File-based routing         |
+| **Styling**     | Tailwind CSS v4 · shadcn/ui (Radix UI)       |
+| **Validação**   | Zod · date-fns                               |
+| **Build**       | Vite 7 · `@lovable.dev/vite-tanstack-config` |
+| **Deploy**      | Cloudflare Workers · Wrangler                |
+| **Componentes** | lucide-react · recharts · sonner             |
 
 ---
 
 ## ⚡ Quick Start
 
 ### Pré-requisitos
+
 - **Node.js** 20+ (desenvolvido em Node 24)
 - **npm** (compatível com `bun`, mas scripts usam npm)
 
@@ -44,8 +45,8 @@ A app sobe em `http://localhost:5173` (Vite). Por padrão, a API é esperada em 
 
 ### Variáveis de Ambiente
 
-| Variável | Padrão | Descrição |
-|----------|--------|-----------|
+| Variável       | Padrão                  | Descrição               |
+| -------------- | ----------------------- | ----------------------- |
 | `VITE_API_URL` | `http://localhost:5701` | URL base da API backend |
 
 ---
@@ -103,11 +104,11 @@ src/
 
 ### Papéis de Usuário (RBAC)
 
-| Role | Capacidades |
-|------|-----------|
-| **Passageiro** | Explorar viagens, reservar, gerenciar inscrições |
-| **Motorista** | Tudo de Passageiro + confirmar presença, marcar pagamentos |
-| **Admin** | Criar/gerenciar organização, templates, viagens, motoristas |
+| Role           | Capacidades                                                 |
+| -------------- | ----------------------------------------------------------- |
+| **Passageiro** | Explorar viagens, reservar, gerenciar inscrições            |
+| **Motorista**  | Tudo de Passageiro + confirmar presença, marcar pagamentos  |
+| **Admin**      | Criar/gerenciar organização, templates, viagens, motoristas |
 
 Os roles são detectados em runtime via `RoleContext` após autenticação. As rotas são protegidas por **pathless layouts**:
 
@@ -161,15 +162,15 @@ A documentação técnica completa está em [`docs/`](docs/).
 
 ### Início Recomendado
 
-| Documento | Propósito |
-|-----------|-----------|
-| [docs/frontend/README.md](docs/frontend/README.md) | Ponto de entrada técnico |
-| [docs/frontend/development.md](docs/frontend/development.md) | Setup, scripts, convenções |
-| [docs/frontend/architecture.md](docs/frontend/architecture.md) | Design patterns e estrutura |
-| [docs/frontend/routes.md](docs/frontend/routes.md) | Mapa completo de rotas |
-| [docs/frontend/auth-and-access.md](docs/frontend/auth-and-access.md) | Autenticação e RBAC |
-| [docs/frontend/api-integration.md](docs/frontend/api-integration.md) | Integração com API backend |
-| [docs/reference/api-frontend.md](docs/reference/api-frontend.md) | Contrato da API |
+| Documento                                                            | Propósito                   |
+| -------------------------------------------------------------------- | --------------------------- |
+| [docs/frontend/README.md](docs/frontend/README.md)                   | Ponto de entrada técnico    |
+| [docs/frontend/development.md](docs/frontend/development.md)         | Setup, scripts, convenções  |
+| [docs/frontend/architecture.md](docs/frontend/architecture.md)       | Design patterns e estrutura |
+| [docs/frontend/routes.md](docs/frontend/routes.md)                   | Mapa completo de rotas      |
+| [docs/frontend/auth-and-access.md](docs/frontend/auth-and-access.md) | Autenticação e RBAC         |
+| [docs/frontend/api-integration.md](docs/frontend/api-integration.md) | Integração com API backend  |
+| [docs/reference/api-frontend.md](docs/reference/api-frontend.md)     | Contrato da API             |
 
 ### Testes
 
