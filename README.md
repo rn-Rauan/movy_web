@@ -186,4 +186,4 @@ UNLICENSED
 
 ## 👤 Autor
 
-**Rauan** — [GitHub](https://github.com/rn-Rauan)
+**Rauan** — [GitHub](https://github.com/rn-Rauan) 2026
