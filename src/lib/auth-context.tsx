@@ -11,6 +11,8 @@ export type AuthResponse = {
 type AuthContextValue = {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isEmailVerified: boolean;
+  requiresEmailVerification: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (input: {
@@ -30,6 +32,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const isEmailVerified = !!user?.emailVerifiedAt;
+  const isAuthenticated = !!user;
+  const requiresEmailVerification = isAuthenticated && !isEmailVerified;
 
   useEffect(() => {
     setUser(tokenStorage.user);
@@ -86,7 +92,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        isAuthenticated,
+        isEmailVerified,
+        requiresEmailVerification,
         loading,
         login,
         signup,

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { Bus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { tokenStorage } from "@/lib/api";
 import { apiErrorMessage, zodFieldErrors } from "@/lib/handle-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +54,8 @@ function SignupPage() {
     setSubmitting(true);
     try {
       await signup(parsed.data);
-      navigate({ to: "/" });
+      const needsVerification = !tokenStorage.user?.emailVerifiedAt;
+      navigate({ to: needsVerification ? "/verify-email" : "/" });
     } catch (err) {
       setFormError(apiErrorMessage(err, "Falha ao cadastrar"));
     } finally {

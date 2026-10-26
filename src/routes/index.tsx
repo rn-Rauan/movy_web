@@ -10,12 +10,13 @@ export const Route = createFileRoute("/")({
 });
 
 function IndexPage() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
   const { isAdmin, adminOrgId, roleLoading } = useRole();
 
   if (authLoading || (isAuthenticated && roleLoading)) return null;
 
   if (isAuthenticated) {
+    if (!user?.emailVerifiedAt) return <Navigate to="/verify-email" replace />;
     if (isAdmin && adminOrgId) return <Navigate to="/dashboard" />;
     return <Navigate to="/public/trip-instances" />;
   }

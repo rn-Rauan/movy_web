@@ -3,6 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { Bus } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { tokenStorage } from "@/lib/api";
 import { loginErrorMessage, zodFieldErrors } from "@/lib/handle-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +47,8 @@ function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate({ to: redirect ? (redirect as string) : "/" });
+      const needsVerification = !tokenStorage.user?.emailVerifiedAt;
+      navigate({ to: needsVerification ? "/verify-email" : redirect ? (redirect as string) : "/" });
     } catch (err) {
       setFormError(loginErrorMessage(err));
     } finally {

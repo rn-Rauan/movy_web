@@ -15,14 +15,17 @@ export const Route = createFileRoute("/verify-email")({
   component: VerifyEmailPage,
 });
 
-type State = "pending" | "success" | "error" | "missing";
+type State = "pending" | "success" | "error" | "missing" | "required";
 
 function VerifyEmailPage() {
   const { token } = Route.useSearch();
-  const { setSession } = useAuth();
+  const { setSession, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const ranRef = useRef(false);
-  const [state, setState] = useState<State>(token ? "pending" : "missing");
+  const requiresVerification = isAuthenticated && !user?.emailVerifiedAt && !token;
+  const [state, setState] = useState<State>(
+    token ? "pending" : requiresVerification ? "required" : "missing",
+  );
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
@@ -91,6 +94,23 @@ function VerifyEmailPage() {
               className="h-12 w-full rounded-[12px] border border-line bg-surface text-center text-[14px] font-bold leading-[3rem] text-ink hover:bg-line-soft"
             >
               Voltar ao login
+            </Link>
+          </div>
+        )}
+
+        {state === "required" && (
+          <div className="flex flex-col gap-3">
+            <div className="rounded-[14px] border border-warning-soft bg-warning-soft p-3.5 text-[12px] font-semibold text-amber-700">
+              Confirme seu e-mail para continuar usando a conta.
+            </div>
+            <p className="text-center text-[12px] text-muted-foreground">
+              O link foi enviado para seu e-mail no momento do cadastro.
+            </p>
+            <Link
+              to="/public/trip-instances"
+              className="h-12 w-full rounded-[12px] border border-line bg-surface text-center text-[14px] font-bold leading-[3rem] text-ink hover:bg-line-soft"
+            >
+              Continuar explorando
             </Link>
           </div>
         )}
